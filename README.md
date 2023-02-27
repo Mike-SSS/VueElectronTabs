@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # electron-vite-vue
 
 🥳 Really simple `Electron` + `Vue` + `Vite` boilerplate.
@@ -69,3 +70,6 @@ export default {
 
 - [dependencies vs devDependencies](https://github.com/electron-vite/vite-plugin-electron-renderer#dependencies-vs-devdependencies)
 - [C/C++ addons, Node.js modules - Pre-Bundling](https://github.com/electron-vite/vite-plugin-electron-renderer#dependency-pre-bundling)
+=======
+# VueElectronTabs
+>>>>>>> bce1e9315bd4be68f7366199f85e17dc299f5f30
