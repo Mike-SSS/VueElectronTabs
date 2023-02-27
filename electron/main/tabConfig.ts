@@ -32,12 +32,13 @@ export class CreateNewTabs {
     // this.homeBrowserview.setAutoResize({ width: true, height: true })
     // this.homeBrowserview.webContents.loadURL('http://localhost:8888/')
     // this.homeBrowserview.webContents.openDevTools()
-
+    console.log("Init tabs ");
     // 监听
     this.onCreateBrowserView()
     this.onChangeTabBrowserView()
     this.onHomeBrowserView()
     this.onCloseBrowserView()
+    console.log("Done Init tabs ");
   }
   public getSize(): number[] {
     return this.mainWindow.getSize()
@@ -143,7 +144,7 @@ export class CreateNewTabs {
    * @param {BrowserView} browserView:BrowserView
    * @returns void
    */
-  private createBrowserView(arg: any): void {
+  public createBrowserView(arg: any): void {
     const [width, height] = this.getSize()
     if (!this.browserViewList[`${arg.applicationKey}`]) {
       this.browserViewList[`${arg.applicationKey}`] = new BrowserView({ webPreferences: {nodeIntegration: true} })
