@@ -64,7 +64,11 @@ async function createTabs(win: BrowserWindow, url: string) {
   win.addBrowserView(tabsView);
   win.setTopBrowserView(tabsView);
 
-  tabsView.webContents.send("add-tab", { title: "+", url: "add" });
+  tabsView.webContents.send("add-tab", {
+    title: "+",
+    url: "add",
+    id: tabsView.webContents.id,
+  });
 
   tabsView.webContents.on("did-finish-load", () => {
     console.log("Tabs Finished load");
@@ -79,7 +83,7 @@ async function createTabs(win: BrowserWindow, url: string) {
   });
 }
 async function createSingleBrowserView(win: BrowserWindow, url: string) {
-  mainView = new BrowserView({
+  const newView = new BrowserView({
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -90,16 +94,16 @@ async function createSingleBrowserView(win: BrowserWindow, url: string) {
       webviewTag: false,
     },
   });
-  browserViews.push(mainView);
-  win.addBrowserView(mainView);
-  mainView.setBackgroundColor("#000");
+  browserViews.push(newView);
+  win.addBrowserView(newView);
+  newView.setBackgroundColor("#000");
   console.log("Single view", url);
 
   // win.setTopBrowserView(view);
   // win.setBr
   // views.push(view);
   // await new Promise(resolve => {
-  mainView.webContents.on("did-finish-load", () => {
+  newView.webContents.on("did-finish-load", () => {
     console.log("single window finsihed load", url);
     const bounds = {
       x: 0,
@@ -107,7 +111,8 @@ async function createSingleBrowserView(win: BrowserWindow, url: string) {
       width: win.getSize()[0],
       height: 350,
     };
-    mainView.setBounds(bounds);
+    newView.setBounds(bounds);
+    win.show();
     // resolve(0);
   });
   // });
@@ -116,18 +121,36 @@ async function createSingleBrowserView(win: BrowserWindow, url: string) {
   if (process.env.VITE_DEV_SERVER_URL) {
     // electron-vite-vue#298
     console.log("Single Dev browserViews", process.env.VITE_DEV_SERVER_URL);
-    mainView.webContents.loadURL(url);
+    newView.webContents.loadURL(url);
     // Open devTool if the app is not packaged
-    mainView.webContents.openDevTools();
+    newView.webContents.openDevTools();
   } else {
     console.log("Single Dist browserViews");
-    mainView.webContents.loadFile(indexHtml);
+    newView.webContents.loadFile(indexHtml);
+    // tabsView.webContents.openDevTools();
   }
   // Send message to tabs view window to add a new tab
   const title = `Tabs`;
   if (tabsView) {
-    tabsView.webContents.send("add-tab", { title, url: url });
+    tabsView.webContents.send("add-tab", {
+      title,
+      url: url,
+      id: newView.webContents.id,
+    });
   } else console.log("No tabs view to send new tab too");
+
+  // win.setBrowserView(newView);
+  if (mainView != null) {
+    win.removeBrowserView(mainView);
+  }
+
+  if (mainView != null) {
+    win.removeBrowserView(mainView);
+  }
+
+  mainView = newView;
+  win.addBrowserView(mainView);
+  mainView.webContents.reload();
 }
 async function createBrowserViews(win: BrowserWindow, url: string) {
   const views: BrowserView[] = [];
@@ -175,7 +198,11 @@ async function createBrowserViews(win: BrowserWindow, url: string) {
       // Send message to tabs view window to add a new tab
       const title = `Tab ${i + 1}`;
       if (tabsView) {
-        tabsView.webContents.send("add-tab", { title, url: url });
+        tabsView.webContents.send("add-tab", {
+          title,
+          url: url,
+          id: view.webContents.id,
+        });
       } else console.log("No tabs view to send new tab too");
     });
 
@@ -221,7 +248,7 @@ async function createWindow() {
   await createTabs(win, tabsHtml);
 
   // tabsView.
-  await createBrowserViews(win, url);
+  // await createBrowserViews(win, url);
 
   await createSingleBrowserView(win, process.env.VITE_DEV_SERVER_URL);
 }
@@ -249,24 +276,47 @@ app.on("activate", () => {
     createWindow();
   }
 });
-ipcMain.on("switch-tab", (event, { title, id }) => {
+ipcMain.on("switch-tab", (event, { title, id, url }) => {
   // console.log("switch tab", title, url);
   // Get the current active browser view
   // const activeView = browserViews[];
-  const newView = browserViews[id];
+  const newView = browserViews.find((e) => e.webContents.id == id);
   console.log(
-    "switch tab",
+    "switch tab id: ",
     id,
+    " title: ",
     title,
-    url,
+    " newView: ",
     newView,
     browserViews.map((e) => e.webContents.id)
   );
   // console.log("switch tab]==", win.getBrowserViews().);
   // Set the selected view as the active view
   if (undefined !== newView) {
+    console.log(
+      "Assign new view ",
+      mainView.webContents.id,
+      newView.webContents.id,
+      url
+    );
+    if (mainView != null) {
+      win.removeBrowserView(mainView);
+    }
     mainView = newView;
-    mainView.setBounds(mainView.getBounds());
+    win.addBrowserView(mainView);
+    mainView.webContents.reload();
+    mainView.setAutoResize({ width: true, height: true });
+    mainView.setBounds({
+      x: 0,
+      y: 50,
+      width: win.getBounds().width,
+      height: win.getBounds().height - 50,
+    });
+    mainView.webContents.reload();
+    mainView.webContents.openDevTools();
+    win.show();
+    // mainView.webContents.deb();
+    // win?.setBrowserView(mainView);
   }
 
   // }
@@ -276,7 +326,7 @@ ipcMain.on("create-tab", (event, { title, url }) => {
   if (url == "add") {
     url = process.env.VITE_DEV_SERVER_URL;
   }
-  console.log("Create tab", url, process.env.VITE_DEV_SERVER_URL);
+  console.log("Create tab", url);
   const view = new BrowserView({
     webPreferences: {
       preload,
@@ -289,13 +339,19 @@ ipcMain.on("create-tab", (event, { title, url }) => {
     },
   });
   view.webContents.loadURL(url);
-  win?.addBrowserView(view);
+  // win?.addBrowserView(view);
   browserViews.push(view);
-  win?.setBrowserView(view);
+  // win?.setBrowserView(view);
   view.setAutoResize({ width: true, height: true });
-  console.log("Create tab evetn ", title, url);
+  view.setBounds({
+    x: 0,
+    y: 50,
+    width: win.getBounds().width,
+    height: win.getBounds().height - 50,
+  });
+  console.log("Create tab evetn ", title, url, view.webContents.id);
   // Send a message to the renderer process to add a new tab
-  tabsView.webContents.send("add-tab", { title, url });
+  tabsView.webContents.send("add-tab", { title, url, id: view.webContents.id });
 });
 // New window example arg: new windows url
 ipcMain.handle("open-win", (_, arg) => {
