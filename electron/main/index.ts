@@ -36,6 +36,7 @@ if (!app.requestSingleInstanceLock()) {
 
 let win: BrowserWindow | null = null;
 let tabsView: BrowserView | null = null;
+let mainView: BrowserView | null = null;
 let browserViews: BrowserView[] = [];
 // Here, you can also use other preload
 const preload = join(__dirname, "../preload/index.js");
@@ -61,6 +62,7 @@ async function createTabs(win: BrowserWindow, url: string) {
   tabsView.webContents.loadFile(tabsHtml);
   tabsView.webContents.openDevTools();
   win.addBrowserView(tabsView);
+  win.setTopBrowserView(tabsView);
 
   tabsView.webContents.send("add-tab", { title: "+", url: "add" });
 
@@ -76,12 +78,8 @@ async function createTabs(win: BrowserWindow, url: string) {
     return Promise.resolve();
   });
 }
-async function createSingleBrowserView(
-  win: BrowserWindow,
-  url: string,
-  col: number
-) {
-  const view = new BrowserView({
+async function createSingleBrowserView(win: BrowserWindow, url: string) {
+  mainView = new BrowserView({
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -92,33 +90,38 @@ async function createSingleBrowserView(
       webviewTag: false,
     },
   });
+  browserViews.push(mainView);
+  win.addBrowserView(mainView);
+  mainView.setBackgroundColor("#000");
+  console.log("Single view", url);
 
-  view.setBackgroundColor("#275D2B");
-  win.addBrowserView(view);
+  // win.setTopBrowserView(view);
+  // win.setBr
   // views.push(view);
-  await new Promise((resolve) => {
-    view.webContents.on("did-finish-load", () => {
-      console.log("browserViews finsihed load", url);
-      const bounds = {
-        x: col % 2 === 0 ? 0 : 520,
-        y: col < 2 ? 200 : 570,
-        width: 500,
-        height: 350,
-      };
-      view.setBounds(bounds);
-      this.resolve();
-    });
+  // await new Promise(resolve => {
+  mainView.webContents.on("did-finish-load", () => {
+    console.log("single window finsihed load", url);
+    const bounds = {
+      x: 0,
+      y: 50, // tab height offset
+      width: win.getSize()[0],
+      height: 350,
+    };
+    mainView.setBounds(bounds);
+    // resolve(0);
   });
+  // });
+  console.log("After did finish promise");
 
   if (process.env.VITE_DEV_SERVER_URL) {
     // electron-vite-vue#298
-    console.log("Dev browserViews", process.env.VITE_DEV_SERVER_URL);
-    view.webContents.loadURL(url);
+    console.log("Single Dev browserViews", process.env.VITE_DEV_SERVER_URL);
+    mainView.webContents.loadURL(url);
     // Open devTool if the app is not packaged
-    view.webContents.openDevTools();
+    mainView.webContents.openDevTools();
   } else {
-    console.log("Dist browserViews");
-    view.webContents.loadFile(indexHtml);
+    console.log("Single Dist browserViews");
+    mainView.webContents.loadFile(indexHtml);
   }
   // Send message to tabs view window to add a new tab
   const title = `Tabs`;
@@ -129,7 +132,7 @@ async function createSingleBrowserView(
 async function createBrowserViews(win: BrowserWindow, url: string) {
   const views: BrowserView[] = [];
 
-  const promises = Array.from({ length: 4 }).map((_, i) => {
+  const promises = Array.from({ length: 2 }).map((_, i) => {
     console.log("Creating browserViews");
     const view = new BrowserView({
       webPreferences: {
@@ -151,7 +154,7 @@ async function createBrowserViews(win: BrowserWindow, url: string) {
         console.log("browserViews ", i, " finsihed load");
         const bounds = {
           x: i % 2 === 0 ? 0 : 520,
-          y: i < 2 ? 200 : 570,
+          y: i < 2 ? 400 : 770,
           width: 500,
           height: 350,
         };
@@ -216,7 +219,11 @@ async function createWindow() {
   });
   // win.webContents.on('will-navigate', (event, url) => { }) #344
   await createTabs(win, tabsHtml);
+
+  // tabsView.
   await createBrowserViews(win, url);
+
+  await createSingleBrowserView(win, process.env.VITE_DEV_SERVER_URL);
 }
 
 app.whenReady().then(createWindow);
@@ -242,10 +249,34 @@ app.on("activate", () => {
     createWindow();
   }
 });
+ipcMain.on("switch-tab", (event, { title, id }) => {
+  // console.log("switch tab", title, url);
+  // Get the current active browser view
+  // const activeView = browserViews[];
+  const newView = browserViews[id];
+  console.log(
+    "switch tab",
+    id,
+    title,
+    url,
+    newView,
+    browserViews.map((e) => e.webContents.id)
+  );
+  // console.log("switch tab]==", win.getBrowserViews().);
+  // Set the selected view as the active view
+  if (undefined !== newView) {
+    mainView = newView;
+    mainView.setBounds(mainView.getBounds());
+  }
 
+  // }
+});
 // Add a listener to create a new browser view when a 'create-tab' message is received
 ipcMain.on("create-tab", (event, { title, url }) => {
-  console.log("Create tab");
+  if (url == "add") {
+    url = process.env.VITE_DEV_SERVER_URL;
+  }
+  console.log("Create tab", url, process.env.VITE_DEV_SERVER_URL);
   const view = new BrowserView({
     webPreferences: {
       preload,
@@ -260,6 +291,8 @@ ipcMain.on("create-tab", (event, { title, url }) => {
   view.webContents.loadURL(url);
   win?.addBrowserView(view);
   browserViews.push(view);
+  win?.setBrowserView(view);
+  view.setAutoResize({ width: true, height: true });
   console.log("Create tab evetn ", title, url);
   // Send a message to the renderer process to add a new tab
   tabsView.webContents.send("add-tab", { title, url });
