@@ -304,7 +304,6 @@ ipcMain.on("switch-tab", (event, { title, id, url }) => {
     }
     mainView = newView;
     win.addBrowserView(mainView);
-    mainView.webContents.reload();
     mainView.setAutoResize({ width: true, height: true });
     mainView.setBounds({
       x: 0,
@@ -312,7 +311,7 @@ ipcMain.on("switch-tab", (event, { title, id, url }) => {
       width: win.getBounds().width,
       height: win.getBounds().height - 50,
     });
-    mainView.webContents.reload();
+    // mainView.webContents.reload();
     mainView.webContents.openDevTools();
     win.show();
     // mainView.webContents.deb();
