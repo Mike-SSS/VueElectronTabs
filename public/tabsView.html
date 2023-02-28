@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tabs View</title>
+    <style>
+      /* :host {
+        display: flex;
+        width: 100%;
+        height: 50px;
+        background-color: #eee;
+        padding: 5px;
+        box-sizing: border-box;
+      } */
+      .tabs {
+        height: 100px;
+        background-color: purple;
+      }
+
+      .tab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 5px;
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-bottom: none;
+        cursor: pointer;
+      }
+
+      .tab.active {
+        background-color: #ddd;
+      }
+
+      .tab:last-child {
+        margin-right: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tabs">Hello friends</div>
+     <script type="module">
+      console.log("Hello friends... ");
+    //   import { ipcRenderer } from "electron";
+
+    //   const tabsContainer = document.querySelector(".tabs");
+    //   const tabs = [];
+
+    //   function createTab(tabTitle, tabUrl) {
+    //     const tab = document.createElement("div");
+    //     tab.classList.add("tab");
+    //     tab.innerText = tabTitle;
+    //     tabsContainer.appendChild(tab);
+    //     tabs.push({ title: tabTitle, url: tabUrl, element: tab });
+
+    //     // Listen for click event on the tab
+    //     tab.addEventListener("click", () => {
+    //       // Send a message to the main process to create a new browser view for the tab
+    //       ipcRenderer.send("create-tab", { title: tabTitle, url: tabUrl });
+
+    //       // Set the active tab
+    //       setActiveTab(tabTitle);
+    //     });
+    //   }
+
+    //   function removeTab(tabTitle) {
+    //     const tabToRemove = tabs.find((tab) => tab.title === tabTitle);
+
+    //     if (tabToRemove) {
+    //       tabsContainer.removeChild(tabToRemove.element);
+    //       tabs.splice(tabs.indexOf(tabToRemove), 1);
+    //     }
+    //   }
+
+    //   function setActiveTab(tabTitle) {
+    //     tabs.forEach((tab) => {
+    //       if (tab.title === tabTitle) {
+    //         tab.element.classList.add("active");
+    //       } else {
+    //         tab.element.classList.remove("active");
+    //       }
+    //     });
+    //   }
+
+    //   // Listen for messages from the main process
+    //   ipcRenderer.on("add-tab", (_, { title, url }) => {
+    //     createTab(title, url);
+    //   });
+
+    //   ipcRenderer.on("remove-tab", (_, { title }) => {
+    //     removeTab(title);
+    //   });
+
+    //   ipcRenderer.on("activate-tab", (_, { title }) => {
+    //     setActiveTab(title);
+    //   });
+    </script>
+  </body>
+</html>
