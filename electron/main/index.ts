@@ -107,9 +107,9 @@ async function createSingleBrowserView(win: BrowserWindow, url: string) {
     console.log("single window finsihed load", url);
     const bounds = {
       x: 0,
-      y: 50, // tab height offset
-      width: win.getSize()[0],
-      height: 350,
+      y: 50, //tabs offset
+      width: win.getBounds().width,
+      height: win.getBounds().height - 50,
     };
     newView.setBounds(bounds);
     win.show();
@@ -151,69 +151,6 @@ async function createSingleBrowserView(win: BrowserWindow, url: string) {
   mainView = newView;
   win.addBrowserView(mainView);
   mainView.webContents.reload();
-}
-async function createBrowserViews(win: BrowserWindow, url: string) {
-  const views: BrowserView[] = [];
-
-  const promises = Array.from({ length: 2 }).map((_, i) => {
-    console.log("Creating browserViews");
-    const view = new BrowserView({
-      webPreferences: {
-        preload,
-        // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
-        // Consider using contextBridge.exposeInMainWorld
-        // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
-        nodeIntegration: true,
-        contextIsolation: false,
-        webviewTag: false,
-      },
-    });
-    view.setBackgroundColor("#275D2B");
-    win.addBrowserView(view);
-    views.push(view);
-
-    const promise = new Promise<void>((resolve) => {
-      view.webContents.on("did-finish-load", () => {
-        console.log("browserViews ", i, " finsihed load");
-        const bounds = {
-          x: i % 2 === 0 ? 0 : 520,
-          y: i < 2 ? 400 : 770,
-          width: 500,
-          height: 350,
-        };
-        view.setBounds(bounds);
-        resolve();
-      });
-
-      if (process.env.VITE_DEV_SERVER_URL) {
-        // electron-vite-vue#298
-        console.log("Dev browserViews", process.env.VITE_DEV_SERVER_URL);
-        view.webContents.loadURL(url);
-        // Open devTool if the app is not packaged
-        view.webContents.openDevTools();
-      } else {
-        console.log("Dist browserViews");
-        view.webContents.loadFile(indexHtml);
-      }
-      // Send message to tabs view window to add a new tab
-      const title = `Tab ${i + 1}`;
-      if (tabsView) {
-        tabsView.webContents.send("add-tab", {
-          title,
-          url: url,
-          id: view.webContents.id,
-        });
-      } else console.log("No tabs view to send new tab too");
-    });
-
-    return promise;
-  });
-  await Promise.all(promises);
-
-  console.log("All views loaded", url);
-  win.show();
-
-  browserViews = views;
 }
 
 async function createWindow() {
