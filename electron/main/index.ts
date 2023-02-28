@@ -35,6 +35,7 @@ if (!app.requestSingleInstanceLock()) {
 // process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 let win: BrowserWindow | null = null;
+let tabsView: BrowserView | null = null;
 let browserViews: BrowserView[] = [];
 // Here, you can also use other preload
 const preload = join(__dirname, "../preload/index.js");
@@ -43,7 +44,7 @@ const indexHtml = join(process.env.DIST, "index.html");
 const tabsHtml = join(process.env.DIST, "tabsView.html");
 
 async function createTabs(win: BrowserWindow, url: string) {
-  const tabsView = new BrowserView({
+  tabsView = new BrowserView({
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -61,17 +62,69 @@ async function createTabs(win: BrowserWindow, url: string) {
   tabsView.webContents.openDevTools();
   win.addBrowserView(tabsView);
 
+  tabsView.webContents.send("add-tab", { title: "+", url: "add" });
+
   tabsView.webContents.on("did-finish-load", () => {
     console.log("Tabs Finished load");
 
     tabsView.setBounds({
       x: 0,
       y: 0,
-      width: win.getBounds().width - 200,
-      height: 100,
+      width: win.getBounds().width,
+      height: 50,
     });
     return Promise.resolve();
   });
+}
+async function createSingleBrowserView(
+  win: BrowserWindow,
+  url: string,
+  col: number
+) {
+  const view = new BrowserView({
+    webPreferences: {
+      preload,
+      // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
+      // Consider using contextBridge.exposeInMainWorld
+      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
+      nodeIntegration: true,
+      contextIsolation: false,
+      webviewTag: false,
+    },
+  });
+
+  view.setBackgroundColor("#275D2B");
+  win.addBrowserView(view);
+  // views.push(view);
+  await new Promise((resolve) => {
+    view.webContents.on("did-finish-load", () => {
+      console.log("browserViews finsihed load", url);
+      const bounds = {
+        x: col % 2 === 0 ? 0 : 520,
+        y: col < 2 ? 200 : 570,
+        width: 500,
+        height: 350,
+      };
+      view.setBounds(bounds);
+      this.resolve();
+    });
+  });
+
+  if (process.env.VITE_DEV_SERVER_URL) {
+    // electron-vite-vue#298
+    console.log("Dev browserViews", process.env.VITE_DEV_SERVER_URL);
+    view.webContents.loadURL(url);
+    // Open devTool if the app is not packaged
+    view.webContents.openDevTools();
+  } else {
+    console.log("Dist browserViews");
+    view.webContents.loadFile(indexHtml);
+  }
+  // Send message to tabs view window to add a new tab
+  const title = `Tabs`;
+  if (tabsView) {
+    tabsView.webContents.send("add-tab", { title, url: url });
+  } else console.log("No tabs view to send new tab too");
 }
 async function createBrowserViews(win: BrowserWindow, url: string) {
   const views: BrowserView[] = [];
@@ -116,12 +169,15 @@ async function createBrowserViews(win: BrowserWindow, url: string) {
         console.log("Dist browserViews");
         view.webContents.loadFile(indexHtml);
       }
+      // Send message to tabs view window to add a new tab
+      const title = `Tab ${i + 1}`;
+      if (tabsView) {
+        tabsView.webContents.send("add-tab", { title, url: url });
+      } else console.log("No tabs view to send new tab too");
     });
-    
+
     return promise;
   });
-  promises.push(createTabs(win, tabsHtml))
-
   await Promise.all(promises);
 
   console.log("All views loaded", url);
@@ -159,8 +215,8 @@ async function createWindow() {
     return { action: "deny" };
   });
   // win.webContents.on('will-navigate', (event, url) => { }) #344
-
-  createBrowserViews(win, url);
+  await createTabs(win, tabsHtml);
+  await createBrowserViews(win, url);
 }
 
 app.whenReady().then(createWindow);
@@ -187,6 +243,27 @@ app.on("activate", () => {
   }
 });
 
+// Add a listener to create a new browser view when a 'create-tab' message is received
+ipcMain.on("create-tab", (event, { title, url }) => {
+  console.log("Create tab");
+  const view = new BrowserView({
+    webPreferences: {
+      preload,
+      // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
+      // Consider using contextBridge.exposeInMainWorld
+      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
+      nodeIntegration: true,
+      contextIsolation: false,
+      webviewTag: false,
+    },
+  });
+  view.webContents.loadURL(url);
+  win?.addBrowserView(view);
+  browserViews.push(view);
+  console.log("Create tab evetn ", title, url);
+  // Send a message to the renderer process to add a new tab
+  tabsView.webContents.send("add-tab", { title, url });
+});
 // New window example arg: new windows url
 ipcMain.handle("open-win", (_, arg) => {
   const childWindow = new BrowserWindow({
