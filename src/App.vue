@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <!-- <v-app-bar app>
+    <v-app-bar class="white--text" color="#252525" app>
       <v-menu v-model="drawer" :close-on-content-click="false" location="end">
         <template v-slot:activator="{ props }">
           <v-app-bar-nav-icon
@@ -9,7 +9,7 @@
             class="rounded-0 ml-0 py-auto align-center"
             style="border-right: 1px solid grey; width: 60px"
           >
-            <v-icon size="30">mdi-leaf</v-icon>
+            <v-icon color="white" size="30">mdi-leaf</v-icon>
           </v-app-bar-nav-icon>
         </template>
 
@@ -36,11 +36,11 @@
         </v-card>
       </v-menu>
 
-      <v-app-bar-title>My App</v-app-bar-title>
-    </v-app-bar> -->
-    <v-menu>
+      <v-app-bar-title class="text-white text-left">BVG Trader</v-app-bar-title>
+    </v-app-bar>
+    <!-- <v-menu>
       <template> </template>
-    </v-menu>
+    </v-menu> -->
     <!-- <v-navigation-drawer
       :rail="rail"
       rail-width="60"
@@ -62,130 +62,35 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer> -->
-    <v-navigation-drawer rail-width="60" rail permanent location="left">
+    <v-navigation-drawer app color="primary" rail-width="60" rail permanent location="left">
       <v-list density="compact">
         <v-list-item
-          prepend-icon="mdi-home-city"
+          prepend-icon="mdi-fire"
           title="Home"
           value="home"
         ></v-list-item>
         <v-list-item
-          prepend-icon="mdi-account"
+          prepend-icon="mdi-cash"
           title="My Account"
           value="account"
         ></v-list-item>
         <v-list-item
-          prepend-icon="mdi-account-group-outline"
+          prepend-icon="mdi-cart-variant"
           title="Users"
           value="users"
         ></v-list-item>
         <v-list-item
-          prepend-icon="mdi-account-group-outline"
+          prepend-icon="mdi-chart-gantt"
           title="Users"
           value="users"
         ></v-list-item>
         <v-list-item
-          prepend-icon="mdi-account-group-outline"
+          prepend-icon="mdi-chart-timeline-variant-shimmer"
           title="Users"
           value="users"
         ></v-list-item>
         <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-
-    <v-navigation-drawer rail-width="60" rail permanent location="right">
-      <v-list density="compact">
-        <v-list-item
-          prepend-icon="mdi-home-city"
-          title="Home"
-          value="home"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account"
-          title="My Account"
-          value="account"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-account-group-outline"
+          prepend-icon="mdi-cog"
           title="Users"
           value="users"
         ></v-list-item>

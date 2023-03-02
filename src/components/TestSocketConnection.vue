@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <v-row>
       <v-col class="d-flex flex-column align-center"
         ><v-img contain height="100" width="auto" src="@/assets/logo.svg" />
