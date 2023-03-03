@@ -41,6 +41,7 @@
     "pinia": "^2.0.32",
     "vite-plugin-vuetify": "^1.0.2",
     "vue-router": "^4.1.6",
+    "vuedraggable": "^4.1.0",
     "vuetify": "^3.1.6",
     "webfontloader": "^1.6.28"
   }

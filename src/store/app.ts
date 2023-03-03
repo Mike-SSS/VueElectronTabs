@@ -4,7 +4,7 @@ import { defineStore } from "pinia";
 export const useAppStore = defineStore("app", {
   state: () => ({
     //
-    drawer: true,
+    drawer: false,
     items: [
       { title: 'Home', icon: 'mdi-home', link: '/' },
       { title: 'About', icon: 'mdi-information', link: '/about' },
