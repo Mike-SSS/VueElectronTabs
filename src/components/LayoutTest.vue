@@ -21,21 +21,21 @@
     </v-card-actions>
     <v-card-text v-if="state.selectedLayout">
       <v-container fluid>
-        <draggable
-          v-model="state.selectedLayout.columns"
-          :options="state.dragOptions"
-          :component-data="{ class: 'v-row' }"
-        >
-          <template #item="{ element }"
-            ><v-col :key="element" :cols="element.width">
-              <v-card class="column-card" :color="element.color">
-                <div class="column-content">
-                  <div class="mb-6">{{ element.content }}</div>
-                  <component :is="element.component"></component>
-                </div>
-              </v-card> </v-col
-          ></template>
-        </draggable>
+        <keep-alive
+          ><draggable
+            v-model="state.selectedLayout.columns"
+            :options="state.dragOptions"
+            :component-data="{ class: 'v-row' }"
+            item-key="id"
+          >
+            <template #item="{ element }">
+              <v-col :key="element" :cols="element.width">
+                <v-card class="column-card" :color="element.color">
+                  <component :is="element.component" />
+                </v-card>
+              </v-col>
+            </template> </draggable
+        ></keep-alive>
       </v-container>
     </v-card-text>
   </v-card>
@@ -52,6 +52,7 @@ interface Column {
   width: number;
   color: string;
   content: string;
+  id: string;
   component: string | typeof Column1 | null;
 }
 
@@ -77,11 +78,36 @@ const state = reactive<{
           color: "primary",
           content: "Column 1",
           component: Column1,
+          id: "first",
         },
-        { width: 6, color: "secondary", content: "Column 2", component: null },
-        { width: 12, color: "error", content: "Column 3", component: null },
-        { width: 6, color: "success", content: "Column 4", component: null },
-        { width: 6, color: "warning", content: "Column 5", component: null },
+        {
+          width: 6,
+          color: "secondary",
+          content: "Column 2",
+          component: Column1,
+          id: "second",
+        },
+        {
+          width: 12,
+          color: "error",
+          content: "Column 3",
+          component: Column1,
+          id: "third",
+        },
+        {
+          width: 6,
+          color: "success",
+          content: "Column 4",
+          component: Column1,
+          id: "forth",
+        },
+        {
+          width: 6,
+          color: "warning",
+          content: "Column 5",
+          component: Column1,
+          id: "fifth",
+        },
       ],
     },
     {
@@ -92,18 +118,19 @@ const state = reactive<{
           color: "primary",
           content: "Column 1",
           component: Column1,
+          id: "first",
         },
-        { width: 12, color: "secondary", content: "Column 2", component: null },
-        { width: 12, color: "error", content: "Column 3", component: null },
+        { width: 12, color: "secondary", content: "Column 2", component: Column1, id: "second", },
+        { width: 12, color: "error", content: "Column 3", component: Column1, id: "third", },
       ],
     },
     {
       name: "Layout 3",
       columns: [
-        { width: 4, color: "primary", content: "Column 1", component: Column1 },
-        { width: 8, color: "secondary", content: "Column 2", component: null },
-        { width: 6, color: "warning", content: "Column 3", component: null },
-        { width: 6, color: "success", content: "Column 4", component: null },
+        { width: 4, color: "primary", content: "Column 1", component: Column1, id: "first", },
+        { width: 8, color: "secondary", content: "Column 2", component: Column1, id: "second", },
+        { width: 6, color: "warning", content: "Column 3", component: Column1, id: "third", },
+        { width: 6, color: "success", content: "Column 4", component: Column1, id: "forth", },
       ],
     },
   ],
