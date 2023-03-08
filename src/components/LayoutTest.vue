@@ -19,27 +19,56 @@
         </v-list>
       </v-menu>
     </v-card-actions>
+    <v-card-text>
+      <div class="grid-container">
+        <div class="panel panel-1"></div>
+        <div class="panel panel-2"></div>
+        <div class="panel panel-3a"></div>
+        <div class="panel panel-3b"></div>
+        <div class="panel panel-4"></div>
+        <div class="panel panel-5"></div>
+        <div class="panel panel-6"></div>
+        <!-- <div class="panel panel-7"></div> -->
+        <!-- <div class="panel panel-8"></div> -->
+      </div>
+    </v-card-text>
     <v-card-text v-if="state.selectedLayout">
       <v-container fluid>
         <keep-alive
           ><draggable
             v-model="state.selectedLayout.columns"
             :options="state.dragOptions"
-            :component-data="{ class: 'v-row' }"
+            :component-data="{
+              class: 'v-row v-masonry no-gutters dense',
+              gutter: 0,
+              'no-gutters': true,
+              'fit-rows': false,
+              'flex-direction': 'column',
+              'origin-left': true,
+              'horizontal-order': false,
+              'transition-duration': '0.1s',
+              'item-selector': '.item',
+            }"
             item-key="id"
-            :draggable="false"
+            @change="redrawVueMasonry()"
+            v-masonry
           >
             <template #item="{ element }">
-              <v-col :key="element" :cols="element.width">
+              <v-col
+                v-masonry-tile
+                class="item pa-0"
+                :key="element"
+                :cols="element.width"
+              >
                 <v-card
                   class="column-card"
                   :color="element.color"
                   :height="element.height * 50"
                 >
                   <v-card-title class="black" color="white">
-                    toolbar for the window
+                    {{ element.content }}
                   </v-card-title>
-                  <v-card-text>
+                  <v-card-text class="fill-height">
                     <component :is="element.component" />
                   </v-card-text>
                   <div
@@ -62,17 +91,52 @@
               </v-col>
             </template> </draggable
         ></keep-alive>
+        <v-row :no-gutters="true"></v-row>
+      </v-container>
+      <v-container fluid>
+        <v-row><v-btn @click="addCard">Add</v-btn></v-row>
+        <v-row
+          :style="{
+            'max-width': '100%',
+          }"
+          v-masonry
+          origin-left="true"
+          class="d-flex flex-row"
+          horizontal-order="false"
+          :fit-width="false"
+          transition-duration="0.1s"
+          item-selector=".item"
+        >
+          <v-col
+            v-masonry-tile
+            v-for="card in state.selectedLayout.columns"
+            class="column-card item"
+            :key="card.id"
+            :cols="card.width"
+            height="auto"
+          >
+            <v-card :color="card.color" width="100%" :height="card.height * 50">
+              <v-card-title>New </v-card-title>
+              <v-card-text>
+                <component :is="card.component" />
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
       </v-container>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { defineComponent, reactive, markRaw } from "vue";
+import { defineComponent, reactive, markRaw, ref, inject } from "vue";
 import Column1 from "@/components/Column1.vue";
+// import Masonry from "vue-masonry-css";
 import draggable from "vuedraggable";
 import { createPinia } from "pinia";
 import { detailed } from "yargs-parser";
+const redrawVueMasonry: Function | undefined = inject("redrawVueMasonry");
+
 const DEFAULT_ROW_HEIGHT = 50;
 const DRAG_THRESHOLD = 30;
 const pinia = createPinia();
@@ -89,6 +153,7 @@ interface Layout {
   name: string;
   columns: Column[];
 }
+const layoutContainer = ref(null);
 const state = reactive<{
   layoutOptions: Layout[];
   selectedLayout: Layout | null;
@@ -111,8 +176,104 @@ const state = reactive<{
       name: "Layout 1",
       columns: [
         {
-          width: 6,
-          height: 6,
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-1",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-2",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-3",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-4",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-5",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-6",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-7",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-8",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-9",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-10",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-11",
+        },
+        {
+          width: 1,
+          height: 1,
+          color: "grey",
+          content: "Dummy",
+          component: null,
+          id: "dummy-12",
+        },
+        {
+          width: 7,
+          height: 2,
           color: "primary",
           content: "Column 1",
           component: markRaw(Column1),
@@ -120,7 +281,7 @@ const state = reactive<{
         },
         {
           width: 6,
-          height: 6,
+          height: 2,
           color: "secondary",
           content: "Column 2",
           component: markRaw(Column1),
@@ -128,7 +289,7 @@ const state = reactive<{
         },
         {
           width: 12,
-          height: 6,
+          height: 4,
           color: "error",
           content: "Column 3",
           component: markRaw(Column1),
@@ -149,6 +310,14 @@ const state = reactive<{
           content: "Column 5",
           component: markRaw(Column1),
           id: "fifth",
+        },
+        {
+          width: 3,
+          height: 7,
+          color: "purple",
+          content: "Column 6",
+          component: markRaw(Column1),
+          id: "sixth",
         },
       ],
     },
@@ -245,16 +414,18 @@ const startResize = (
   state.resizeOptions.resizeHandle = direction;
   state.resizeOptions.startX = event.clientX;
   state.resizeOptions.startY = event.clientY;
-  // state.resizeOptions.startWidth = parseInt(
-  //   window.getComputedStyle(this.$el).getPropertyValue("width"),
-  //   10
-  // );
-  // state.resizeOptions.startHeight = parseInt(
-  //   window.getComputedStyle(this.$el).getPropertyValue("height"),
-  //   10
-  // );
   window.addEventListener("mousemove", handleResize);
   window.addEventListener("mouseup", stopResize);
+};
+const addCard = () => {
+  state.selectedLayout?.columns.push({
+    id: Math.random().toString(),
+    color: "yellow",
+    component: null,
+    content: "Newly added",
+    height: 3,
+    width: 3,
+  });
 };
 const handleResize = (event: MouseEvent) => {
   if (!state.resizeOptions.element) return;
@@ -268,16 +439,20 @@ const handleResize = (event: MouseEvent) => {
       state.resizeOptions.resizeHandle === "right" &&
       deltaX % DRAG_THRESHOLD == 0
     ) {
-      console.log("Right increase");
+      console.log("Right increase", layoutContainer.value);
+
       console.log("Deltas ", deltaX, event);
       state.resizeOptions.element.width += deltaX > 0 ? 1 : deltaX < 0 ? -1 : 0;
+      redrawVueMasonry();
     } else if (
       state.resizeOptions.resizeHandle === "down" &&
       deltaY % DRAG_THRESHOLD == 0
     ) {
       console.log("Down increase");
       console.log("Deltas ", deltaY, event);
-      state.resizeOptions.element.height += deltaY > 0 ? 1 : deltaY < 0 ? -1 : 0;
+      state.resizeOptions.element.height +=
+        deltaY > 0 ? 1 : deltaY < 0 ? -1 : 0;
+      redrawVueMasonry();
     } else if (
       state.resizeOptions.resizeHandle === "left" &&
       deltaX % DRAG_THRESHOLD == 0
@@ -285,25 +460,34 @@ const handleResize = (event: MouseEvent) => {
       console.log("Left increase");
       console.log("Deltas ", deltaX, event);
       state.resizeOptions.element.width += deltaX > 0 ? -1 : deltaX < 0 ? 1 : 0;
+      redrawVueMasonry();
     } else if (
       state.resizeOptions.resizeHandle === "up" &&
       deltaY % DRAG_THRESHOLD == 0
     ) {
       console.log("Up increase");
       console.log("Deltas ", deltaY, event);
+      state.resizeOptions.element.height +=
+        deltaY > 0 ? -1 : deltaY < 0 ? 1 : 0;
+      redrawVueMasonry();
     }
     state.resizeOptions.startX = event.clientX;
     state.resizeOptions.startY = event.clientY;
   }
   if (state.resizeOptions.element.width > 12) {
     state.resizeOptions.element.width = 12;
+    redrawVueMasonry();
   } else if (state.resizeOptions.element.width < 1) {
     state.resizeOptions.element.width = 1;
+    redrawVueMasonry();
   }
-  if (state.resizeOptions.element.height > 12) {
-    state.resizeOptions.element.height = 12;
-  } else if (state.resizeOptions.element.height < 1) {
+  // if (state.resizeOptions.element.height > 12) {
+  //   state.resizeOptions.element.height = 12;
+  //   redrawVueMasonry();
+  // } else
+  if (state.resizeOptions.element.height < 1) {
     state.resizeOptions.element.height = 1;
+    redrawVueMasonry();
   }
 };
 const stopResize = () => {
@@ -314,6 +498,7 @@ const stopResize = () => {
   // state.layoutOptions.startY = null;
   // state.layoutOptions.startWidth = null;
   // state.layoutOptions.startHeight = null;
+  redrawVueMasonry();
   window.removeEventListener("mousemove", handleResize);
   window.removeEventListener("mouseup", stopResize);
 };
@@ -367,5 +552,105 @@ const setSelectedLayout = (layout: Layout) => {
   left: 0;
   width: 5px;
   cursor: ew-resize;
+}
+
+/* .item {
+  grid-row-end: span 1;
+  grid-column-end: span 1;
+}
+
+.item:first-child {
+  grid-column-start: 1;
+}
+
+.item[colspan="2"] {
+  grid-column-end: span 2;
+}
+
+.item[colspan="3"] {
+  grid-column-end: span 3;
+}
+
+.item[colspan="4"] {
+  grid-column-end: span 4;
+}
+
+.item[rowspan="2"] {
+  grid-row-end: span 2;
+}
+
+.item[rowspan="3"] {
+  grid-row-end: span 3;
+} */
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-auto-rows: minmax(100px, max-content);
+  grid-gap: 10px;
+  width: 100%;
+}
+
+.panel {
+  background-color: #ccc;
+  padding: 10px;
+}
+
+.panel-1 {
+  grid-row: 1 / 4;
+  grid-column: 1 / 2;
+  height: 100%;
+}
+
+.panel-2 {
+  grid-row: 1 / 2;
+  grid-column: 2 / 4;
+  height: 100%;
+}
+
+.panel-3a {
+  background-color: gold;
+  grid-row: 2 / 3;
+  grid-column: 2 / 3;
+  height: 100%;
+}
+.panel-3b {
+  background-color: red;
+  grid-row: 3 / 6;
+  grid-column: 2 / 3;
+  height: 100%;
+}
+
+.panel-4 {
+  background-color: yellowgreen;
+  grid-row: 2 / 5;
+  grid-column: 3 / 4;
+  height: 100%;
+}
+
+.panel-5 {
+  background-color: green;
+  grid-row: 4 / 6;
+  grid-column: 1 / 2;
+  height: 100%;
+}
+
+.panel-6 {
+  background-color: blue;
+  grid-row: 6 / 7;
+  grid-column: 1 / 4;
+  height: 100%;
+}
+
+.panel-7 {
+  grid-row: 4 / 5;
+  grid-column: 3 / 4;
+  height: 100%;
+}
+
+.panel-8 {
+  grid-row: 4 / 5;
+  grid-column: 3 / 4;
+  height: 100%;
 }
 </style>

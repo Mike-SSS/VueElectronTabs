@@ -40,6 +40,8 @@
     "@microsoft/signalr": "^7.0.3",
     "pinia": "^2.0.32",
     "vite-plugin-vuetify": "^1.0.2",
+    "vue-masonry": "^0.16.0",
+    "vue-masonry-css": "^1.0.3",
     "vue-router": "^4.1.6",
     "vuedraggable": "^4.1.0",
     "vuetify": "^3.1.6",
