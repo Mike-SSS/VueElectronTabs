@@ -90,7 +90,8 @@
           width="100%"
           :items="messages[connectionState.endpoint]"
           :headers="headers"
-          item-value="group"
+          :group-by="[{ key: 'group' }]"
+          item-value="items"
           :items-per-page="-1"
         >
           <!-- <template #default="props">

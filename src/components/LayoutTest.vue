@@ -9,13 +9,17 @@
           }}</v-btn>
         </template>
         <v-list>
-          <v-list-item
-            v-for="(layout, index) in state.layoutOptions"
-            :key="index"
-            @click="setSelectedLayout(layout)"
-          >
-            <v-list-item-title>{{ layout.name }}</v-list-item-title>
-          </v-list-item>
+          <!-- <v-list-group> -->
+            <v-list-item
+              v-for="(layout, index) in state.layoutOptions"
+              :key="index"
+              :value="layout.name"
+              active-color="primary"
+              @click="setSelectedLayout(layout)"
+            >
+              <v-list-item-title>{{ layout.name }}</v-list-item-title>
+            </v-list-item>
+          <!-- </v-list-group> -->
         </v-list>
       </v-menu>
     </v-card-actions>

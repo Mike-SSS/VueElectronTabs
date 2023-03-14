@@ -3,8 +3,8 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import electron from "vite-plugin-electron";
 import renderer from "vite-plugin-electron-renderer";
-import { fileURLToPath, URL } from 'node:url'
-import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import { fileURLToPath, URL } from "node:url";
+import vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 import pkg from "./package.json";
 
 // https://vitejs.dev/config/
@@ -25,8 +25,8 @@ export default defineConfig(({ command }) => {
       extensions: [".js", ".json", ".jsx", ".mjs", ".ts", ".tsx", ".vue"],
     },
     plugins: [
-      vue({ 
-        template: { transformAssetUrls }
+      vue({
+        template: { transformAssetUrls },
       }),
       // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
       vuetify({
@@ -93,6 +93,9 @@ export default defineConfig(({ command }) => {
     //       port: +url.port,
     //     };
     //   })(),
+    server: {
+      port: 3000,
+    },
     clearScreen: false,
   };
 });

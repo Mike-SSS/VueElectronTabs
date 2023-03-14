@@ -107,7 +107,10 @@ export const useSignalRStore = defineStore("signalr", {
     getConnections(): ConnectionInfo[] {
       return Object.values(this.connections);
     },
-    getMessages(): Record<string,  { group: string; items: MarketDisplayItem[] }[]> {
+    getMessages(): Record<
+      string,
+      { group: string; items: MarketDisplayItem[] }[]
+    > {
       return this.messages;
     },
   },
@@ -162,7 +165,7 @@ export const useSignalRStore = defineStore("signalr", {
                 const regexMatch = item.contract.match(
                   /^(.*?)\s+(\w{4})(\/\w{4})?$/
                 );
-                let group;
+                let group: string;
                 if (regexMatch) {
                   group = regexMatch[2];
                 } else {
@@ -175,13 +178,18 @@ export const useSignalRStore = defineStore("signalr", {
                   }
                 }
                 const fullGroup = group;
-                if (!acc[JSON.stringify(fullGroup)]) {
-                  acc[JSON.stringify(fullGroup)] = [];
+                console.log("Full group ", group);
+                // if (!acc[JSON.stringify(fullGroup)]) {
+                //   acc[JSON.stringify(fullGroup)] = [];
+                // }
+                // acc[JSON.stringify(fullGroup)].push(item);
+                if (!acc[fullGroup]) {
+                  acc[fullGroup] = [];
                 }
-                acc[JSON.stringify(fullGroup)].push(item);
+                acc[fullGroup].push(item);
                 return acc;
               },
-              { unknown: [] }
+              { "unknown": [] }
             );
             console.log("Groups: (", Object.keys(groups).length, ")", groups);
             // const tableData = Object.entries(groups);
@@ -189,8 +197,8 @@ export const useSignalRStore = defineStore("signalr", {
             this.messages[endpoint] = Object.entries(groups).map((e) => {
               return {
                 group: e[0],
-                items: e[1]
-              }
+                items: e[1],
+              };
             });
 
             // this.messages[endpoint].push(message);
