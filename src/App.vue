@@ -37,9 +37,13 @@
       </v-menu>
 
       <v-app-bar-title class="text-white text-left">BVG Trader</v-app-bar-title>
+      <v-spacer></v-spacer>
+      <v-btn color="white" variant="text" @click="openLayoutManager"
+        >Layout Manager</v-btn
+      >
       <v-menu offset-y>
         <template #activator="props">
-          <v-btn color="primary" variant="outlined" v-bind="props.props">{{
+          <v-btn color="primary" variant="elevated" v-bind="props.props">{{
             currentLayout?.name || "Select Layout"
           }}</v-btn>
         </template>
@@ -64,6 +68,62 @@
         </v-list>
       </v-menu>
     </v-app-bar>
+    <v-dialog width="1000" v-model="state.isLayoutManagerOpen">
+      <v-card>
+        <v-card-title class="d-flex justify-space-between align-center"
+          ><div>Layout Manager</div>
+          <v-btn icon flat><v-icon>mdi-close</v-icon></v-btn></v-card-title
+        >
+        <v-card-text>
+          <v-container>
+            <v-row align="center" justify="space-between">
+              <v-col cols="5">
+                <v-select label="Current Layout" hide-details="auto"></v-select>
+              </v-col>
+              <v-col cols="2" class="text-center">
+                <v-icon>mdi-arrow-right</v-icon></v-col
+              >
+              <v-col cols="5"
+                ><v-select label="New Layout" hide-details="auto"></v-select
+              ></v-col>
+            </v-row>
+            <v-row v-if="currentLayout">
+              <template
+                v-for="(largestColumnIndex, rowIndex) in largestLayoutSize"
+              >
+                <v-col cols="6">
+                  <v-card class="comparison-card">
+                    <v-card-title
+                      >Current Layout - Column {{ rowIndex }}</v-card-title
+                    >
+                    <v-card-text>
+                      <div v-if="currentLayout.columns[rowIndex - 1]">
+                        Component:
+                        {{ currentLayout.columns[rowIndex - 1].component }}
+                      </div>
+                      <div v-else>Empty</div>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+                <v-col cols="6">
+                  <v-card class="comparison-card">
+                    <v-card-title
+                      >New Layout - Column {{ rowIndex }}</v-card-title
+                    >
+                    <v-card-text>
+                      <div v-if="selectedLayout[rowIndex - 1]">
+                        Component: {{ selectedLayout[rowIndex - 1].component }}
+                      </div>
+                      <div v-else>Empty</div>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+              </template>
+            </v-row>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <!-- <v-menu>
       <template> </template>
     </v-menu> -->
@@ -147,21 +207,51 @@
 
 <script setup lang="ts">
 // import { useAppStore } from "pinia";
-import { onMounted, computed, reactive, markRaw } from "vue";
+import { onMounted, computed, reactive, markRaw, inject, ref } from "vue";
 import { useAppStore } from "@/store/app";
 import { useLayoutStore } from "@/store/layout";
+import { AxiosInstance } from "axios";
+import { axiosSymbol } from "@/models/symbols";
 
-const store = useAppStore();
+// Inject the Axios instance with the defined symbol
+const axios = inject<AxiosInstance>(axiosSymbol);
+
+const appStore = useAppStore();
 const storeLayout = useLayoutStore();
 let rail = true;
 const setSelectedLayout = (layout: any) => {
   storeLayout.setCurrentLayout(layout);
 };
-onMounted(() => {
+const state = reactive<{
+  isLayoutManagerOpen: boolean;
+}>({
+  isLayoutManagerOpen: false,
+});
+let isLayoutManagerOpen = ref(false);
+onMounted(async () => {
   // Do something after the component is mounted
   console.log("Trust mounted");
-});
+  if (!axios) {
+    throw new Error("Axios instance not found");
+  }
+  const temp = await GetMarketDisplay();
+  if (temp) appStore.setMarketDisplayData(temp);
+  console.log("App store market data: ", appStore.getMarketDisplayData);
 
+  // Get instruments
+});
+function openLayoutManager() {
+  state.isLayoutManagerOpen = true;
+}
+
+const GetMarketDisplay = async () => {
+  try {
+    const res = await axios?.get("/MarketSubscription/GetMarketDisplay");
+    if (res) return Promise.resolve(res.data);
+  } catch (err) {
+    console.error(err);
+  }
+};
 const tabs = [
   { title: "Tab 1", url: "https://www.example.com/tab1" },
   { title: "Tab 2", url: "https://www.example.com/tab2" },
@@ -170,13 +260,13 @@ const tabs = [
 const links = ["Home", "About Us", "Team", "Services", "Blog", "Contact Us"];
 const drawer = computed({
   get() {
-    return store.drawer;
+    return appStore.drawer;
   },
   set(newVal) {
-    store.drawer = newVal;
+    appStore.drawer = newVal;
   },
 });
-const items = computed(() => store.items);
+const items = computed(() => appStore.items);
 const layoutOptions = computed(() => storeLayout.layoutOptions);
 const currentLayout = computed(() => storeLayout.currentLayout);
 function openNewWindow(tab: { title: string; url: string }) {
@@ -184,6 +274,6 @@ function openNewWindow(tab: { title: string; url: string }) {
 }
 function toggleDrawer() {
   console.log("Toggle drawer");
-  store.toggleDrawer();
+  appStore.toggleDrawer();
 }
 </script>

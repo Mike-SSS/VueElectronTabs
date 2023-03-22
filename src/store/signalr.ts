@@ -93,7 +93,8 @@ export interface Message {
 }
 interface State {
   connections: Record<string, ConnectionInfo>; // object to store connections
-  messages: Record<string, { group: string; items: MarketDisplayItem[] }[]>; // object to store messages for each endpoint
+  // messages: Record<string, { group: string; items: MarketDisplayItem[] }[]>; // object to store messages for each endpoint
+  messages: Record<string, MarketDisplayItem[]>;
   isAlive: boolean;
 }
 
@@ -107,10 +108,7 @@ export const useSignalRStore = defineStore("signalr", {
     getConnections(): ConnectionInfo[] {
       return Object.values(this.connections);
     },
-    getMessages(): Record<
-      string,
-      { group: string; items: MarketDisplayItem[] }[]
-    > {
+    getMessages(): Record<string, MarketDisplayItem[]> {
       return this.messages;
     },
   },
@@ -133,7 +131,7 @@ export const useSignalRStore = defineStore("signalr", {
         await this.connections[endpoint].connection.start();
         // register event handler for incoming messages
         this.connections[endpoint].connection.on(
-          "marketDisplay",
+          "MarketDisplay",
           (message: Message) => {
             // add message to endpoint's messages array
             console.log("Message ", message);
@@ -141,67 +139,23 @@ export const useSignalRStore = defineStore("signalr", {
             // this.messages[endpoint].push(message);
           }
         );
+        this.connections[endpoint].connection.onreconnecting((error) => {
+          console.log("Error on reconnect ", error);
+        });
         this.connections[endpoint].connection.on(
-          "marketDisplayTable",
-          (message: MarketDisplayItem[]) => {
+          "MarketDisplayTable",
+          (message: string) => {
+            // convert from string to json
+            let temp = JSON.parse(message);
+            if (Array.isArray(temp)) {
+              temp = temp.map(e => e as MarketDisplayItem)
+            }
+
             // add message to endpoint's messages array
-            console.log("Message Table", endpoint, message);
-            // message.forEach((e) => this.messages[endpoint].push(e));
 
-            // 239
-            // const groups = message.reduce((acc: Record<string, MarketDisplayItem[]>, item) => {
-            //   const match = item.contract.match(/^(.*?)\s+(.*)$/);
-            //   const code = match && match[1] ? match[1] : "xx";
-            //   const group = match && match[2] ? match[2].trim() : "unknown"; // if group is missing, group under "unknown"
-            //   console.log(`Contract: ${item.contract}, Code: ${code}, Group: ${group}`);
-            //   if (!acc[group]) {
-            //     acc[group] = [];
-            //   }
-            //   acc[group].push(item);
-            //   return acc;
-            // }, {});
-            const groups = message.reduce(
-              (acc: Record<string, MarketDisplayItem[]>, item) => {
-                const regexMatch = item.contract.match(
-                  /^(.*?)\s+(\w{4})(\/\w{4})?$/
-                );
-                let group: string;
-                if (regexMatch) {
-                  group = regexMatch[2];
-                } else {
-                  const phrases = item.contract.split(" ");
-                  if (phrases.length === 2) {
-                    group = phrases[1];
-                  } else {
-                    acc.unknown.push(item);
-                    return acc;
-                  }
-                }
-                const fullGroup = group;
-                console.log("Full group ", group);
-                // if (!acc[JSON.stringify(fullGroup)]) {
-                //   acc[JSON.stringify(fullGroup)] = [];
-                // }
-                // acc[JSON.stringify(fullGroup)].push(item);
-                if (!acc[fullGroup]) {
-                  acc[fullGroup] = [];
-                }
-                acc[fullGroup].push(item);
-                return acc;
-              },
-              { "unknown": [] }
-            );
-            console.log("Groups: (", Object.keys(groups).length, ")", groups);
-            // const tableData = Object.entries(groups);
-            // console.log("Table data: (", tableData, ")");
-            this.messages[endpoint] = Object.entries(groups).map((e) => {
-              return {
-                group: e[0],
-                items: e[1],
-              };
-            });
 
-            // this.messages[endpoint].push(message);
+            console.log("Message Table", endpoint, message, temp);            
+            this.messages[endpoint] = temp;
           }
         );
 

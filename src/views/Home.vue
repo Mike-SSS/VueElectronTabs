@@ -18,20 +18,43 @@
         }}</v-card>
       </v-col>
     </v-row> -->
+
+    <!-- <div class="grid-container" v-if="currentLayout">
+        <div
+          v-for="(col, index) in currentLayout.columns"
+          class="grid-item"
+          :class="`bg-` + col.color"
+          :style="col.grid"
+          :key="col.id"
+        >
+          Item {{ index }}
+          <keep-alive
+            ><component
+              v-if="col.component != null"
+              :key="col.component"
+              :is="componentRegistry[col.component]"
+              v-bind="col.props"
+            />
+            <div v-else class="text-h5">
+              No component loaded yet
+            </div></keep-alive
+          >
+        </div>
+    </div> -->
     <div class="grid-container" v-if="currentLayout">
-      <div
-        v-for="(col, index) in currentLayout.columns"
-        class="grid-item"
-        :class="`bg-` + col.color"
-        :style="col.grid"
-      >
-        Item {{ index }}
-      </div>
-      <!-- <div class="grid-item item2">Item 2</div>
-      <div class="grid-item item3">Item 3</div>
-      <div class="grid-item item4">Item 4</div>
-      <div class="grid-item item5">Item 5</div>
-      <div class="grid-item item6">Item 6</div> -->
+      <keep-alive>
+        <component
+          v-for="(col, index) in currentLayout.columns"
+          class="grid-item"
+          :class="`bg-` + col.color"
+          :style="col.grid"
+          :key="col.component"
+          :is="col.component ? componentRegistry[col.component] : null"
+            v-bind="col.props"
+        >
+          Item {{ index }}
+        </component>
+      </keep-alive>
     </div>
   </v-container>
   <!-- <TestSocketConnection />
@@ -43,6 +66,7 @@ import { computed } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import TestSocketConnection from "@/components/TestSocketConnection.vue";
 import LayoutTest from "@/components/LayoutTest.vue";
+import componentRegistry from "@/models/componentRegistry";
 
 const storeLayout = useLayoutStore();
 
@@ -52,14 +76,8 @@ const currentLayout = computed(() => storeLayout.currentLayout);
 <style>
 .grid-container {
   display: grid;
-  /* grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); */
   grid-template-columns: repeat(12, 1fr);
   grid-template-rows: repeat(12, 1fr);
-  /* grid-template-columns: 1fr; */
-  /* grid-auto-rows: minmax(100px, max-content); */
-  /* grid-auto-rows: minmax(15%, max-content); */
-  /* grid-template-rows:  1fr 1fr 1fr 1fr; */
-  /* grid-auto-rows: 5%; */
   grid-gap: 10px;
   width: 100%;
   height: 100%;
@@ -72,9 +90,9 @@ const currentLayout = computed(() => storeLayout.currentLayout);
   text-align: center;
 }
 
-@media screen and (max-width: 600px) {
+/* @media screen and (max-width: 600px) {
   .grid-container {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
-}
+} */
 </style>

@@ -1,14 +1,32 @@
 // Utilities
 import { defineStore } from "pinia";
+import { MarketDisplayItem } from "./signalr";
+
+type LANGUAGE = "en" | "afr";
+type THEME = "light" | "dark";
+
+interface State {
+  drawer: boolean;
+  marketDisplayData: MarketDisplayItem[];
+  items: {
+    title: string;
+    icon: string;
+    link: string;
+  }[];
+  theme: THEME;
+  language: LANGUAGE;
+  isLoggedIn: boolean;
+}
 
 export const useAppStore = defineStore("app", {
-  state: () => ({
+  state: (): State => ({
     //
+    marketDisplayData: [],
     drawer: false,
     items: [
-      { title: 'Home', icon: 'mdi-home', link: '/' },
-      { title: 'About', icon: 'mdi-information', link: '/about' },
-      { title: 'Contact', icon: 'mdi-email', link: '/contact' },
+      { title: "Home", icon: "mdi-home", link: "/" },
+      { title: "About", icon: "mdi-information", link: "/about" },
+      { title: "Contact", icon: "mdi-email", link: "/contact" },
     ],
     theme: "light",
     language: "en",
@@ -22,8 +40,11 @@ export const useAppStore = defineStore("app", {
     toggleTheme() {
       this.theme = this.theme === "light" ? "dark" : "light";
     },
-    setLanguage(language: string) {
+    setLanguage(language: LANGUAGE) {
       this.language = language;
+    },
+    setMarketDisplayData(items: MarketDisplayItem[]) {
+      this.marketDisplayData = items;
     },
     login() {
       this.isLoggedIn = true;
@@ -35,5 +56,6 @@ export const useAppStore = defineStore("app", {
 
   getters: {
     greeting: (state) => (state.language === "en" ? "Hello!" : "¡Hola!"),
+    getMarketDisplayData: (state) => state.marketDisplayData,
   },
 });
