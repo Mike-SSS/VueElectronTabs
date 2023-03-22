@@ -131,7 +131,7 @@ import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
 
 import { MarketDisplayItem, useSignalRStore } from "@/store/signalr";
-import { HubConnection } from "@microsoft/signalr";
+import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 const signalrStore = useSignalRStore();
 const appStore = useAppStore();
 
@@ -172,14 +172,26 @@ const headers: any[] = [
 ];
 const connectionState = reactive<{
   connection: HubConnection | null;
+  messages: MarketDisplayItem[];
 }>({
   connection: null,
+  messages: [],
 });
 
-const connect = (endpoint: string) => {
+const connect = async (endpoint: string) => {
   console.log("Attempt to connect");
 
   // signalrStore.connect(endpoint);
+  connectionState.connection = new HubConnectionBuilder()
+    .withUrl(`https://localhost:63125${endpoint}`)
+    .withAutomaticReconnect()
+    .build();
+
+    await connectionState.connection.start();
+
+    connectionState.connection.on("message", (message: string) => {
+      console.log()
+    })
 };
 const subscribeToSelected = () => {
   instrumentsToAdd.value.forEach((e) => {
