@@ -49,13 +49,42 @@
           :class="`bg-` + col.color"
           :style="col.grid"
           :key="col.component"
-          :is="col.component ? componentRegistry[col.component] : null"
-            v-bind="col.props"
+          :is="col.component ? componentRegistry[col.component] : componentRegistry['Options']"
+          v-bind="col.props"
         >
           Item {{ index }}
         </component>
       </keep-alive>
     </div>
+    <v-row v-else justify="center">
+      <v-col cols="10">
+        <v-card min-height="400">
+          <v-card-text>
+            <div class="text-h4 mb-4">Welcome!</div>
+            <div class="text-h6 mb-4">
+              Select Layout to continue
+            </div>
+            <div class="text-body-1 mb-4">
+              In tincidunt vitae ipsum sit amet sollicitudin. Phasellus luctus
+              condimentum eros vitae laoreet. Quisque non mollis dui, ut rhoncus
+              ex. Aenean facilisis ante felis, gravida rutrum tellus finibus ut.
+              Phasellus nulla enim, dignissim mollis metus nec, imperdiet
+              gravida ipsum.
+            </div>
+            <div class="text-body-1">
+              Etiam efficitur libero eget nisl laoreet, at gravida lacus
+              elementum. Proin vel efficitur nisl. Donec porta, ex sit amet
+              sodales auctor, libero ipsum suscipit enim, nec congue lectus
+              nulla sit amet ante. Vestibulum nulla ligula, fermentum non
+              iaculis iaculis, cursus ut nulla. Morbi ullamcorper nunc eu lorem
+              consequat auctor. Praesent ligula nunc, dignissim vel lorem nec,
+              tincidunt viverra ipsum. Interdum et malesuada fames ac ante ipsum
+              primis in faucibus. 
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
   </v-container>
   <!-- <TestSocketConnection />
   <LayoutTest /> -->
@@ -85,8 +114,8 @@ const currentLayout = computed(() => storeLayout.currentLayout);
 
 .grid-item {
   background-color: lightgray;
-  padding: 10px;
-  font-size: 20px;
+  /* padding: 10px;
+  font-size: 20px; */
   text-align: center;
 }
 

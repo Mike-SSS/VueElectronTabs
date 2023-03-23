@@ -1,18 +1,24 @@
 <template>
-  <v-container fluid :class="props.class" :style="props.style">
-    <div class="text-h4">Options</div>
-    <v-sheet class="pa-4" rounded elevation="1">
-      <div class="text-h5">Counter: {{ count }}</div>
-      <v-row>
-        <v-col>
-          <v-btn color="primary" @click="decrease">Decrease</v-btn>
-        </v-col>
-        <v-col>
-          <v-btn color="primary" @click="increase">Increase</v-btn>
-        </v-col>
-      </v-row>
-    </v-sheet></v-container
+  <v-container
+    fluid
+    :class="props.class"
+    :style="props.style"
   >
+    <v-row justify="center">
+      <v-col cols="auto"><div class="text-h4">Test reactivity</div></v-col>
+    </v-row>
+    <v-row justify="center">
+      <v-col cols="auto"
+        ><div class="text-h5">Counter: {{ count }}</div></v-col
+      >
+      <v-col cols="auto">
+        <v-btn color="primary" @click="decrease">Decrease</v-btn>
+      </v-col>
+      <v-col cols="auto">
+        <v-btn color="primary" @click="increase">Increase</v-btn>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts" setup>

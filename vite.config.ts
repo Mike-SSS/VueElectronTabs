@@ -31,6 +31,7 @@ export default defineConfig(({ command }) => {
       // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
       vuetify({
         autoImport: true,
+        styles: { configFile: 'src/settings.scss' }
       }),
       // electron([
       //   {

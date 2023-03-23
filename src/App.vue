@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar :height="75" class="white--text" color="#252525">
+    <!-- <v-app-bar :height="75" class="white--text" color="#252525">
       <v-menu v-model="drawer" :close-on-content-click="false" location="end">
         <template v-slot:activator="{ props }">
           <v-app-bar-nav-icon
@@ -67,8 +67,8 @@
           </v-list-item>
         </v-list>
       </v-menu>
-    </v-app-bar>
-    <v-dialog width="1000" v-model="state.isLayoutManagerOpen">
+    </v-app-bar> -->
+    <!-- <v-dialog width="1000" v-model="state.isLayoutManagerOpen">
       <v-card>
         <v-card-title class="d-flex justify-space-between align-center"
           ><div>Layout Manager</div>
@@ -123,7 +123,7 @@
           </v-container>
         </v-card-text>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
     <!-- <v-menu>
       <template> </template>
     </v-menu> -->
@@ -148,7 +148,7 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer> -->
-    <v-navigation-drawer
+    <!-- <v-navigation-drawer
       color="primary"
       rail-width="60"
       :rail="true"
@@ -187,7 +187,7 @@
           value="users"
         ></v-list-item>
       </v-list>
-    </v-navigation-drawer>
+    </v-navigation-drawer> -->
     <router-view />
     <!-- <v-footer app class="bg-grey-lighten-1">
       <v-row justify="center" no-gutters>

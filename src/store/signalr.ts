@@ -68,6 +68,14 @@ interface ConnectionInfo {
 export interface MarketDisplayItem {
   displaySeq: string;
   contract: string;
+  contractDisplay: {
+    instrument: string;
+    contractDate: string;
+    strike: number;
+    flag: string;
+    contracT_TYPE: number;
+    contractDisplay: string;
+  };
   qtyBid: string;
   bid: string;
   offer: string;
@@ -148,13 +156,12 @@ export const useSignalRStore = defineStore("signalr", {
             // convert from string to json
             let temp = JSON.parse(message);
             if (Array.isArray(temp)) {
-              temp = temp.map(e => e as MarketDisplayItem)
+              temp = temp.map((e) => e as MarketDisplayItem);
             }
 
             // add message to endpoint's messages array
 
-
-            console.log("Message Table", endpoint, message, temp);            
+            console.log("Message Table", endpoint, message, temp);
             this.messages[endpoint] = temp;
           }
         );
