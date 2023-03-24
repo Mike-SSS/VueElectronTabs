@@ -182,6 +182,9 @@
         prepend-icon="mdi-fire"
         title="Home"
         value="home"
+        :to="{
+          name: 'Login'
+        }"
       ></v-list-item>
       <v-list-item
         prepend-icon="mdi-cash"
