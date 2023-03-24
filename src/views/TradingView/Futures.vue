@@ -1,15 +1,18 @@
 <template>
-  <v-container
-    fluid
-    :class="props.class"
-    :style="props.style"
-    key="Futures"
-  >
-    <v-row justify="space-between" align="center">
+  <v-container fluid :style="props.style" key="Futures" class="bg-grey">
+    <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto">
         <div class="text-h5">Futures</div>
       </v-col>
       <v-col cols="auto">
+        <v-btn
+          density="compact"
+          color="transparent"
+          variant="flat"
+          icon
+          @click="state.openHeaderPicker = true"
+          ><v-icon>mdi-table-headers-eye</v-icon></v-btn
+        >
         <v-tooltip>
           <template v-slot:activator="{ props }">
             <v-btn
@@ -41,7 +44,7 @@
           color="transparent"
           variant="flat"
           icon
-          @click="openInstruments = true"
+          @click="state.openInstruments = true"
           ><v-icon>mdi-plus</v-icon></v-btn
         >
       </v-col>
@@ -50,16 +53,34 @@
       <v-col cols="12" class="pa-0">
         <v-data-table
           density="compact"
-          :items="currentSubscriptions"
-          :headers="headers"
+          :group-by="[{ key: 'contractDisplay.instrument' }]"
+          :items="state.currentSubscriptions"
+          :headers="getSortedHeaders"
           height="200"
           fixed-header
         >
-          <!-- <template #default="props">
-              <tr>
-                <th v-for="head in props" :key="head.key">{{ head }}</th>
-              </tr>
-            </template> -->
+          <template
+            v-slot:group-header="{
+              item,
+              columns,
+              toggleGroup,
+              isGroupOpen,
+              isSelected,
+              toggleSelect,
+            }"
+          >
+            <tr :id="'group_' + item.value">
+              <td :colspan="columns.length" class="text-start">
+                <VBtn
+                  size="small"
+                  variant="text"
+                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                  @click="toggleGroup(item)"
+                ></VBtn>
+                {{ item.value }}
+              </td>
+            </tr>
+          </template>
           <template v-slot:column.Column="{ column }">
             {{ column.title.toUpperCase() }}
           </template>
@@ -67,7 +88,51 @@
       </v-col>
     </v-row>
     <v-dialog
-      v-model="openInstruments"
+      v-model="state.openHeaderPicker"
+      scrollable
+      width="auto"
+      key="Futures_addInstruments"
+    >
+      <v-card height="80vh" min-width="300" color="white">
+        <v-card-title class="bg-primary"
+          ><v-row justify="space-between" align="center">
+            <v-col cols="10" sm="9">Instrument Headers</v-col>
+            <v-col cols="2" sm="auto"
+              ><v-btn
+                @click="state.openHeaderPicker = false"
+                size="small"
+                icon
+                color="transparent"
+                flat
+              >
+                <v-icon icon="mdi-close"></v-icon> </v-btn
+            ></v-col> </v-row
+        ></v-card-title>
+        <v-card-text>
+          <v-list>
+            <v-list-item
+              lines="one"
+              v-for="header in headers"
+              :key="header.title"
+              :title="header.title"
+              :id="header.title"
+            >
+              <template v-slot:prepend>
+                <v-list-item-action start>
+                  <v-checkbox-btn
+                    @change="updateHeader($event, header)"
+                    :model-value="state.selectedHeaders.find((e: any) => e.key == header.key) != null"
+                  ></v-checkbox-btn>
+                </v-list-item-action>
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      v-model="state.openInstruments"
       scrollable
       width="auto"
       key="Futures_addInstruments"
@@ -83,7 +148,7 @@
             <v-col cols="2" sm="auto"
               ><v-btn icon size="20" color="error" flat></v-btn
               ><v-btn
-                @click="openInstruments = false"
+                @click="state.openInstruments = false"
                 size="small"
                 icon
                 color="transparent"
@@ -107,14 +172,14 @@
               <v-col cols="auto"
                 ><v-btn
                   @click="subscribeToSelected"
-                  :disabled="instrumentsToAdd.length == 0"
+                  :disabled="state.instrumentsToAdd.length == 0"
                   color="primary"
                 >
-                  Add ({{ instrumentsToAdd.length }})</v-btn
+                  Add ({{ state.instrumentsToAdd.length }})</v-btn
                 ></v-col
               >
               <v-col cols="auto"
-                ><v-btn @click="openInstruments = false" color="primary">
+                ><v-btn @click="state.openInstruments = false" color="primary">
                   Done</v-btn
                 ></v-col
               >
@@ -126,8 +191,8 @@
             density="compact"
             class="tableData"
             :items="marketMessages"
-            v-model="instrumentsToAdd"
-            :headers="headers"
+            v-model="state.instrumentsToAdd"
+            :headers="state.selectedHeaders"
             :group-by="[{ key: 'contractDisplay.instrument' }]"
             height="60vh"
             show-select
@@ -150,13 +215,6 @@
               }"
             >
               <tr :id="'group_' + item.value">
-                <!-- <td colspan="1">
-                  <v-checkbox
-                    :value="isSelected"
-                    @click:append="toggleSelect"
-                    hide-details
-                  ></v-checkbox>
-                </td> -->
                 <td :colspan="columns.length">
                   <VBtn
                     size="small"
@@ -171,7 +229,7 @@
           </v-data-table>
         </v-card-text>
         <v-card-actions>
-          <v-btn color="primary" block @click="openInstruments = false"
+          <v-btn color="primary" block @click="state.openInstruments = false"
             >Close Instruments</v-btn
           >
         </v-card-actions>
@@ -199,11 +257,13 @@ const appStore = useAppStore();
 const marketDisplayStore = useMarketDisplayStore();
 
 type ConvertibleKeys<T> = {
-  [K in keyof T]: T[K] extends string | number ? K : never;
+  [K in keyof T]: T[K] extends string | number | object ? K : never;
 }[keyof T];
 
 type ConvertibleTypes<T> = {
-  [K in ConvertibleKeys<T>]: T[K];
+  [K in ConvertibleKeys<T>]: T[K] extends object
+    ? ConvertibleTypes<T[K]>
+    : T[K];
 };
 
 const props = defineProps({
@@ -213,6 +273,18 @@ const props = defineProps({
     required: true,
   },
 });
+
+function updateHeader(e: Event, i: any) {
+  console.log("Update header ", (e?.target as any).value, i);
+  const foundSelected = state.selectedHeaders.findIndex(
+    (item) => item.key == i.key
+  );
+  if (foundSelected != -1) {
+    state.selectedHeaders.splice(foundSelected, 1);
+  } else {
+    state.selectedHeaders.push(i);
+  }
+}
 
 onMounted(() => {
   console.log("Mounted Futures ");
@@ -224,7 +296,6 @@ onBeforeUnmount(() => {
   disconnect(url);
 });
 
-const openInstruments = ref(false);
 const marketMessages = computed(() =>
   appStore.getMarketDisplayData.filter((e) => {
     if (e.contractDisplay.flag !== "F") return false;
@@ -232,8 +303,8 @@ const marketMessages = computed(() =>
 
     // apply text filter here
 
-    if (currentSubscriptions.value.length > 0) {
-      const found = currentSubscriptions.value.find(
+    if (state.currentSubscriptions.length > 0) {
+      const found = state.currentSubscriptions.find(
         (b) => b.contract == e.contract
       );
       if (!found) {
@@ -244,31 +315,47 @@ const marketMessages = computed(() =>
     }
   })
 );
-const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
-const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
+// const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
+// const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
-  { title: "Date", key: "contractDisplay.contractDate" },
+  { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
   // { title: "Instrument", key: "contractDisplay.instrument" },
-  { title: "Strike", key: "contractDisplay.strike" },
-  { title: "Flag", key: "contractDisplay.flag" },
-  { title: "Type", key: "contractDisplay.contracT_TYPE" },
-  // { title: "C/Display", key: "contractDisplay" },
-  {
-    title: "Bid",
-    key: "bid",
-  },
   {
     title: "B/QTY",
     key: "qtyBid",
+    order: 2,
   },
-  { title: "Change", key: "change" },
-  { title: "O/QTY", key: "qtyOffer" },
-  { title: "Offer", key: "offer" },
+  {
+    title: "Bid",
+    key: "bid",
+    order: 3,
+  },
+  { title: "Offer", key: "offer", order: 4 },
+  { title: "O/QTY", key: "qtyOffer", order: 5 },
+  { title: "Change", key: "change", order: 6 },
+  { title: "Time", key: "time", order: 7 },
 
   // { title: "Last", key: "last" },
-  { title: "Volume", key: "volume" },
+  { title: "Volume", key: "volume", order: 8 },
 ];
+const getSortedHeaders = computed(() =>
+  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+);
+const state = reactive<{
+  openHeaderPicker: boolean;
+  openInstruments: boolean;
+  selectedHeaders: any[];
+  currentSubscriptions: MarketDisplayItem[];
+  instrumentsToAdd: MarketDisplayItem[];
+}>({
+  openHeaderPicker: false,
+  openInstruments: false,
+  selectedHeaders: headers.concat([]),
+  currentSubscriptions: [],
+  instrumentsToAdd: [],
+});
+
 const connectionState = reactive<{
   connection: HubConnection | null;
   messages: MarketDisplayItem[];
@@ -305,17 +392,19 @@ const connect = async (endpoint: string) => {
     console.log("Socket message ", message);
   });
 };
-function createTypedObject<T>(data: string): T {
-  const parsedData = JSON.parse(data);
-  const typedObject: Partial<ConvertibleTypes<T>> = {};
+function createTypedObject<T>(data: string | object): T {
+  const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+  const typedObject: Partial<T> = {};
 
   for (const key in parsedData) {
-    const value: T[ConvertibleKeys<T>] = parsedData[
-      key
-    ] as T[ConvertibleKeys<T>];
+    const value = parsedData[key];
 
     if (typeof value === "string" || typeof value === "number") {
-      typedObject[key as keyof ConvertibleTypes<T>] = value;
+      typedObject[key as keyof T] = value as T[keyof T];
+    } else if (typeof value === "object") {
+      typedObject[key as keyof T] = createTypedObject<T[keyof T]>(
+        value
+      ) as T[keyof T];
     } else {
       throw new Error(`Invalid data for field ${key}`);
     }
@@ -323,15 +412,15 @@ function createTypedObject<T>(data: string): T {
   return typedObject as T;
 }
 const subscribeToSelected = () => {
-  console.log("Subscribing to : ", instrumentsToAdd);
+  console.log("Subscribing to : ", state.instrumentsToAdd);
   connectionState.connection?.invoke(
     "Subscribe",
-    instrumentsToAdd.value.map((e) => e.contract)
+    state.instrumentsToAdd.map((e) => e.contract)
   );
-  instrumentsToAdd.value.forEach((e) => {
-    currentSubscriptions.value.push(e);
+  state.instrumentsToAdd.forEach((e) => {
+    state.currentSubscriptions.push(e);
   });
-  instrumentsToAdd.value.splice(0);
+  state.instrumentsToAdd.splice(0);
 };
 const disconnect = (endpoint: string) => {
   console.log("Disconnect futures with subs", endpoint);
