@@ -67,102 +67,149 @@
       </v-list>
     </v-menu>
   </v-app-bar>
-  <v-dialog width="1000" v-model="state.isLayoutManagerOpen">
-    <v-card>
+  <v-dialog width="1000" v-model="state.isLayoutManagerOpen" scrollable>
+    <v-card min-height="250">
       <v-card-title class="d-flex justify-space-between align-center"
         ><div>Layout Manager</div>
-        <v-btn icon flat><v-icon>mdi-close</v-icon></v-btn></v-card-title
+        <v-btn density="compact" icon flat><v-icon>mdi-close</v-icon></v-btn></v-card-title
       >
+      <v-card-subtitle>
+        <div class="text-subtitle-1">Some data may lost when switching layouts and panel is not transfered</div>
+      </v-card-subtitle>
       <v-card-text>
         <v-container>
           <v-row align="center" justify="space-between">
             <v-col cols="5">
-              <v-select label="Current Layout" hide-details="auto"></v-select>
+              <v-select
+                v-model="currentLayout"
+                item-title="name"
+                item-value="name"
+                return-object
+                readonly
+                :single-line="false"
+                label="Current Layout"
+                hide-details="auto"
+              ></v-select>
             </v-col>
-            <v-col cols="2" class="text-center">computed
-              <v-icon>mdi-arrow-right</v-icon></v-col
+            <v-col cols="2" class="text-center"
+              ><v-icon>mdi-arrow-right</v-icon></v-col
             >
             <v-col cols="5"
-              ><v-select label="New Layout" hide-details="auto"></v-select
+              ><v-select
+                v-model="state.changeToLayout"
+                label="New Layout"
+                :single-line="false"
+                item-title="name"
+                item-value="name"
+                return-object
+                :items="layoutOptions"
+                hide-details="auto"
+              ></v-select
             ></v-col>
           </v-row>
-          <v-row v-if="currentLayout">
-            <template
-              v-for="(largestColumnIndex, rowIndex) in largestLayoutSize"
+          <v-row
+            dense
+            v-if="currentLayout"
+            v-for="(largestColumnIndex, rowIndex) in largestLayoutSize"
+            align="center"
+          >
+            <v-col cols="5">
+              <v-card
+                class="comparison-card"
+                v-if="currentLayout.columns[rowIndex]"
+              >
+                <v-card-title>Panel {{ rowIndex }}</v-card-title>
+                <v-card-text class="text-subtitle-1">
+                  <div v-if="currentLayout && currentLayout.columns[rowIndex]">
+                    Component:
+                    {{
+                      currentLayout.columns[rowIndex].component
+                        ? currentLayout.columns[rowIndex].component
+                        : "None"
+                    }}
+                  </div>
+                  <div v-else>Component: Empty {{ rowIndex }}</div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+            <v-col cols="2" class="text-center"
+              ><v-icon>mdi-arrow-right</v-icon></v-col
             >
-              <v-col cols="6">
-                <v-card class="comparison-card">
-                  <v-card-title
-                    >Current Layout - Column {{ rowIndex }}</v-card-title
+            <v-col cols="5">
+              <v-card
+                class="comparison-card"
+                v-if="
+                  state.changeToLayout && state.changeToLayout.columns[rowIndex]
+                "
+              >
+                <v-card-title>Panel {{ rowIndex }}</v-card-title>
+                <v-card-text class="text-subtitle-1">
+                  <div
+                    v-if="
+                      state.changeToLayout &&
+                      state.changeToLayout.columns[rowIndex]
+                    "
                   >
-                  <v-card-text>
-                    <div v-if="currentLayout.columns[rowIndex - 1]">
-                      Component:
-                      {{ currentLayout.columns[rowIndex - 1].component }}
-                    </div>
-                    <div v-else>Empty</div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col cols="6">
-                <v-card class="comparison-card">
-                  <v-card-title
-                    >New Layout - Column {{ rowIndex }}</v-card-title
-                  >
-                  <v-card-text>
-                    <div v-if="selectedLayout[rowIndex - 1]">
-                      Component: {{ selectedLayout[rowIndex - 1].component }}
-                    </div>
-                    <div v-else>Empty</div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </template>
+                    Component:
+                    {{
+                      state.changeToLayout.columns[rowIndex].component
+                        ? state.changeToLayout.columns[rowIndex].component
+                        : "None"
+                    }}
+                  </div>
+                  <div v-else>Empty</div>
+                </v-card-text>
+              </v-card>
+            </v-col>
           </v-row>
         </v-container>
       </v-card-text>
+      <v-card-actions class="justify-end">
+        <v-btn variant="tonal" color="primary">Confirm</v-btn>
+      </v-card-actions>
     </v-card>
   </v-dialog>
   <v-navigation-drawer
-      color="primary"
-      rail-width="60"
-      :rail="true"
-      width="200"
-      location="left"
-    >
-      <v-list density="compact">
-        <v-list-item
-          prepend-icon="mdi-fire"
-          title="Home"
-          value="home"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-cash"
-          title="My Account"
-          value="account"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-cart-variant"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-chart-gantt"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-chart-timeline-variant-shimmer"
-          title="Users"
-          value="users"
-        ></v-list-item>
-        <v-list-item
-          prepend-icon="mdi-cog"
-          title="Users"
-          value="users"
-        ></v-list-item>
-      </v-list>
-    </v-navigation-drawer>
+    color="primary"
+    permanent
+    rail-width="60"
+    :rail="true"
+    width="200"
+    location="left"
+  >
+    <v-list density="compact">
+      <v-list-item
+        prepend-icon="mdi-fire"
+        title="Home"
+        value="home"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-cash"
+        title="My Account"
+        value="account"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-cart-variant"
+        title="Users"
+        value="users"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-chart-gantt"
+        title="Users"
+        value="users"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-chart-timeline-variant-shimmer"
+        title="Users"
+        value="users"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-cog"
+        title="Users"
+        value="users"
+      ></v-list-item>
+    </v-list>
+  </v-navigation-drawer>
   <default-view />
 </template>
 
@@ -172,13 +219,34 @@ import DefaultView from "./View.vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
 
+import { AxiosInstance } from "axios";
+import { axiosSymbol } from "@/models/symbols";
+import { LAYOUT } from "@/models/layout";
+
+// Inject the Axios instance with the defined symbol
+const axios = inject<AxiosInstance>(axiosSymbol);
+
 const storeLayout = useLayoutStore();
 const appStore = useAppStore();
 
 const state = reactive<{
   isLayoutManagerOpen: boolean;
+  changeToLayout: LAYOUT | null;
 }>({
   isLayoutManagerOpen: false,
+  changeToLayout: null,
+});
+const largestLayoutSize = computed(() => {
+  // if (currentLayout.value?.columns.length > state.changeToLayout)
+  if (currentLayout.value && state.changeToLayout != null) {
+    if (
+      currentLayout.value.columns.length > state.changeToLayout.columns.length
+    ) {
+      return currentLayout.value.columns.length;
+    } else {
+      return state.changeToLayout.columns.length;
+    }
+  }
 });
 
 const layoutOptions = computed(() => storeLayout.layoutOptions);
@@ -194,7 +262,29 @@ const drawer = computed({
 function openLayoutManager() {
   state.isLayoutManagerOpen = true;
 }
-const setSelectedLayout = (layout: any) => {
+const setSelectedLayout = (layout: LAYOUT) => {
   storeLayout.setCurrentLayout(layout);
+};
+
+onMounted(async () => {
+  // Do something after the component is mounted
+  console.log("Mounted Default Layout");
+  if (!axios) {
+    throw new Error("Axios instance not found");
+  }
+  const temp = await GetMarketDisplay();
+  if (temp) appStore.setMarketDisplayData(temp);
+  console.log("App store market data: ", appStore.getMarketDisplayData);
+
+  // Get instruments
+});
+
+const GetMarketDisplay = async () => {
+  try {
+    const res = await axios?.get("/MarketSubscription/GetMarketDisplay");
+    if (res) return Promise.resolve(res.data);
+  } catch (err) {
+    console.error(err);
+  }
 };
 </script>

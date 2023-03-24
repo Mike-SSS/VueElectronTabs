@@ -29,7 +29,8 @@ export const useMarketDisplayStore = defineStore("marketDisplay", {
             currentItem[key as keyof MarketDisplayItem] !==
               updatedItem[key as keyof MarketDisplayItem]
           ) {
-            currentItem[key as keyof MarketDisplayItem] = updatedItem[key as keyof MarketDisplayItem];
+            const temp = updatedItem[key as keyof MarketDisplayItem];
+            currentItem[key as keyof MarketDisplayItem] = temp;
           }
         }
       } else {

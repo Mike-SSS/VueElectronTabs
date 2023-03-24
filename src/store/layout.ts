@@ -33,7 +33,7 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "purple",
             content: "Column 2",
-            component: null,
+            component: "Options",
             id: "second1",
           },
           {
@@ -78,7 +78,7 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "secondary",
             content: "Column 2",
-            component: "Futures", // options
+            component: "Options", // options
             id: "third",
             props: {
               initialValue: 5,

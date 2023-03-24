@@ -108,13 +108,13 @@
                 ><v-btn
                   @click="subscribeToSelected"
                   :disabled="instrumentsToAdd.length == 0"
-                  color="purple"
+                  color="primary"
                 >
                   Add ({{ instrumentsToAdd.length }})</v-btn
                 ></v-col
               >
               <v-col cols="auto"
-                ><v-btn @click="openInstruments = false" color="blue">
+                ><v-btn @click="openInstruments = false" color="primary">
                   Done</v-btn
                 ></v-col
               >
@@ -227,6 +227,11 @@ onBeforeUnmount(() => {
 const openInstruments = ref(false);
 const marketMessages = computed(() =>
   appStore.getMarketDisplayData.filter((e) => {
+    if (e.contractDisplay.flag !== "F") return false;
+    if (e.contractDisplay.strike !== 0) return false;
+
+    // apply text filter here
+
     if (currentSubscriptions.value.length > 0) {
       const found = currentSubscriptions.value.find(
         (b) => b.contract == e.contract

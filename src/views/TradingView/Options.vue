@@ -5,18 +5,7 @@
     :style="props.style"
   >
     <v-row justify="center">
-      <v-col cols="auto"><div class="text-h4">Test reactivity</div></v-col>
-    </v-row>
-    <v-row justify="center">
-      <v-col cols="auto"
-        ><div class="text-h5">Counter: {{ count }}</div></v-col
-      >
-      <v-col cols="auto">
-        <v-btn color="primary" @click="decrease">Decrease</v-btn>
-      </v-col>
-      <v-col cols="auto">
-        <v-btn color="primary" @click="increase">Increase</v-btn>
-      </v-col>
+      <v-col cols="auto"><div class="text-h4">Options</div></v-col>
     </v-row>
   </v-container>
 </template>
@@ -37,15 +26,6 @@ const props = defineProps({
   },
 });
 onMounted(() => {
-  console.log("Mounted ", count);
+  console.log("Mounted ");
 });
-
-const count = ref(props.initialValue);
-const increase = () => {
-  count.value++;
-};
-
-const decrease = () => {
-  count.value--;
-};
 </script>

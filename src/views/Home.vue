@@ -49,7 +49,7 @@
           :class="`bg-` + col.color"
           :style="col.grid"
           :key="col.component"
-          :is="col.component ? componentRegistry[col.component] : componentRegistry['Options']"
+          :is="col.component ? componentRegistry[col.component] : componentRegistry['Placeholder']"
           v-bind="col.props"
         >
           Item {{ index }}

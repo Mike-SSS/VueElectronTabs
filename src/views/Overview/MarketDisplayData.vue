@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-    <div class="text-h4">Market Display Data ({{ marketData.length }})</div>
+    <div class="text-h5">Market Display items ({{ marketData.length }})</div>
   </v-container>
 </template>
 
