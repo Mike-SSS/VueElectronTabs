@@ -1,4 +1,5 @@
 // Utilities
+import { ComponentRegistry } from "@/models/componentRegistry";
 import { LAYOUT } from "@/models/layout";
 import { defineStore } from "pinia";
 
@@ -101,7 +102,7 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "success",
             content: "Column 4",
-            component: "Futures",
+            component: "Deltas",
             id: "forth",
           },
         ],
@@ -343,7 +344,7 @@ export const useLayoutStore = defineStore("layout", {
     setLayoutOptions(layouts: LAYOUT[]) {
       this.layoutOptions = layouts;
     },
-    changeColumnComponent(comp: any, colId: string) {
+    changeColumnComponent(comp: keyof ComponentRegistry, colId: string) {
       // only works for selectedLayout else add layoutId: string
       const found = this.currentLayout?.columns.find((e) => e.id == colId);
       if (found) {

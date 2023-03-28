@@ -2,7 +2,7 @@
   <v-container fluid :style="props.style" key="Options" class="bg-grey">
     <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto">
-        <div class="text-h5">Options</div>
+        <div class="text-h5">Deltas</div>
       </v-col>
       <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
@@ -224,6 +224,9 @@
                 </td>
               </tr>
             </template>
+            <template #item.contractDisplay.strike="{ item }">
+              {{ item.value.contractDisplay.strike }}D
+            </template>
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -285,7 +288,7 @@ function updateHeader(e: Event, i: any) {
 }
 
 onMounted(() => {
-  console.log("Mounted Options ");
+  console.log("Mounted Deltas");
   const url = "/market";
   connect(url);
 });
@@ -307,20 +310,28 @@ function getUniqueValues() {
     []
   );
 }
-const filtered = computed(() => marketMessages.value.filter((e) => {
-  if (e.contractDisplay.instrument == "SOYA" && e.contractDisplay.contractDate == "APR23") {
-    return e;
-  }
-  return false;
-}).map((e) => ({
-  contract: e.contract,
-  seq: e.contractSeq,
-  display: e.contractDisplay
-})));
+const filtered = computed(
+  () =>
+    marketMessages.value.filter((e) => {
+      if (
+        e.contractDisplay.instrument == "SOYA" &&
+        e.contractDisplay.contractDate == "APR23"
+      ) {
+        return e;
+      }
+      return false;
+    })
+  // .map((e) => ({
+  //   contract: e.contract,
+  //   seq: e.contractSeq,
+  //   display: e.contractDisplay
+  // }))
+);
 const marketMessages = computed(() =>
   appStore.getMarketDisplayData.filter((e) => {
-    if (e.contractDisplay.flag == "F") return false;
-    if (e.contractDisplay.contracT_TYPE !== 2) return false;
+    if (e.contractDisplay.flag != "C" && e.contractDisplay.flag != "P")
+      return false;
+    if (e.contractDisplay.contracT_TYPE !== 5) return false;
 
     // apply text filter here
 

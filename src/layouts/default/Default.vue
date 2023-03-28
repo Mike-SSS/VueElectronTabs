@@ -1,5 +1,10 @@
 <template>
-  <v-app-bar :height="75" class="white--text" color="#252525">
+  <v-app-bar
+    :extension-height="0"
+    :height="75"
+    class="white--text"
+    color="#252525"
+  >
     <v-menu v-model="drawer" :close-on-content-click="false" location="end">
       <template v-slot:activator="{ props }">
         <v-app-bar-nav-icon
@@ -66,15 +71,114 @@
         </v-list-item>
       </v-list>
     </v-menu>
+    <template #extension>
+      <v-container fluid v-if="false">
+        <v-row dense>
+          <v-col cols="12">
+            <v-tabs height="40" density="compact" v-model="currentToolbar">
+              <v-tab value="main">
+                <div class="text-h5 text-white">Main</div>
+              </v-tab>
+              <v-tab value="admin">
+                <div class="text-h5 text-white">Admin</div>
+              </v-tab>
+              <v-tab value="trading">
+                <div class="text-h5 text-white">Trading</div>
+              </v-tab>
+            </v-tabs>
+          </v-col>
+        </v-row>
+        <v-row dense>
+          <v-col cols="12">
+            <v-window v-model="currentToolbar">
+              <v-window-item value="trading">
+                <v-container fluid>
+                  <v-row class="text-white">
+                    <v-col cols="4">Market info + clock
+                      <v-container fluid>
+                        <v-row>
+                          <v-col cols="auto">
+                            <AnalogClock></AnalogClock>
+                          </v-col>
+                          <!-- <v-col cols="4">
+                            <div class="text-body-1">Market Open: 9:00</div>
+                            <div class="text-body-1">Market Closed: 17:00</div>
+                            <div class="text-body-1">Market Offline: 03:00</div>
+                          </v-col>
+                          <v-col cols="4">
+                            <div class="text-body-1">Current Trading Date: 2023/03/15</div>
+                            <div class="text-body-1">Previous Trading Date: 2023/03/14</div>
+                            <div class="text-body-1">Next Trading Date: 2023/03/15</div>
+                          </v-col> -->
+                        </v-row>
+                      </v-container>
+                    </v-col>
+                    <v-col cols="2">Contracts</v-col>
+                    <v-col cols="2">Views</v-col>
+                    <v-col cols="2">Trade History</v-col>
+                    <v-col cols="2">Preferences</v-col>
+                  </v-row>
+                </v-container>
+              </v-window-item>
+              <v-window-item value="main">
+                <v-container fluid>
+                  <v-row class="text-white">
+                    <v-col cols="2">Main bar content</v-col>
+                  </v-row>
+                </v-container>
+              </v-window-item>
+              <v-window-item value="admin">
+                <v-container fluid>
+                  <v-row class="text-white">
+                    <v-col cols="2">Admin bar content</v-col>
+                  </v-row>
+                </v-container>
+              </v-window-item>
+            </v-window>
+          </v-col>
+        </v-row>
+      </v-container>
+    </template>
   </v-app-bar>
+  <!-- <v-app-bar floating order="3" collapse  color="blue">
+      <v-btn icon>
+        <v-icon>mdi-magnify</v-icon>
+      </v-btn>
+
+      <v-btn icon>
+        <v-icon>mdi-dots-vertical</v-icon>
+      </v-btn>
+    </v-app-bar>
+    <v-app-bar floating order="4" collapse  color="blue">
+      <v-btn icon>
+        <v-icon>mdi-magnify</v-icon>
+      </v-btn>
+
+      <v-btn icon>
+        <v-icon>mdi-dots-vertical</v-icon>
+      </v-btn>
+    </v-app-bar>
+    <v-app-bar floating order="5" collapse  color="blue">
+      <v-btn icon>
+        <v-icon>mdi-magnify</v-icon>
+      </v-btn>
+
+      <v-btn icon>
+        <v-icon>mdi-dots-vertical</v-icon>
+      </v-btn>
+    </v-app-bar> -->
   <v-dialog width="1000" v-model="state.isLayoutManagerOpen" scrollable>
     <v-card min-height="250">
       <v-card-title class="d-flex justify-space-between align-center"
         ><div>Layout Manager</div>
-        <v-btn density="compact" icon flat><v-icon>mdi-close</v-icon></v-btn></v-card-title
+        <v-btn density="compact" icon flat
+          ><v-icon>mdi-close</v-icon></v-btn
+        ></v-card-title
       >
       <v-card-subtitle>
-        <div class="text-subtitle-1">Some data may lost when switching layouts and panel is not transfered</div>
+        <div class="text-subtitle-1">
+          Some data may lost when switching layouts and panel is not transfered
+        </div>
       </v-card-subtitle>
       <v-card-text>
         <v-container>
@@ -183,7 +287,7 @@
         title="Home"
         value="home"
         :to="{
-          name: 'Login'
+          name: 'Login',
         }"
       ></v-list-item>
       <v-list-item
@@ -226,9 +330,11 @@ import { AxiosInstance } from "axios";
 import { axiosSymbol } from "@/models/symbols";
 import { LAYOUT } from "@/models/layout";
 
+import AnalogClock from "@/components/AnalogClock.vue";
+
 // Inject the Axios instance with the defined symbol
 const axios = inject<AxiosInstance>(axiosSymbol);
-
+const currentToolbar = ref(null);
 const storeLayout = useLayoutStore();
 const appStore = useAppStore();
 

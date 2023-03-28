@@ -44,15 +44,19 @@
     <div class="grid-container" v-if="currentLayout">
       <keep-alive>
         <component
+          @newComp="onNewComp($event, col)"
           v-for="(col, index) in currentLayout.columns"
           class="grid-item"
           :class="`bg-` + col.color"
           :style="col.grid"
           :key="col.component"
-          :is="col.component ? componentRegistry[col.component] : componentRegistry['Placeholder']"
+          :is="
+            col.component
+              ? componentRegistry[col.component]
+              : componentRegistry['Placeholder']
+          "
           v-bind="col.props"
         >
-          Item {{ index }}
         </component>
       </keep-alive>
     </div>
@@ -61,9 +65,7 @@
         <v-card min-height="400">
           <v-card-text>
             <div class="text-h4 mb-4">Welcome!</div>
-            <div class="text-h6 mb-4">
-              Select Layout to continue
-            </div>
+            <div class="text-h6 mb-4">Select Layout to continue</div>
             <div class="text-body-1 mb-4">
               In tincidunt vitae ipsum sit amet sollicitudin. Phasellus luctus
               condimentum eros vitae laoreet. Quisque non mollis dui, ut rhoncus
@@ -79,7 +81,7 @@
               iaculis iaculis, cursus ut nulla. Morbi ullamcorper nunc eu lorem
               consequat auctor. Praesent ligula nunc, dignissim vel lorem nec,
               tincidunt viverra ipsum. Interdum et malesuada fames ac ante ipsum
-              primis in faucibus. 
+              primis in faucibus.
             </div>
           </v-card-text>
         </v-card>
@@ -95,11 +97,19 @@ import { computed } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import TestSocketConnection from "@/components/TestSocketConnection.vue";
 import LayoutTest from "@/components/LayoutTest.vue";
-import componentRegistry from "@/models/componentRegistry";
+import componentRegistry, {
+  ComponentRegistry,
+} from "@/models/componentRegistry";
+import { COLUMN } from "@/models/layout";
 
 const storeLayout = useLayoutStore();
 
 const currentLayout = computed(() => storeLayout.currentLayout);
+
+const onNewComp = (event: keyof ComponentRegistry, item: COLUMN) => {
+  console.log("On New Comp ", event, item.id);
+  storeLayout.changeColumnComponent(event, item.id);
+};
 </script>
 
 <style>

@@ -81,9 +81,6 @@
               </td>
             </tr>
           </template>
-          <template v-slot:column.Column="{ column }">
-            {{ column.title.toUpperCase() }}
-          </template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -193,6 +190,7 @@
             :items="marketMessages"
             v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
+            multi-sort
             :group-by="[{ key: 'contractDisplay.instrument' }]"
             height="60vh"
             show-select
@@ -248,6 +246,7 @@ import {
   onBeforeUnmount,
 } from "vue";
 import { useLayoutStore } from "@/store/layout";
+
 import { useAppStore } from "@/store/app";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
 
