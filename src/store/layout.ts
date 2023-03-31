@@ -44,7 +44,7 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "yellow",
             content: "Column 2-2",
-            component: null,
+            component: "Splits",
             id: "second",
           },
           {
@@ -92,7 +92,7 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "warning",
             content: "Column 3",
-            component: "MarketDisplayData",
+            component: "Splits",
             id: "second",
           },
           {

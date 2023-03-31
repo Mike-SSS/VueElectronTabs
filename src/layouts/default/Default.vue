@@ -51,7 +51,17 @@
           currentLayout?.name || "Select Layout"
         }}</v-btn>
       </template>
-      <v-list lines="one" select-strategy="classic">
+      <v-list min-width="250" lines="one" select-strategy="classic">
+        <v-list-item
+          prepend-icon="mdi-cog"
+          key="configure_current"
+          active-class="bg-amber"
+          active-color="primary"
+          select-strategy="classic"
+          @click="configureSelectedLayout"
+          >Configure Current</v-list-item
+        >
+        <v-divider></v-divider>
         <v-list-item
           v-for="(layout, index) in layoutOptions"
           :key="index"
@@ -94,7 +104,8 @@
               <v-window-item value="trading">
                 <v-container fluid>
                   <v-row class="text-white">
-                    <v-col cols="4">Market info + clock
+                    <v-col cols="4"
+                      >Market info + clock
                       <v-container fluid>
                         <v-row>
                           <v-col cols="auto">
@@ -167,6 +178,64 @@
         <v-icon>mdi-dots-vertical</v-icon>
       </v-btn>
     </v-app-bar> -->
+  <v-dialog width="1000" v-model="state.isLayoutConfiguratorOpen" scrollable>
+    <v-card min-height="250">
+      <v-card-title class="d-flex justify-space-between align-center"
+        ><div>Layout Configurator</div>
+        <v-btn density="compact" icon flat
+          ><v-icon>mdi-close</v-icon></v-btn
+        ></v-card-title
+      >
+      <v-card-subtitle>
+        <div class="text-subtitle-1">
+          Change the order in which components are ordered on screen.
+        </div>
+      </v-card-subtitle>
+      <v-card-text>
+        <v-container fluid>
+          <v-row>
+            <v-col cols="12">
+              <div>
+                <div class="grid-container" v-if="currentLayout">
+                  <div
+                    v-for="(col, index) in currentLayout.columns"
+                    :key="col.id"
+                    :class="`bg-` + col.color"
+                    class="text-center align-center"
+                    :style="col.grid"
+                  >
+                    {{ col.id }}
+                  </div>
+                </div>
+              </div>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col><div class="text-h6">Swap order below</div></v-col>
+          </v-row>
+          <v-row>
+            <v-col
+              ><v-list v-if="currentLayout">
+                <draggable
+                  :options="state.dragOptions"
+                  v-model="currentLayout.columns"
+                  @start="onStart"
+                  @end="onEnd"
+                  item-key="id"
+                >
+                  <template #item="{ element }">
+                    <v-list-item :class="'bg-' + element.color">
+                      {{ element.component }}</v-list-item
+                    >
+                  </template>
+                </draggable>
+              </v-list></v-col
+            >
+          </v-row>
+        </v-container>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
   <v-dialog width="1000" v-model="state.isLayoutManagerOpen" scrollable>
     <v-card min-height="250">
       <v-card-title class="d-flex justify-space-between align-center"
@@ -326,6 +395,8 @@ import DefaultView from "./View.vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
 
+import draggable from "vuedraggable";
+
 import { AxiosInstance } from "axios";
 import { axiosSymbol } from "@/models/symbols";
 import { LAYOUT } from "@/models/layout";
@@ -340,11 +411,57 @@ const appStore = useAppStore();
 
 const state = reactive<{
   isLayoutManagerOpen: boolean;
+  isLayoutConfiguratorOpen: boolean;
+  lm_mode: "configure" | "change";
   changeToLayout: LAYOUT | null;
+  dragOptions: {
+    animation: number;
+    group: string;
+    ghostClass: string;
+  };
 }>({
+  dragOptions: {
+    animation: 200,
+    group: "layout",
+    ghostClass: "ghost",
+  },
   isLayoutManagerOpen: false,
+  isLayoutConfiguratorOpen: false,
+  lm_mode: "change",
   changeToLayout: null,
 });
+const draggedData: any = ref(null);
+const onStart = (event: any) => {
+  console.log("on start");
+  if (currentLayout.value) {
+    draggedData.value = {
+      component: currentLayout.value.columns[event.oldIndex].component,
+    };
+  }
+};
+const onEnd = (event: any) => {
+  console.log("onEnd", event);
+  if (currentLayout.value && event.oldIndex !== event.newIndex) {
+    // Revert item positions
+    const movedItem = currentLayout.value.columns.splice(event.newIndex, 1)[0];
+    currentLayout.value.columns.splice(event.oldIndex, 0, movedItem);
+
+    // Swap components
+    const targetComponent =
+      currentLayout.value.columns[event.newIndex].component;
+    currentLayout.value.columns[event.newIndex].component =
+      draggedData.value.component;
+    currentLayout.value.columns[event.oldIndex].component = targetComponent;
+  }
+};
+// const currentColumns = computed({
+//   get() {
+//     return currentLayout.value?.columns;
+//   },
+//   set(value) {
+//     console.log("SEt", value);
+//   },
+// });
 const largestLayoutSize = computed(() => {
   // if (currentLayout.value?.columns.length > state.changeToLayout)
   if (currentLayout.value && state.changeToLayout != null) {
@@ -357,7 +474,10 @@ const largestLayoutSize = computed(() => {
     }
   }
 });
-
+const configureSelectedLayout = () => {
+  console.log("Configure selected layout");
+  state.isLayoutConfiguratorOpen = true;
+};
 const layoutOptions = computed(() => storeLayout.layoutOptions);
 const currentLayout = computed(() => storeLayout.currentLayout);
 const drawer = computed({

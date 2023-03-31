@@ -1,6 +1,11 @@
 <template>
-  <v-container fluid :style="props.style" key="Futures" class="bg-grey">
-    <v-row :class="props.class" justify="space-between" align="center">
+  <v-container
+    fluid
+    :style="props.style"
+    id="Futures"
+    class="bg-grey overflow-y-auto d-flex flex-column"
+  >
+    <v-row justify="space-between" align="center">
       <v-col cols="auto">
         <div class="text-h5">Futures</div>
       </v-col>
@@ -50,13 +55,13 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0">
+      <v-col cols="12" class="pa-0 fill-height" ref="Futures">
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
           :items="state.currentSubscriptions"
           :headers="getSortedHeaders"
-          height="200"
+          :height="calculateTableHeight"
           fixed-header
         >
           <template
@@ -284,21 +289,50 @@ function updateHeader(e: Event, i: any) {
     state.selectedHeaders.push(i);
   }
 }
+const tableHeight = ref(0);
+const Futures = ref();
+const calculateTableHeight = computed(() => {
+  console.log("Futures: ", Futures.value);
+  if (Futures && Futures.value) {
+    const col = Futures.value.$el as HTMLElement;
+    const height = col.clientHeight;
+    console.log("Height :", height, col.clientHeight, col);
+    // return height;
+    const header = col.querySelector("thead") as HTMLElement;
+    const pagination = col.querySelector(".v-data-table-footer") as HTMLElement;
+    console.log("Check: ", header, pagination);
+    const paginationHeight = pagination ? pagination.offsetHeight : 0;
 
+    const result = height - paginationHeight - 20;
+    console.log("Returned height: ", result, paginationHeight);
+    return result;
+  } else {
+    return 0;
+  }
+});
+
+const onWindowResize = () => {
+  tableHeight.value = calculateTableHeight.value;
+};
 onMounted(() => {
   console.log("Mounted Futures ");
   const url = "/market";
   connect(url);
+
+  onWindowResize();
+  window.addEventListener("resize", onWindowResize);
 });
 onBeforeUnmount(() => {
   const url = "/market";
   disconnect(url);
+  window.removeEventListener("resize", onWindowResize);
 });
 
 const marketMessages = computed(() =>
   appStore.getMarketDisplayData.filter((e) => {
     if (e.contractDisplay.flag !== "F") return false;
     if (e.contractDisplay.strike !== 0) return false;
+    if (e.contractDisplay.contracT_TYPE == 3) return false;
 
     // apply text filter here
 
@@ -426,7 +460,11 @@ const disconnect = (endpoint: string) => {
   connectionState.connection?.stop();
 };
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
+.v-data-table {
+  max-height: 100%;
+  height: 100%;
+}
 // .v-table > .v-table__wrapper > table > thead > tr > th {
 //   padding-left: 5px;
 //   padding-right: 5px;

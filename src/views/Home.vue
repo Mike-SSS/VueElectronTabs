@@ -126,6 +126,7 @@ const onNewComp = (event: keyof ComponentRegistry, item: COLUMN) => {
   background-color: lightgray;
   /* padding: 10px;
   font-size: 20px; */
+  overflow-y: auto;
   text-align: center;
 }
 

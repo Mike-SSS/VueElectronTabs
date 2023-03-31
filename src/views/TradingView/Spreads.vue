@@ -1,10 +1,14 @@
 <template>
-  <v-container fluid :style="props.style" key="Options" class="bg-grey">
-    <v-row :class="props.class" justify="space-between" align="center">
+  <v-container
+    fluid
+    :style="props.style"
+    id="Splits"
+    class="bg-grey overflow-y-auto d-flex flex-column"
+  >
+    <v-row justify="space-between" align="center">
       <v-col cols="auto">
-        <div class="text-h5">Options</div>
+        <div class="text-h5">Spreads</div>
       </v-col>
-      <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
         <v-btn
           density="compact"
@@ -51,7 +55,7 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0" ref="ResizeHeight">
+      <v-col cols="12" class="pa-0 fill-height" ref="ResizeHeight">
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
@@ -191,6 +195,7 @@
             :items="marketMessages"
             v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
+            multi-sort
             :group-by="[{ key: 'contractDisplay.instrument' }]"
             height="60vh"
             show-select
@@ -246,6 +251,7 @@ import {
   onBeforeUnmount,
 } from "vue";
 import { useLayoutStore } from "@/store/layout";
+
 import { useAppStore } from "@/store/app";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
 
@@ -272,9 +278,6 @@ const props = defineProps({
   },
 });
 
-const tableHeight = ref(0);
-const ResizeHeight = ref();
-
 function updateHeader(e: Event, i: any) {
   console.log("Update header ", (e?.target as any).value, i);
   const foundSelected = state.selectedHeaders.findIndex(
@@ -286,66 +289,10 @@ function updateHeader(e: Event, i: any) {
     state.selectedHeaders.push(i);
   }
 }
-
-onMounted(() => {
-  console.log("Mounted Options ");
-  const url = "/market";
-  connect(url);
-
-  tableHeight.value = calculateTableHeight.value;
-  window.addEventListener("resize", onWindowResize);
-});
-onBeforeUnmount(() => {
-  const url = "/market";
-  disconnect(url);
-  window.removeEventListener("resize", onWindowResize);
-});
-
-function getUniqueValues() {
-  const field = "contractDisplay";
-  const child = "flag";
-  return marketMessages.value.reduce(
-    (unique: string[], item: MarketDisplayItem) => {
-      if (!unique.includes(<string>item[field][child])) {
-        unique.push(<string>item[field][child]);
-      }
-      return unique;
-    },
-    []
-  );
-}
-const filtered = computed(() => marketMessages.value.filter((e) => {
-  if (e.contractDisplay.instrument == "SOYA" && e.contractDisplay.contractDate == "APR23") {
-    return e;
-  }
-  return false;
-}).map((e) => ({
-  contract: e.contract,
-  seq: e.contractSeq,
-  display: e.contractDisplay
-})));
-const marketMessages = computed(() =>
-  appStore.getMarketDisplayData.filter((e) => {
-    if (e.contractDisplay.flag == "F") return false;
-    if (e.contractDisplay.contracT_TYPE !== 2) return false;
-
-    // apply text filter here
-
-    if (state.currentSubscriptions.length > 0) {
-      const found = state.currentSubscriptions.find(
-        (b) => b.contract == e.contract
-      );
-      if (!found) {
-        return e;
-      }
-    } else {
-      return e;
-    }
-  })
-);
-
+const tableHeight = ref(0);
+const ResizeHeight = ref();
 const calculateTableHeight = computed(() => {
-  console.log("Options: ", ResizeHeight.value);
+  console.log("Futures: ", ResizeHeight.value);
   if (ResizeHeight && ResizeHeight.value) {
     const col = ResizeHeight.value.$el as HTMLElement;
     const height = col.clientHeight;
@@ -367,14 +314,45 @@ const calculateTableHeight = computed(() => {
 const onWindowResize = () => {
   tableHeight.value = calculateTableHeight.value;
 };
+onMounted(() => {
+  console.log("Mounted Futures ");
+  const url = "/market";
+  connect(url);
+
+  onWindowResize();
+  window.addEventListener("resize", onWindowResize);
+});
+onBeforeUnmount(() => {
+  const url = "/market";
+  disconnect(url);
+  window.removeEventListener("resize", onWindowResize);
+});
+
+const marketMessages = computed(() =>
+  appStore.getMarketDisplayData.filter((e) => {
+    if (e.contractDisplay.flag !== "F") return false;
+    if (e.contractDisplay.contracT_TYPE !== 4) return false;
+
+    // apply text filter here
+
+    if (state.currentSubscriptions.length > 0) {
+      const found = state.currentSubscriptions.find(
+        (b) => b.contract == e.contract
+      );
+      if (!found) {
+        return e;
+      }
+    } else {
+      return e;
+    }
+  })
+);
 // const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
 // const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
   { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
-  { title: "Strike", key: "contractDisplay.strike", order: 6 },
-  { title: "Flag", key: "contractDisplay.flag" },
-
+  // { title: "Instrument", key: "contractDisplay.instrument" },
   {
     title: "B/QTY",
     key: "qtyBid",
@@ -388,7 +366,6 @@ const headers: any[] = [
   { title: "Offer", key: "offer", order: 4 },
   { title: "O/QTY", key: "qtyOffer", order: 5 },
   { title: "Change", key: "change", order: 6 },
-
   { title: "Time", key: "time", order: 7 },
 
   // { title: "Last", key: "last" },
@@ -482,7 +459,11 @@ const disconnect = (endpoint: string) => {
   connectionState.connection?.stop();
 };
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
+.v-data-table {
+  max-height: 100%;
+  height: 100%;
+}
 // .v-table > .v-table__wrapper > table > thead > tr > th {
 //   padding-left: 5px;
 //   padding-right: 5px;

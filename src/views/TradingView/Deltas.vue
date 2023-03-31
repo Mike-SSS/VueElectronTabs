@@ -51,13 +51,13 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0">
+      <v-col cols="12" class="pa-0" ref="ResizeHeight">
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
           :items="state.currentSubscriptions"
           :headers="getSortedHeaders"
-          height="200"
+          :height="calculateTableHeight"
           fixed-header
         >
           <template
@@ -291,10 +291,15 @@ onMounted(() => {
   console.log("Mounted Deltas");
   const url = "/market";
   connect(url);
+
+  onWindowResize();
+  window.addEventListener("resize", onWindowResize);
 });
 onBeforeUnmount(() => {
   const url = "/market";
   disconnect(url);
+
+  window.removeEventListener("resize", onWindowResize);
 });
 
 function getUniqueValues() {
@@ -398,6 +403,31 @@ const connectionState = reactive<{
   connection: null,
   messages: [],
 });
+const tableHeight = ref(0);
+const ResizeHeight = ref();
+const calculateTableHeight = computed(() => {
+  console.log("Options: ", ResizeHeight.value);
+  if (ResizeHeight && ResizeHeight.value) {
+    const col = ResizeHeight.value.$el as HTMLElement;
+    const height = col.clientHeight;
+    console.log("Height :", height, col.clientHeight, col);
+    // return height;
+    const header = col.querySelector("thead") as HTMLElement;
+    const pagination = col.querySelector(".v-data-table-footer") as HTMLElement;
+    console.log("Check: ", header, pagination);
+    const paginationHeight = pagination ? pagination.offsetHeight : 0;
+
+    const result = height - paginationHeight - 20;
+    console.log("Returned height: ", result, paginationHeight);
+    return result;
+  } else {
+    return 0;
+  }
+});
+
+const onWindowResize = () => {
+  tableHeight.value = calculateTableHeight.value;
+};
 
 const connect = async (endpoint: string) => {
   console.log("Attempt to connect");

@@ -125,6 +125,8 @@ const categories: Ref<MenuItem[]> = ref([
       { id: 1, name: "Futures", component: "Futures" as const },
       { id: 2, name: "Options", component: "Options" as const },
       { id: 3, name: "Deltas", component: "Deltas" as const },
+      { id: 4, name: "Splits", component: "Splits" as const },
+      { id: 5, name: "Spreads", component: "Spreads" as const },
     ],
     subMenu: false,
   },
