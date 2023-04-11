@@ -1,13 +1,12 @@
 // Utilities
 import { defineStore } from "pinia";
-import { MarketDisplayItem } from "./signalr";
+import { MarketDisplayItemContract } from "@/models/marketData";
 
 type LANGUAGE = "en" | "afr";
 type THEME = "light" | "dark";
 
 interface State {
   drawer: boolean;
-  marketDisplayData: MarketDisplayItem[];
   items: {
     title: string;
     icon: string;
@@ -20,8 +19,6 @@ interface State {
 
 export const useAppStore = defineStore("app", {
   state: (): State => ({
-    //
-    marketDisplayData: [],
     drawer: false,
     items: [
       { title: "Home", icon: "mdi-home", link: "/" },
@@ -43,9 +40,6 @@ export const useAppStore = defineStore("app", {
     setLanguage(language: LANGUAGE) {
       this.language = language;
     },
-    setMarketDisplayData(items: MarketDisplayItem[]) {
-      this.marketDisplayData = items;
-    },
     login() {
       this.isLoggedIn = true;
     },
@@ -56,6 +50,5 @@ export const useAppStore = defineStore("app", {
 
   getters: {
     greeting: (state) => (state.language === "en" ? "Hello!" : "¡Hola!"),
-    getMarketDisplayData: (state) => state.marketDisplayData,
   },
 });

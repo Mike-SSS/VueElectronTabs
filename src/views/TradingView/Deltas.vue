@@ -250,12 +250,12 @@ import {
 } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
+import { useContractsStore } from "@/store/contracts";
 
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-import { MarketDisplayItem } from "@/store/signalr";
+import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
 const appStore = useAppStore();
-const marketDisplayStore = useMarketDisplayStore();
+const mainStore = useContractsStore();
 
 type ConvertibleKeys<T> = {
   [K in keyof T]: T[K] extends string | number | object ? K : never;
@@ -306,7 +306,7 @@ function getUniqueValues() {
   const field = "contractDisplay";
   const child = "flag";
   return marketMessages.value.reduce(
-    (unique: string[], item: MarketDisplayItem) => {
+    (unique: string[], item: MainModel) => {
       if (!unique.includes(<string>item[field][child])) {
         unique.push(<string>item[field][child]);
       }
@@ -333,7 +333,7 @@ const filtered = computed(
   // }))
 );
 const marketMessages = computed(() =>
-  appStore.getMarketDisplayData.filter((e) => {
+  mainStore.getMarketDisplayData.filter((e) => {
     if (e.contractDisplay.flag != "C" && e.contractDisplay.flag != "P")
       return false;
     if (e.contractDisplay.contracT_TYPE !== 5) return false;
@@ -386,8 +386,8 @@ const state = reactive<{
   openHeaderPicker: boolean;
   openInstruments: boolean;
   selectedHeaders: any[];
-  currentSubscriptions: MarketDisplayItem[];
-  instrumentsToAdd: MarketDisplayItem[];
+  currentSubscriptions: MainModel[];
+  instrumentsToAdd: MainModel[];
 }>({
   openHeaderPicker: false,
   openInstruments: false,
@@ -398,7 +398,7 @@ const state = reactive<{
 
 const connectionState = reactive<{
   connection: HubConnection | null;
-  messages: MarketDisplayItem[];
+  messages: MainModel[];
 }>({
   connection: null,
   messages: [],
@@ -434,7 +434,7 @@ const connect = async (endpoint: string) => {
 
   // signalrStore.connect(endpoint);
   connectionState.connection = new HubConnectionBuilder()
-    .withUrl(`https://localhost:63125${endpoint}`)
+    .withUrl(`${import.meta.env.VITE_APP_API_URL}${endpoint}`)
     .withAutomaticReconnect()
     .build();
 
@@ -446,9 +446,9 @@ const connect = async (endpoint: string) => {
   connectionState.connection.on("MarketUpdate", (message: string) => {
     console.log("Socket Message ", message);
     try {
-      const temp = createTypedObject<MarketDisplayItem>(message);
+      const temp = createTypedObject<MainModel>(message);
       console.log("Parsed update : ", message, temp);
-      marketDisplayStore.updateItem(temp);
+      mainStore.updateItem(temp);
     } catch (err) {
       console.error("error parsing json for ", message, err);
     }

@@ -54,6 +54,7 @@
 //   },
 // });
 import { defineStore } from "pinia";
+import { MarketDisplayItem } from "@/models/marketData";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 
 interface ConnectionInfo {
@@ -65,34 +66,6 @@ interface ConnectionInfo {
 //   id: string;
 //   text: string;
 // }
-export interface MarketDisplayItem {
-  displaySeq: string;
-  contract: string;
-  contractDisplay: {
-    instrument: string;
-    contractDate: string;
-    strike: number;
-    flag: string;
-    contracT_TYPE: number;
-    contractDisplay: string;
-  };
-  qtyBid: string;
-  bid: string;
-  offer: string;
-  qtyOffer: string;
-  change: string;
-  time: string;
-  last: string;
-  hi: string;
-  lo: string;
-  volume: string;
-  openPrice: string;
-  contractSeq: string;
-  dateSeq: string;
-  strikeSeq: string;
-  secondContractSeq: string;
-  secondDateSeq: string;
-}
 
 export interface Message {
   type: number;
@@ -124,7 +97,7 @@ export const useSignalRStore = defineStore("signalr", {
     async connect(endpoint: string) {
       if (!this.connections[endpoint]) {
         const connection = new HubConnectionBuilder()
-          .withUrl(`https://localhost:63125${endpoint}`)
+          .withUrl(`${import.meta.env.VITE_APP_API_URL}${endpoint}`)
           .withAutomaticReconnect()
           .build();
 
@@ -192,8 +165,8 @@ export const useSignalRStore = defineStore("signalr", {
 
     disconnect(endpoint: string) {
       let splitted = endpoint;
-      if (endpoint.includes("https://localhost:63125")) {
-        splitted = endpoint.split("https://localhost:63125")[1];
+      if (endpoint.includes(import.meta.env.VITE_APP_API_URL)) {
+        splitted = endpoint.split(import.meta.env.VITE_APP_API_URL)[1];
       }
 
       console.log("Disconnect ", splitted, endpoint);

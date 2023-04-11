@@ -506,14 +506,29 @@ onMounted(async () => {
   console.log("App store market data: ", appStore.getMarketDisplayData);
 
   // Get instruments
+  // const pub = await PublishAll();
+
 });
 
 const GetMarketDisplay = async () => {
   try {
-    const res = await axios?.get("/MarketSubscription/GetMarketDisplay");
+    const res = await axios?.get("/api/MarketSubscription/GetMarketDisplay");
     if (res) return Promise.resolve(res.data);
   } catch (err) {
     console.error(err);
   }
 };
+
+// const PublishAll = async () => {
+//   try {
+//     const res = await axios?.get("/api/Download/publishall");
+
+//     if (res) {
+//       console.log("Publish All : ", res.data);
+//       return Promise.resolve(res.data);
+//     }
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
 </script>

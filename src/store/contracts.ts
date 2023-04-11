@@ -2,14 +2,11 @@
 import { defineStore } from "pinia";
 import { MarketDisplayItemContract as Model } from "@/models/marketData";
 
-type LANGUAGE = "en" | "afr";
-type THEME = "light" | "dark";
-
 interface State {
   marketDisplayData: Model[];
 }
 
-export const useMarketDisplayStore = defineStore("marketDisplay", {
+export const useContractsStore = defineStore("contracts", {
   state: (): State => ({
     marketDisplayData: [],
   }),
