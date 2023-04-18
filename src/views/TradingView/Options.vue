@@ -29,17 +29,12 @@
           <div>
             <v-icon
               size="25"
-              :color="
-                connectionState.connection?.state == 'Connected'
-                  ? 'success'
-                  : 'error'
-              "
+              :color="socket?.state == 'Connected' ? 'success' : 'error'"
               >mdi-circle</v-icon
             >
           </div>
           <div>Current status</div>
         </v-tooltip>
-        <!-- lable and Add Instrument button here  -->
         <v-btn
           density="compact"
           color="transparent"
@@ -199,9 +194,6 @@
             item-value="contract"
             :items-per-page="-1"
           >
-            <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
-            <!-- { item, columns, toggleGroup, isGroupOpen } -->
-            <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
             <template
               v-slot:group-header="{
                 item,
@@ -245,26 +237,17 @@ import {
   onMounted,
   onBeforeUnmount,
 } from "vue";
-import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
-import { useContractsStore } from "@/store/contracts";
+import { useMarketDisplayStore } from "@/store/marketDisplay";
 
-import { instance } from "@/plugins/axios";
-
-import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import { useWebSocket } from "@/utils/useWebsocket";
 import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
 const appStore = useAppStore();
-const mainStore = useContractsStore();
+const mainStore = useMarketDisplayStore();
 
-type ConvertibleKeys<T> = {
-  [K in keyof T]: T[K] extends string | number | object ? K : never;
-}[keyof T];
+const endpoint = "/market";
 
-type ConvertibleTypes<T> = {
-  [K in ConvertibleKeys<T>]: T[K] extends object
-    ? ConvertibleTypes<T[K]>
-    : T[K];
-};
+const { socket, data, subscribe } = useWebSocket<MainModel>(useMarketDisplayStore, endpoint);
 
 const props = defineProps({
   class: String,
@@ -291,52 +274,44 @@ function updateHeader(e: Event, i: any) {
 
 onMounted(() => {
   console.log("Mounted Options ");
-  const url = "/market";
-  connect(url);
 
   tableHeight.value = calculateTableHeight.value;
   window.addEventListener("resize", onWindowResize);
 });
 onBeforeUnmount(() => {
-  const url = "/market";
-  disconnect(url);
   window.removeEventListener("resize", onWindowResize);
 });
 
 function getUniqueValues() {
   const field = "contractDisplay";
   const child = "flag";
-  return marketMessages.value.reduce(
-    (unique: string[], item: MainModel) => {
-      item;
-      if (!unique.includes(<string>item[field][child])) {
-        unique.push(<string>item[field][child]);
-      }
-      return unique;
-    },
-    []
-  );
+  return marketMessages.value.reduce((unique: string[], item: MainModel) => {
+    item;
+    if (!unique.includes(<string>item[field][child])) {
+      unique.push(<string>item[field][child]);
+    }
+    return unique;
+  }, []);
 }
-const filtered = computed(() =>
-  marketMessages.value
-    .filter((e) => {
-      if (
-        e.contractDisplay.instrument == "SOYA" &&
-        e.contractDisplay.contractDate == "APR23"
-      ) {
-        return e;
-      }
-      return false;
-    })
-    .map((e) => ({
-      contract: e.contract,
-      seq: e.contractSeq,
-      display: e.contractDisplay,
-    }))
-);
+// const filtered = computed(() =>
+//   marketMessages.value
+//     .filter((e) => {
+//       if (
+//         e.contractDisplay.instrument == "SOYA" &&
+//         e.contractDisplay.contractDate == "APR23"
+//       ) {
+//         return e;
+//       }
+//       return false;
+//     })
+//     .map((e) => ({
+//       contract: e.contract,
+//       seq: e.contractSeq,
+//       display: e.contractDisplay,
+//     }))
+// );
 const marketMessages = computed(() =>
   mainStore.getMarketDisplayData.filter((e) => {
-    // if (e instanceof ComponentModel)
     if (e.contractDisplay.flag == "F") return false;
     if (e.contractDisplay.contracT_TYPE !== 2) return false;
 
@@ -352,6 +327,8 @@ const marketMessages = computed(() =>
     } else {
       return e;
     }
+
+    return e;
   })
 );
 
@@ -422,110 +399,13 @@ const state = reactive<{
   instrumentsToAdd: [],
 });
 
-const connectionState = reactive<{
-  connection: HubConnection | null;
-  messages: MainModel[];
-}>({
-  connection: null,
-  messages: [],
-});
-
-const connect = async (endpoint: string) => {
-  console.log("Attempt to connect");
-
-  // signalrStore.connect(endpoint);
-  connectionState.connection = new HubConnectionBuilder()
-    .withUrl(`${import.meta.env.VITE_APP_API_URL}${endpoint}`)
-    .withAutomaticReconnect()
-    .build();
-
-  await connectionState.connection
-    .start()
-    .then(async () => {
-      // init data here for each panel
-      console.log("Socket connected here");
-      if (connectionState.connection) {
-        connectionState.connection.on("MarketInit", (message: any) => {
-          console.log("Inner market init Message ", message);
-          try {
-            const temp = createTypedObject<MainModel>(message);
-            console.log("Parsed update : ", message, temp);
-            mainStore.updateItem(temp);
-          } catch (err) {
-            console.error("error parsing json for ", message, err);
-          }
-        });
-        console.log("Invoke market init");
-        // connectionState.connection.invoke("PublishAll");
-        const res = await instance.get("/api/download/publishall");
-        if (res) {
-          console.log("Publish all Result ", res.data);
-        }
-      }
-    })
-    .catch((err) => {
-      console.error("Error starting socket ", err);
-    });
-
-  connectionState.connection.on("connected", (message: string) => {
-    console.log(
-      "Socket connected ",
-      message,
-      connectionState.connection?.connectionId
-    );
-  });
-
-  connectionState.connection.on("message", (message: string) => {
-    console.log("Socket message ", message);
-  });
-
-  connectionState.connection.on("MarketUpdate", (message: string) => {
-    console.log("Socket Message ", message);
-    try {
-      const temp = createTypedObject<MainModel>(message);
-      console.log("Parsed update : ", message, temp);
-      mainStore.updateItem(temp);
-    } catch (err) {
-      console.error("error parsing json for ", message, err);
-    }
-  });
-  connectionState.connection.on("marketUpdate", (message: string) => {
-    console.log("Socket message ", message);
-  });
-};
-function createTypedObject<T>(data: string | object): T {
-  const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-  const typedObject: Partial<T> = {};
-
-  for (const key in parsedData) {
-    const value = parsedData[key];
-
-    if (typeof value === "string" || typeof value === "number") {
-      typedObject[key as keyof T] = value as T[keyof T];
-    } else if (typeof value === "object") {
-      typedObject[key as keyof T] = createTypedObject<T[keyof T]>(
-        value
-      ) as T[keyof T];
-    } else {
-      throw new Error(`Invalid data for field ${key}`);
-    }
-  }
-  return typedObject as T;
-}
 const subscribeToSelected = () => {
   console.log("Subscribing to : ", state.instrumentsToAdd);
-  connectionState.connection?.invoke(
-    "Subscribe",
-    state.instrumentsToAdd.map((e) => e.contract)
-  );
+  subscribe(state.instrumentsToAdd.map((e) => e.contract));
   state.instrumentsToAdd.forEach((e) => {
     state.currentSubscriptions.push(e);
   });
   state.instrumentsToAdd.splice(0);
-};
-const disconnect = (endpoint: string) => {
-  console.log("Disconnect futures with subs", endpoint);
-  connectionState.connection?.stop();
 };
 </script>
 <style lang="scss">

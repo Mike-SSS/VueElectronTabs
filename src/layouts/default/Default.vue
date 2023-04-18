@@ -394,6 +394,7 @@ import { onMounted, computed, reactive, markRaw, inject, ref } from "vue";
 import DefaultView from "./View.vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
+import { useMarketDisplayStore } from "@/store/marketDisplay";
 
 import draggable from "vuedraggable";
 
@@ -407,6 +408,7 @@ import AnalogClock from "@/components/AnalogClock.vue";
 const axios = inject<AxiosInstance>(axiosSymbol);
 const currentToolbar = ref(null);
 const storeLayout = useLayoutStore();
+const marketDisplayStore = useMarketDisplayStore();
 const appStore = useAppStore();
 
 const state = reactive<{
@@ -502,12 +504,11 @@ onMounted(async () => {
     throw new Error("Axios instance not found");
   }
   const temp = await GetMarketDisplay();
-  if (temp) appStore.setMarketDisplayData(temp);
-  console.log("App store market data: ", appStore.getMarketDisplayData);
+  if (temp) marketDisplayStore.setMarketDisplayData(temp);
+  console.log("App store market data: ", marketDisplayStore.getMarketDisplayData);
 
   // Get instruments
   // const pub = await PublishAll();
-
 });
 
 const GetMarketDisplay = async () => {

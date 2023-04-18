@@ -1,14 +1,10 @@
 <template>
-  <v-container
-    fluid
-    :style="props.style"
-    id="Splits"
-    class="bg-grey overflow-y-auto d-flex flex-column"
-  >
-    <v-row justify="space-between" align="center">
+  <v-container fluid :style="props.style" key="Options" class="bg-grey">
+    <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto">
-        <div class="text-h5">Splits</div>
+        <div class="text-h5">Options</div>
       </v-col>
+      <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
         <v-btn
           density="compact"
@@ -34,7 +30,7 @@
             <v-icon
               size="25"
               :color="
-                socket?.state == 'Connected'
+                connectionState.connection?.state == 'Connected'
                   ? 'success'
                   : 'error'
               "
@@ -55,7 +51,7 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0 fill-height" ref="ResizeHeight">
+      <v-col cols="12" class="pa-0" ref="ResizeHeight">
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
@@ -195,7 +191,6 @@
             :items="marketMessages"
             v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
-            multi-sort
             :group-by="[{ key: 'contractDisplay.instrument' }]"
             height="60vh"
             show-select
@@ -251,21 +246,25 @@ import {
   onBeforeUnmount,
 } from "vue";
 import { useLayoutStore } from "@/store/layout";
-
 import { useAppStore } from "@/store/app";
 import { useContractsStore } from "@/store/contracts";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
 
-import { useWebSocket } from "@/utils/useWebsocket";
-import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
+import { instance } from "@/plugins/axios";
+
+import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import { MarketDisplayItemContract as MainModel, PublishAll } from "@/models/marketData";
 const appStore = useAppStore();
-const mainStore = useMarketDisplayStore();
-const endpoint = "/market";
+const mainStore = useContractsStore();
 
-const { socket, data, subscribe } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
-  endpoint
-);
+type ConvertibleKeys<T> = {
+  [K in keyof T]: T[K] extends string | number | object ? K : never;
+}[keyof T];
+
+type ConvertibleTypes<T> = {
+  [K in ConvertibleKeys<T>]: T[K] extends object
+    ? ConvertibleTypes<T[K]>
+    : T[K];
+};
 
 const props = defineProps({
   class: String,
@@ -274,6 +273,9 @@ const props = defineProps({
     required: true,
   },
 });
+
+const tableHeight = ref(0);
+const ResizeHeight = ref();
 
 function updateHeader(e: Event, i: any) {
   console.log("Update header ", (e?.target as any).value, i);
@@ -286,10 +288,75 @@ function updateHeader(e: Event, i: any) {
     state.selectedHeaders.push(i);
   }
 }
-const tableHeight = ref(0);
-const ResizeHeight = ref();
+
+onMounted(() => {
+  console.log("Mounted Options ");
+  const url = "/market";
+  connect(url);
+
+  tableHeight.value = calculateTableHeight.value;
+  window.addEventListener("resize", onWindowResize);
+});
+onBeforeUnmount(() => {
+  const url = "/market";
+  disconnect(url);
+  window.removeEventListener("resize", onWindowResize);
+});
+
+function getUniqueValues() {
+  const field = "contractDisplay";
+  const child = "flag";
+  return marketMessages.value.reduce(
+    (unique: string[], item: MainModel) => {
+      item;
+      if (!unique.includes(<string>item[field][child])) {
+        unique.push(<string>item[field][child]);
+      }
+      return unique;
+    },
+    []
+  );
+}
+const filtered = computed(() =>
+  marketMessages.value
+    .filter((e) => {
+      if (
+        e.contractDisplay.instrument == "SOYA" &&
+        e.contractDisplay.contractDate == "APR23"
+      ) {
+        return e;
+      }
+      return false;
+    })
+    .map((e) => ({
+      contract: e.contract,
+      seq: e.contractSeq,
+      display: e.contractDisplay,
+    }))
+);
+const marketMessages = computed(() =>
+  mainStore.getMarketDisplayData.filter((e) => {
+    // if (e instanceof ComponentModel)
+    if (e.contractDisplay.flag == "F") return false;
+    if (e.contractDisplay.contracT_TYPE !== 2) return false;
+
+    // apply text filter here
+
+    if (state.currentSubscriptions.length > 0) {
+      const found = state.currentSubscriptions.find(
+        (b) => b.contract == e.contract
+      );
+      if (!found) {
+        return e;
+      }
+    } else {
+      return e;
+    }
+  })
+);
+
 const calculateTableHeight = computed(() => {
-  console.log("Futures: ", ResizeHeight.value);
+  console.log("Options: ", ResizeHeight.value);
   if (ResizeHeight && ResizeHeight.value) {
     const col = ResizeHeight.value.$el as HTMLElement;
     const height = col.clientHeight;
@@ -311,40 +378,14 @@ const calculateTableHeight = computed(() => {
 const onWindowResize = () => {
   tableHeight.value = calculateTableHeight.value;
 };
-onMounted(() => {
-  console.log("Mounted Futures ");
-  onWindowResize();
-  window.addEventListener("resize", onWindowResize);
-});
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", onWindowResize);
-});
-
-const marketMessages = computed(() =>
-  mainStore.getMarketDisplayData.filter((e) => {
-    if (e.contractDisplay.flag !== "F") return false;
-    if (e.contractDisplay.contracT_TYPE !== 3) return false;
-
-    // apply text filter here
-
-    if (state.currentSubscriptions.length > 0) {
-      const found = state.currentSubscriptions.find(
-        (b) => b.contract == e.contract
-      );
-      if (!found) {
-        return e;
-      }
-    } else {
-      return e;
-    }
-  })
-);
 // const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
 // const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
   { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
-  // { title: "Instrument", key: "contractDisplay.instrument" },
+  { title: "Strike", key: "contractDisplay.strike", order: 6 },
+  { title: "Flag", key: "contractDisplay.flag" },
+
   {
     title: "B/QTY",
     key: "qtyBid",
@@ -358,6 +399,7 @@ const headers: any[] = [
   { title: "Offer", key: "offer", order: 4 },
   { title: "O/QTY", key: "qtyOffer", order: 5 },
   { title: "Change", key: "change", order: 6 },
+
   { title: "Time", key: "time", order: 7 },
 
   // { title: "Last", key: "last" },
@@ -380,20 +422,119 @@ const state = reactive<{
   instrumentsToAdd: [],
 });
 
+const connectionState = reactive<{
+  connection: HubConnection | null;
+  messages: MainModel[];
+}>({
+  connection: null,
+  messages: [],
+});
+
+const connect = async (endpoint: string) => {
+  console.log("Attempt to connect");
+
+  // signalrStore.connect(endpoint);
+  connectionState.connection = new HubConnectionBuilder()
+    .withUrl(`${import.meta.env.VITE_APP_API_URL}${endpoint}`)
+    .withAutomaticReconnect()
+    .build();
+
+  await connectionState.connection
+    .start()
+    .then(async () => {
+      // init data here for each panel
+      console.log("Socket connected here");
+      if (connectionState.connection) {
+        connectionState.connection.on("MarketInit", (message: any) => {
+          console.log("Inner market init Message ", message);
+          try {
+            const temp = createTypedObject<MainModel>(message);
+            console.log("Parsed update : ", message, temp);
+            mainStore.updateItem(temp);
+          } catch (err) {
+            console.error("error parsing OPTIONS: ", message, err);
+          }
+
+        });
+        console.log("Invoke market init");
+        // connectionState.connection.invoke("PublishAll");
+        const res = await instance.get("/api/download/publishall", {
+          params: {
+            publish: true,
+            enumVal: PublishAll.ContractDate
+          }
+        });
+        if (res) {
+          console.log("Publish all Result ", res.data);
+        }
+      }
+    })
+    .catch((err) => {
+      console.error("Error starting socket ", err);
+    });
+
+  connectionState.connection.on("connected", (message: string) => {
+    console.log(
+      "Socket connected ",
+      message,
+      connectionState.connection?.connectionId
+    );
+  });
+
+  connectionState.connection.on("message", (message: string) => {
+    console.log("Socket message ", message);
+  });
+
+  connectionState.connection.on("MarketUpdate", (message: string) => {
+    console.log("Socket Message ", message);
+    try {
+      const temp = createTypedObject<MainModel>(message);
+      console.log("Parsed update : ", message, temp);
+      mainStore.updateItem(temp);
+    } catch (err) {
+      console.error("error parsing OPTION MARKET UPDATE for ", message, err);
+    }
+  });
+  connectionState.connection.on("marketUpdate", (message: string) => {
+    console.log("Socket message ", message);
+  });
+};
+function createTypedObject<T>(data: string | object): T {
+  const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+  const typedObject: Partial<T> = {};
+
+  for (const key in parsedData) {
+    const value = parsedData[key];
+
+    if (typeof value === "string" || typeof value === "number") {
+      typedObject[key as keyof T] = value as T[keyof T];
+    } else if (typeof value === "object") {
+      typedObject[key as keyof T] = createTypedObject<T[keyof T]>(
+        value
+      ) as T[keyof T];
+    } else {
+      throw new Error(`Invalid data for field ${key}`);
+    }
+  }
+  return typedObject as T;
+}
 const subscribeToSelected = () => {
   console.log("Subscribing to : ", state.instrumentsToAdd);
-  subscribe(state.instrumentsToAdd.map((e) => e.contract));
+  connectionState.connection?.invoke(
+    "Subscribe",
+    state.instrumentsToAdd.map((e) => e.contract)
+  );
   state.instrumentsToAdd.forEach((e) => {
     state.currentSubscriptions.push(e);
   });
   state.instrumentsToAdd.splice(0);
 };
+const disconnect = (endpoint: string) => {
+  console.log("Disconnect futures with subs", endpoint);
+  connectionState.connection?.stop();
+};
 </script>
-<style lang="scss" scoped>
-.v-data-table {
-  max-height: 100%;
-  height: 100%;
-}
+<style lang="scss">
 // .v-table > .v-table__wrapper > table > thead > tr > th {
 //   padding-left: 5px;
 //   padding-right: 5px;

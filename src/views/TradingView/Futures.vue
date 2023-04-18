@@ -34,7 +34,7 @@
             <v-icon
               size="25"
               :color="
-                connectionState.connection?.state == 'Connected'
+                socket?.state == 'Connected'
                   ? 'success'
                   : 'error'
               "
@@ -254,21 +254,18 @@ import { useLayoutStore } from "@/store/layout";
 
 import { useAppStore } from "@/store/app";
 import { useContractsStore } from "@/store/contracts";
-
-import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import { useMarketDisplayStore } from "@/store/marketDisplay";
+import { useWebSocket } from "@/utils/useWebsocket";
 import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
 const appStore = useAppStore();
-const mainStore = useContractsStore();
+const mainStore = useMarketDisplayStore();
 
-type ConvertibleKeys<T> = {
-  [K in keyof T]: T[K] extends string | number | object ? K : never;
-}[keyof T];
+const endpoint = "/market";
 
-type ConvertibleTypes<T> = {
-  [K in ConvertibleKeys<T>]: T[K] extends object
-    ? ConvertibleTypes<T[K]>
-    : T[K];
-};
+const { socket, data, subscribe } = useWebSocket<MainModel>(
+  useMarketDisplayStore,
+  endpoint
+);
 
 const props = defineProps({
   class: String,
@@ -316,15 +313,10 @@ const onWindowResize = () => {
 };
 onMounted(() => {
   console.log("Mounted Futures ");
-  const url = "/market";
-  connect(url);
-
   onWindowResize();
   window.addEventListener("resize", onWindowResize);
 });
 onBeforeUnmount(() => {
-  const url = "/market";
-  disconnect(url);
   window.removeEventListener("resize", onWindowResize);
 });
 
@@ -389,75 +381,13 @@ const state = reactive<{
   instrumentsToAdd: [],
 });
 
-const connectionState = reactive<{
-  connection: HubConnection | null;
-  messages: MainModel[];
-}>({
-  connection: null,
-  messages: [],
-});
-
-const connect = async (endpoint: string) => {
-  console.log("Attempt to connect");
-
-  // signalrStore.connect(endpoint);
-  connectionState.connection = new HubConnectionBuilder()
-    .withUrl(`${import.meta.env.VITE_APP_API_URL}${endpoint}`)
-    .withAutomaticReconnect()
-    .build();
-
-  await connectionState.connection.start();
-
-  connectionState.connection.on("message", (message: string) => {
-    console.log("Socket message ", message);
-  });
-  connectionState.connection.on("MarketUpdate", (message: string) => {
-    console.log("Socket Message ", message);
-    try {
-      const temp = createTypedObject<MainModel>(message);
-      console.log("Parsed update : ", message, temp);
-      mainStore.updateItem(temp);
-    } catch (err) {
-      console.error("error parsing json for ", message, err);
-    }
-  });
-  connectionState.connection.on("marketUpdate", (message: string) => {
-    console.log("Socket message ", message);
-  });
-};
-function createTypedObject<T>(data: string | object): T {
-  const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-  const typedObject: Partial<T> = {};
-
-  for (const key in parsedData) {
-    const value = parsedData[key];
-
-    if (typeof value === "string" || typeof value === "number") {
-      typedObject[key as keyof T] = value as T[keyof T];
-    } else if (typeof value === "object") {
-      typedObject[key as keyof T] = createTypedObject<T[keyof T]>(
-        value
-      ) as T[keyof T];
-    } else {
-      throw new Error(`Invalid data for field ${key}`);
-    }
-  }
-  return typedObject as T;
-}
 const subscribeToSelected = () => {
   console.log("Subscribing to : ", state.instrumentsToAdd);
-  connectionState.connection?.invoke(
-    "Subscribe",
-    state.instrumentsToAdd.map((e) => e.contract)
-  );
+  subscribe(state.instrumentsToAdd.map((e) => e.contract));
   state.instrumentsToAdd.forEach((e) => {
     state.currentSubscriptions.push(e);
   });
   state.instrumentsToAdd.splice(0);
-};
-const disconnect = (endpoint: string) => {
-  console.log("Disconnect futures with subs", endpoint);
-  connectionState.connection?.stop();
 };
 </script>
 <style lang="scss" scoped>

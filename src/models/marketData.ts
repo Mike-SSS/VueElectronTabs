@@ -6,6 +6,13 @@ interface ContractDisplay {
   contracT_TYPE: number;
   contractDisplay: string;
 }
+export enum PublishAll {
+  ActiveOrders = 1,
+  Instruments = 2,
+  Holidays = 3,
+  ContractDate = 4,
+  Positions = 5,
+}
 
 export interface MarketDisplayItemContract {
   [key: string]: string | number | ContractDisplay;

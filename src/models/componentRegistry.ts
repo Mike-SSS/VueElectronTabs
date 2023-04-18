@@ -4,7 +4,7 @@ import Options from "@/views/TradingView/Options.vue";
 import Splits from "@/views/TradingView/Splits.vue";
 import Spreads from "@/views/TradingView/Spreads.vue";
 import Placeholder from "@/views/TradingView/Placeholder.vue";
-import MarketDisplayData from "@/views/Overview/MarketDisplayData.vue";
+// import MarketDisplayData from "@/views/Overview/MarketDisplayData.vue";
 
 export type ComponentRegistry = {
   Futures: typeof Futures;
@@ -13,7 +13,7 @@ export type ComponentRegistry = {
   Spreads: typeof Spreads;
   Splits: typeof Splits;
   Placeholder: typeof Placeholder;
-  MarketDisplayData: typeof MarketDisplayData;
+  // MarketDisplayData: typeof MarketDisplayData;
   // Add more components as needed
 };
 
@@ -23,7 +23,7 @@ const componentRegistry: ComponentRegistry = {
     Options,
     Spreads,
     Deltas,
-    MarketDisplayData,
+    // MarketDisplayData,
     Placeholder
   // ...register more components as needed
 };
