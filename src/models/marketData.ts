@@ -153,3 +153,8 @@ export interface MarketDisplayItemHoliday {
   centreCode: string;
   date: Date;
 }
+export type FilterCondition = {
+  field: string;
+  value: any;
+  nested?: boolean;
+};

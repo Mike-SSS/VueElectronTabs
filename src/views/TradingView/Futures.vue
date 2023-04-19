@@ -55,7 +55,7 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0 fill-height" ref="Futures">
+      <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
@@ -256,12 +256,13 @@ import { useAppStore } from "@/store/app";
 import { useContractsStore } from "@/store/contracts";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
 import { useWebSocket } from "@/utils/useWebsocket";
-import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
+import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
+import { MarketDisplayItemContract as MainModel, FilterCondition } from "@/models/marketData";
 const appStore = useAppStore();
-const mainStore = useMarketDisplayStore();
+const mainStore = useContractsStore();
 
 const endpoint = "/market";
-
+const { calculateTableHeight, Reference } = useTableHeightCalculator();
 const { socket, data, subscribe } = useWebSocket<MainModel>(
   useMarketDisplayStore,
   endpoint
@@ -286,42 +287,15 @@ function updateHeader(e: Event, i: any) {
     state.selectedHeaders.push(i);
   }
 }
-const tableHeight = ref(0);
-const Futures = ref();
-const calculateTableHeight = computed(() => {
-  console.log("Futures: ", Futures.value);
-  if (Futures && Futures.value) {
-    const col = Futures.value.$el as HTMLElement;
-    const height = col.clientHeight;
-    console.log("Height :", height, col.clientHeight, col);
-    // return height;
-    const header = col.querySelector("thead") as HTMLElement;
-    const pagination = col.querySelector(".v-data-table-footer") as HTMLElement;
-    console.log("Check: ", header, pagination);
-    const paginationHeight = pagination ? pagination.offsetHeight : 0;
 
-    const result = height - paginationHeight - 20;
-    console.log("Returned height: ", result, paginationHeight);
-    return result;
-  } else {
-    return 0;
-  }
-});
-
-const onWindowResize = () => {
-  tableHeight.value = calculateTableHeight.value;
-};
-onMounted(() => {
-  console.log("Mounted Futures ");
-  onWindowResize();
-  window.addEventListener("resize", onWindowResize);
-});
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", onWindowResize);
-});
+const filters: FilterCondition[] = [
+  { field: "contractDisplay.flag", value: "F", nested: true },
+  { field: "contractDisplay.strike", value: 0, nested: true },
+  { field: "contractDisplay.contracT_TYPE", value: 3, nested: true },
+];
 
 const marketMessages = computed(() =>
-  mainStore.getMarketDisplayData.filter((e) => {
+  mainStore.getData.filter((e) => {
     if (e.contractDisplay.flag !== "F") return false;
     if (e.contractDisplay.strike !== 0) return false;
     if (e.contractDisplay.contracT_TYPE == 3) return false;

@@ -14,7 +14,7 @@ export const useMarketDisplayStore = defineStore("marketDisplay", {
     marketDisplayData: [],
   }),
   actions: {
-    setMarketDisplayData(items: Model[]) {
+    setData(items: Model[]) {
       this.marketDisplayData = items;
     },
     updateItem(updatedItem: Model) {
@@ -41,6 +41,6 @@ export const useMarketDisplayStore = defineStore("marketDisplay", {
   },
 
   getters: {
-    getMarketDisplayData: (state) => state.marketDisplayData,
+    getData: (state) => state.marketDisplayData,
   },
 });

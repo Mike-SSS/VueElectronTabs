@@ -301,7 +301,7 @@ function getUniqueValues() {
   }, []);
 }
 const marketMessages = computed(() =>
-  mainStore.getMarketDisplayData.filter((e) => {
+  mainStore.getData.filter((e) => {
     if (e.contractDisplay.flag != "C" && e.contractDisplay.flag != "P")
       return false;
     if (e.contractDisplay.contracT_TYPE !== 5) return false;

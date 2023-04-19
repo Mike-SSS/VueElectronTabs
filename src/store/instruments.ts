@@ -17,6 +17,6 @@ export const useInstrumentsStore = defineStore("instruments", {
   },
 
   getters: {
-    getMarketDisplayData: (state) => state.marketDisplayData,
+    getData: (state) => state.marketDisplayData,
   },
 });

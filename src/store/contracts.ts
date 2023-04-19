@@ -11,7 +11,7 @@ export const useContractsStore = defineStore("contracts", {
     marketDisplayData: [],
   }),
   actions: {
-    setMarketDisplayData(items: Model[]) {
+    setData(items: Model[]) {
       this.marketDisplayData = items;
     },
     updateItem(updatedItem: Model) {
@@ -38,6 +38,6 @@ export const useContractsStore = defineStore("contracts", {
   },
 
   getters: {
-    getMarketDisplayData: (state) => state.marketDisplayData,
+    getData: (state) => state.marketDisplayData,
   },
 });

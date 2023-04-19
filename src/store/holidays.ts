@@ -17,6 +17,6 @@ export const useHolidaysStore = defineStore("holidays", {
   },
 
   getters: {
-    getMarketDisplayData: (state) => state.marketDisplayData,
+    getData: (state) => state.marketDisplayData,
   },
 });

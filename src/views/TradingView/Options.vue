@@ -46,11 +46,11 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0" ref="ResizeHeight">
+      <v-col cols="12" class="pa-0" ref="Reference">
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
-          :items="state.currentSubscriptions"
+          :items="currentSubscriptions"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
@@ -135,7 +135,7 @@
           ><v-row justify="space-between">
             <v-col cols="10"
               >Instrument List ({{
-                marketMessages ? marketMessages.length : -2
+                filteredData ? filteredData.length : -2
               }})</v-col
             >
             <v-col cols="2" sm="auto"
@@ -165,10 +165,10 @@
               <v-col cols="auto"
                 ><v-btn
                   @click="subscribeToSelected"
-                  :disabled="state.instrumentsToAdd.length == 0"
+                  :disabled="instrumentsToAdd.length == 0"
                   color="primary"
                 >
-                  Add ({{ state.instrumentsToAdd.length }})</v-btn
+                  Add ({{ instrumentsToAdd.length }})</v-btn
                 ></v-col
               >
               <v-col cols="auto"
@@ -183,8 +183,8 @@
           <v-data-table
             density="compact"
             class="tableData"
-            :items="marketMessages"
-            v-model="state.instrumentsToAdd"
+            :items="filteredData"
+            v-model="instrumentsToAdd"
             :headers="state.selectedHeaders"
             :group-by="[{ key: 'contractDisplay.instrument' }]"
             height="60vh"
@@ -241,13 +241,20 @@ import { useAppStore } from "@/store/app";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
 
 import { useWebSocket } from "@/utils/useWebsocket";
+import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
 
 const endpoint = "/market";
-
-const { socket, data, subscribe } = useWebSocket<MainModel>(useMarketDisplayStore, endpoint);
+const { calculateTableHeight, Reference } = useTableHeightCalculator();
+const {
+  socket,
+  instrumentsToAdd,
+  subscribeToSelected,
+  currentSubscriptions,
+  filteredData,
+} = useWebSocket<MainModel>(useMarketDisplayStore, endpoint);
 
 const props = defineProps({
   class: String,
@@ -256,9 +263,6 @@ const props = defineProps({
     required: true,
   },
 });
-
-const tableHeight = ref(0);
-const ResizeHeight = ref();
 
 function updateHeader(e: Event, i: any) {
   console.log("Update header ", (e?.target as any).value, i);
@@ -274,18 +278,13 @@ function updateHeader(e: Event, i: any) {
 
 onMounted(() => {
   console.log("Mounted Options ");
-
-  tableHeight.value = calculateTableHeight.value;
-  window.addEventListener("resize", onWindowResize);
 });
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", onWindowResize);
-});
+onBeforeUnmount(() => {});
 
 function getUniqueValues() {
   const field = "contractDisplay";
   const child = "flag";
-  return marketMessages.value.reduce((unique: string[], item: MainModel) => {
+  return filteredData.value.reduce((unique: string[], item: MainModel) => {
     item;
     if (!unique.includes(<string>item[field][child])) {
       unique.push(<string>item[field][child]);
@@ -293,70 +292,7 @@ function getUniqueValues() {
     return unique;
   }, []);
 }
-// const filtered = computed(() =>
-//   marketMessages.value
-//     .filter((e) => {
-//       if (
-//         e.contractDisplay.instrument == "SOYA" &&
-//         e.contractDisplay.contractDate == "APR23"
-//       ) {
-//         return e;
-//       }
-//       return false;
-//     })
-//     .map((e) => ({
-//       contract: e.contract,
-//       seq: e.contractSeq,
-//       display: e.contractDisplay,
-//     }))
-// );
-const marketMessages = computed(() =>
-  mainStore.getMarketDisplayData.filter((e) => {
-    if (e.contractDisplay.flag == "F") return false;
-    if (e.contractDisplay.contracT_TYPE !== 2) return false;
 
-    // apply text filter here
-
-    if (state.currentSubscriptions.length > 0) {
-      const found = state.currentSubscriptions.find(
-        (b) => b.contract == e.contract
-      );
-      if (!found) {
-        return e;
-      }
-    } else {
-      return e;
-    }
-
-    return e;
-  })
-);
-
-const calculateTableHeight = computed(() => {
-  console.log("Options: ", ResizeHeight.value);
-  if (ResizeHeight && ResizeHeight.value) {
-    const col = ResizeHeight.value.$el as HTMLElement;
-    const height = col.clientHeight;
-    console.log("Height :", height, col.clientHeight, col);
-    // return height;
-    const header = col.querySelector("thead") as HTMLElement;
-    const pagination = col.querySelector(".v-data-table-footer") as HTMLElement;
-    console.log("Check: ", header, pagination);
-    const paginationHeight = pagination ? pagination.offsetHeight : 0;
-
-    const result = height - paginationHeight - 20;
-    console.log("Returned height: ", result, paginationHeight);
-    return result;
-  } else {
-    return 0;
-  }
-});
-
-const onWindowResize = () => {
-  tableHeight.value = calculateTableHeight.value;
-};
-// const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
-// const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
   { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
@@ -389,24 +325,11 @@ const state = reactive<{
   openHeaderPicker: boolean;
   openInstruments: boolean;
   selectedHeaders: any[];
-  currentSubscriptions: MainModel[];
-  instrumentsToAdd: MainModel[];
 }>({
   openHeaderPicker: false,
   openInstruments: false,
   selectedHeaders: headers.concat([]),
-  currentSubscriptions: [],
-  instrumentsToAdd: [],
 });
-
-const subscribeToSelected = () => {
-  console.log("Subscribing to : ", state.instrumentsToAdd);
-  subscribe(state.instrumentsToAdd.map((e) => e.contract));
-  state.instrumentsToAdd.forEach((e) => {
-    state.currentSubscriptions.push(e);
-  });
-  state.instrumentsToAdd.splice(0);
-};
 </script>
 <style lang="scss">
 // .v-table > .v-table__wrapper > table > thead > tr > th {

@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, Ref } from "vue";
+import { ref, onMounted, onUnmounted, Ref, computed } from "vue";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { instance } from "@/plugins/axios";
 import { useContractsStore } from "@/store/contracts";
@@ -14,11 +14,15 @@ export function useWebSocket<T extends Custom>(
   url: string
 ): {
   socket: Ref<HubConnection | null>;
-  data: Ref<Custom>;
-  subscribe: (list: string[]) => Promise<boolean>
+  currentSubscriptions: Ref<Custom[]>;
+  instrumentsToAdd: Ref<Custom[]>;
+  filteredData: Ref<Custom[]>;
+  subscribeToSelected: () => boolean;
+  subscribe: (list: string[]) => Promise<boolean>;
 } {
-  let socket = ref<HubConnection | null>(null) as Ref<HubConnection | null>;
-  let data = ref<any>(null);
+  const instrumentsToAdd = ref<Custom[]>([]);
+  const socket = ref<HubConnection | null>(null) as Ref<HubConnection | null>;
+  const currentSubscriptions = ref<Custom[]>([]);
 
   onMounted(() => {
     connect(url);
@@ -27,6 +31,40 @@ export function useWebSocket<T extends Custom>(
   onUnmounted(() => {
     disconnect(url);
   });
+  const subscribeToSelected = () => {
+    try {
+      console.log("Subscribing to : ", instrumentsToAdd);
+      subscribe(instrumentsToAdd.value.map((e) => e.contract));
+      instrumentsToAdd.value.forEach((e) => {
+        currentSubscriptions.value.push(e);
+      });
+      instrumentsToAdd.value.splice(0);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  const filteredData = computed(() =>
+    store().getData.filter((e) => {
+      if (e.contractDisplay.flag !== "F") return false;
+      if (e.contractDisplay.strike !== 0) return false;
+      if (e.contractDisplay.contracT_TYPE == 3) return false;
+
+      // apply text filter here
+
+      if (currentSubscriptions.value.length > 0) {
+        const found = currentSubscriptions.value.find(
+          (b) => b.contract == e.contract
+        );
+        if (!found) {
+          return e;
+        }
+      } else {
+        return e;
+      }
+    })
+  );
   const disconnect = (endpoint: string) => {
     console.log("Disconnect futures with subs", endpoint);
     socket.value?.stop();
@@ -121,11 +159,17 @@ export function useWebSocket<T extends Custom>(
     if (socket.value) {
       res = await socket.value.invoke("Subscribe", list);
     }
-    
 
     //return state of subscribe
     return res != null ? true : false;
   }
 
-  return { socket, data, subscribe };
+  return {
+    socket,
+    subscribeToSelected,
+    filteredData,
+    subscribe,
+    currentSubscriptions,
+    instrumentsToAdd,
+  };
 }

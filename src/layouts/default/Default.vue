@@ -504,8 +504,8 @@ onMounted(async () => {
     throw new Error("Axios instance not found");
   }
   const temp = await GetMarketDisplay();
-  if (temp) marketDisplayStore.setMarketDisplayData(temp);
-  console.log("App store market data: ", marketDisplayStore.getMarketDisplayData);
+  if (temp) marketDisplayStore.setData(temp);
+  console.log("App store market data: ", marketDisplayStore.getData);
 
   // Get instruments
   // const pub = await PublishAll();

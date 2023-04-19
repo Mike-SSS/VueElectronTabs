@@ -17,6 +17,6 @@ export const useOrdersStore = defineStore("orders", {
   },
 
   getters: {
-    getMarketDisplayData: (state) => state.marketDisplayData,
+    getData: (state) => state.marketDisplayData,
   },
 });

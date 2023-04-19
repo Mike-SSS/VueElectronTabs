@@ -321,7 +321,7 @@ onBeforeUnmount(() => {
 });
 
 const marketMessages = computed(() =>
-  mainStore.getMarketDisplayData.filter((e) => {
+  mainStore.getData.filter((e) => {
     if (e.contractDisplay.flag !== "F") return false;
     if (e.contractDisplay.contracT_TYPE !== 3) return false;
 
