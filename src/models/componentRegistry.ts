@@ -4,6 +4,10 @@ import Options from "@/views/TradingView/Options.vue";
 import Splits from "@/views/TradingView/Splits.vue";
 import Spreads from "@/views/TradingView/Spreads.vue";
 import Placeholder from "@/views/TradingView/Placeholder.vue";
+
+import ActiveOrders from "@/views/Orders/ActiveOrders.vue";
+import CompletedOrders from "@/views/Orders/CompletedOrders.vue";
+
 // import MarketDisplayData from "@/views/Overview/MarketDisplayData.vue";
 
 export type ComponentRegistry = {
@@ -13,6 +17,8 @@ export type ComponentRegistry = {
   Spreads: typeof Spreads;
   Splits: typeof Splits;
   Placeholder: typeof Placeholder;
+  ActiveOrders: typeof ActiveOrders;
+  CompletedOrders: typeof CompletedOrders;
   // MarketDisplayData: typeof MarketDisplayData;
   // Add more components as needed
 };
@@ -24,7 +30,9 @@ const componentRegistry: ComponentRegistry = {
     Spreads,
     Deltas,
     // MarketDisplayData,
-    Placeholder
+    Placeholder,
+    CompletedOrders,
+    ActiveOrders,
   // ...register more components as needed
 };
 

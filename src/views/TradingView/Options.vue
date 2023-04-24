@@ -242,19 +242,24 @@ import { useMarketDisplayStore } from "@/store/marketDisplay";
 
 import { useWebSocket } from "@/utils/useWebsocket";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
-import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
+import { FilterCondition, MarketDisplayItemContract as MainModel } from "@/models/marketData";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
 
 const endpoint = "/market";
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
+
+const filters: FilterCondition[] = [
+  { field: "contractDisplay.flag", value: "F", operator: "==" },
+  { field: "contractDisplay.contracT_TYPE", value: 2, operator: "!==" },
+];
 const {
   socket,
   instrumentsToAdd,
   subscribeToSelected,
   currentSubscriptions,
   filteredData,
-} = useWebSocket<MainModel>(useMarketDisplayStore, endpoint);
+} = useWebSocket<MainModel>(useMarketDisplayStore, endpoint, filters);
 
 const props = defineProps({
   class: String,

@@ -33,11 +33,7 @@
           <div>
             <v-icon
               size="25"
-              :color="
-                socket?.state == 'Connected'
-                  ? 'success'
-                  : 'error'
-              "
+              :color="socket?.state == 'Connected' ? 'success' : 'error'"
               >mdi-circle</v-icon
             >
           </div>
@@ -55,7 +51,7 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0 fill-height" ref="ResizeHeight">
+      <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
@@ -144,7 +140,7 @@
           ><v-row justify="space-between">
             <v-col cols="10"
               >Instrument List ({{
-                marketMessages ? marketMessages.length : -2
+                filteredData ? filteredData.length : -2
               }})</v-col
             >
             <v-col cols="2" sm="auto"
@@ -192,7 +188,7 @@
           <v-data-table
             density="compact"
             class="tableData"
-            :items="marketMessages"
+            :items="filteredData"
             v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
             multi-sort
@@ -256,17 +252,24 @@ import { useAppStore } from "@/store/app";
 import { useContractsStore } from "@/store/contracts";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
 
+import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator"
+
 import { useWebSocket } from "@/utils/useWebsocket";
-import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
+import { FilterCondition, MarketDisplayItemContract as MainModel } from "@/models/marketData";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
 const endpoint = "/market";
 
-const { socket, data, subscribe } = useWebSocket<MainModel>(
+const filters: FilterCondition[] = [
+  { field: "contractDisplay.flag", value: "F", operator: "!==" },
+  { field: "contractDisplay.contracT_TYPE", value: 3, operator: "!==" },
+];
+const { socket, filteredData, subscribe } = useWebSocket<MainModel>(
   useMarketDisplayStore,
-  endpoint
+  endpoint,
+  filters
 );
-
+const { calculateTableHeight, Reference } = useTableHeightCalculator();
 const props = defineProps({
   class: String,
   style: {
@@ -286,61 +289,12 @@ function updateHeader(e: Event, i: any) {
     state.selectedHeaders.push(i);
   }
 }
-const tableHeight = ref(0);
-const ResizeHeight = ref();
-const calculateTableHeight = computed(() => {
-  console.log("Futures: ", ResizeHeight.value);
-  if (ResizeHeight && ResizeHeight.value) {
-    const col = ResizeHeight.value.$el as HTMLElement;
-    const height = col.clientHeight;
-    console.log("Height :", height, col.clientHeight, col);
-    // return height;
-    const header = col.querySelector("thead") as HTMLElement;
-    const pagination = col.querySelector(".v-data-table-footer") as HTMLElement;
-    console.log("Check: ", header, pagination);
-    const paginationHeight = pagination ? pagination.offsetHeight : 0;
-
-    const result = height - paginationHeight - 20;
-    console.log("Returned height: ", result, paginationHeight);
-    return result;
-  } else {
-    return 0;
-  }
-});
-
-const onWindowResize = () => {
-  tableHeight.value = calculateTableHeight.value;
-};
 onMounted(() => {
-  console.log("Mounted Futures ");
-  onWindowResize();
-  window.addEventListener("resize", onWindowResize);
+  console.log("Mounted Splits");
 });
 onBeforeUnmount(() => {
-  window.removeEventListener("resize", onWindowResize);
 });
 
-const marketMessages = computed(() =>
-  mainStore.getData.filter((e) => {
-    if (e.contractDisplay.flag !== "F") return false;
-    if (e.contractDisplay.contracT_TYPE !== 3) return false;
-
-    // apply text filter here
-
-    if (state.currentSubscriptions.length > 0) {
-      const found = state.currentSubscriptions.find(
-        (b) => b.contract == e.contract
-      );
-      if (!found) {
-        return e;
-      }
-    } else {
-      return e;
-    }
-  })
-);
-// const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
-// const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
   { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },

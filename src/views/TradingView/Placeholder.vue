@@ -134,8 +134,8 @@ const categories: Ref<MenuItem[]> = ref([
     id: 2,
     name: "Views",
     items: [
-      { id: 3, name: "Active Orders", component: null },
-      { id: 4, name: "Completed Orders", component: null },
+      { id: 3, name: "Active Orders", component: "ActiveOrders" as const },
+      { id: 4, name: "Completed Orders", component: "CompletedOrders" as const },
     ],
     subMenu: false,
   },

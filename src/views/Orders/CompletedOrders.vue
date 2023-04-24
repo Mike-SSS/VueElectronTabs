@@ -1,14 +1,10 @@
 <template>
-  <v-container
-    fluid
-    :style="props.style"
-    id="Splits"
-    class="bg-grey overflow-y-auto d-flex flex-column"
-  >
-    <v-row justify="space-between" align="center">
+  <v-container fluid :style="props.style" key="Options" class="bg-grey">
+    <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto">
-        <div class="text-h5">Spreads</div>
+        <div class="text-h5">Completed Orders</div>
       </v-col>
+      <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
         <v-btn
           density="compact"
@@ -51,7 +47,7 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0 fill-height" ref="Reference">
+      <v-col cols="12" class="pa-0" ref="Reference">
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
@@ -133,7 +129,7 @@
       v-model="state.openInstruments"
       scrollable
       width="auto"
-      key="Spreads_addInstruments"
+      key="Futures_addInstruments"
     >
       <v-card height="80vh" width="80vw">
         <v-card-title class="bg-primary"
@@ -191,7 +187,6 @@
             :items="filteredData"
             v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
-            multi-sort
             :group-by="[{ key: 'contractDisplay.instrument' }]"
             height="60vh"
             show-select
@@ -225,6 +220,9 @@
                 </td>
               </tr>
             </template>
+            <template #item.contractDisplay.strike="{ item }">
+              {{ item.value.contractDisplay.strike }}D
+            </template>
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -247,31 +245,22 @@ import {
   onBeforeUnmount,
 } from "vue";
 import { useLayoutStore } from "@/store/layout";
-import { useWebSocket } from "@/utils/useWebsocket";
 import { useAppStore } from "@/store/app";
-import { useContractsStore } from "@/store/contracts";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
-import {
-  FilterCondition,
-  MarketDisplayItemContract as MainModel,
-} from "@/models/marketData";
-
+import { useCompletedOrdersStore } from "@/store/completedOrders";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
+import { useWebSocket } from "@/utils/useWebsocket";
+import { FilterCondition, CompletedOrder as MainModel } from "@/models/marketData";
 const appStore = useAppStore();
-const mainStore = useMarketDisplayStore();
+const mainStore = useCompletedOrdersStore();
+const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
 const endpoint = "/market";
-const filters: FilterCondition[] = [
-  { field: "contractDisplay.flag", value: "F", operator: "!==" },
-  { field: "contractDisplay.contracT_TYPE", value: 4, operator: "!==" },
-];
-const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
-  endpoint,
-  filters
-);
-const { calculateTableHeight, Reference } = useTableHeightCalculator();
+
+
+const filters: FilterCondition[] = [];
+const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(useCompletedOrdersStore, endpoint, filters);
+
 const props = defineProps({
   class: String,
   style: {
@@ -293,15 +282,29 @@ function updateHeader(e: Event, i: any) {
 }
 
 onMounted(() => {
-  console.log("Mounted Spreads");
+  console.log("Mounted Deltas");
 });
-onBeforeUnmount(() => {});
+onBeforeUnmount(() => {
+});
+
+function getUniqueValues() {
+  // const field = "contractDisplay";
+  // const child = "flag";
+  // return filteredData.value.reduce((unique: string[], item: MainModel) => {
+  //   if (!unique.includes(<string>item[field][child])) {
+  //     unique.push(<string>item[field][child]);
+  //   }
+  //   return unique;
+  // }, []);
+}
 // const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
 // const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
   { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
-  // { title: "Instrument", key: "contractDisplay.instrument" },
+  { title: "Strike", key: "contractDisplay.strike", order: 6 },
+  { title: "Flag", key: "contractDisplay.flag" },
+
   {
     title: "B/QTY",
     key: "qtyBid",
@@ -315,6 +318,7 @@ const headers: any[] = [
   { title: "Offer", key: "offer", order: 4 },
   { title: "O/QTY", key: "qtyOffer", order: 5 },
   { title: "Change", key: "change", order: 6 },
+
   { title: "Time", key: "time", order: 7 },
 
   // { title: "Last", key: "last" },
@@ -337,11 +341,7 @@ const state = reactive<{
   instrumentsToAdd: [],
 });
 </script>
-<style lang="scss" scoped>
-.v-data-table {
-  max-height: 100%;
-  height: 100%;
-}
+<style lang="scss">
 // .v-table > .v-table__wrapper > table > thead > tr > th {
 //   padding-left: 5px;
 //   padding-right: 5px;

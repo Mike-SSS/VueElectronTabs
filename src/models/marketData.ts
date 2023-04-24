@@ -1,3 +1,15 @@
+export enum PublishAll {
+  ActiveOrders = 1,
+  Instruments = 2,
+  Holidays = 3,
+  ContractDate = 4,
+  Positions = 5,
+}
+export type FilterCondition = {
+  field: string;
+  operator: "==" | "!==" | ">" | "<" | ">=" | "<=";
+  value: any;
+};
 interface ContractDisplay {
   instrument: string;
   contractDate: string;
@@ -5,13 +17,6 @@ interface ContractDisplay {
   flag: string;
   contracT_TYPE: number;
   contractDisplay: string;
-}
-export enum PublishAll {
-  ActiveOrders = 1,
-  Instruments = 2,
-  Holidays = 3,
-  ContractDate = 4,
-  Positions = 5,
 }
 
 export interface MarketDisplayItemContract {
@@ -153,8 +158,149 @@ export interface MarketDisplayItemHoliday {
   centreCode: string;
   date: Date;
 }
-export type FilterCondition = {
-  field: string;
-  value: any;
-  nested?: boolean;
-};
+// export type FilterCondition = {
+//   field: string;
+//   value: any;
+//   nested?: boolean;
+// };
+
+
+
+interface OrderBase {
+  userDealer: string;
+  clearingMember: string;
+  member: string;
+  dealer: string;
+  principal: string;
+  buySell: string;
+  contract: string;
+  rate: number;
+  suffixCode: number;
+  profitCentre: string;
+  subAccount: string;
+  principleAgency: string;
+}
+
+interface ActiveOrderBase {
+  activeOrderSeq: number;
+  enterTime: TimeSpan;
+  userCode: string;
+  orderState: string;
+  quantity: number;
+  referenceCode: string;
+  originalQuantity: number;
+  gash: string;
+}
+
+interface CompletedOrderBase {
+  completedOrderSeq: number;
+  enterTime: TimeSpan;
+  userMember: string;
+  state: string;
+  qty: number;
+  userRef: string;
+  origQty: number;
+  dealtRate: number;
+  dealtPrice: number;
+  exchangeRef: string;
+  tradeDate: Date;
+  tradeTime: TimeSpan;
+  matchDate: Date;
+  matchTime: TimeSpan;
+  counterParty: string;
+  price: number;
+  origin: string;
+  reason: string;
+  spotPrice: number;
+  hitter: boolean;
+}
+
+export type ActiveOrder = OrderBase & ActiveOrderBase;
+
+export type CompletedOrder = OrderBase & CompletedOrderBase;
+
+interface TimeSpan {
+  days: number;
+  hours: number;
+  milliseconds: number;
+  minutes: number;
+  seconds: number;
+  ticks: number;
+  totalDays: number;
+  totalHours: number;
+  totalMilliseconds: number;
+  totalMinutes: number;
+  totalSeconds: number;
+}
+
+// export interface ActiveOrder {
+//   activeOrderSeq: number;
+//   enterTime: TimeSpan;
+//   userCode: string;
+//   userDealer: string;
+//   clearingMember: string;
+//   member: string;
+//   dealer: string;
+//   principal: string;
+//   buySell: string;
+//   orderState: string;
+//   quantity: number;
+//   contract: string;
+//   rate: number;
+//   referenceCode: string;
+//   suffixCode: number;
+//   profitCentre: string;
+//   subAccount: string;
+//   originalQuantity: number;
+//   principleAgency: string;
+//   gash: string;
+// }
+
+// interface TimeSpan {
+//   days: number;
+//   hours: number;
+//   milliseconds: number;
+//   minutes: number;
+//   seconds: number;
+//   ticks: number;
+//   totalDays: number;
+//   totalHours: number;
+//   totalMilliseconds: number;
+//   totalMinutes: number;
+//   totalSeconds: number;
+// }
+
+// export interface CompletedOrder {
+//   completedOrderSeq: number;
+//   enterTime: TimeSpan;
+//   userMember: string;
+//   userDealer: string;
+//   clearingMember: string;
+//   member: string;
+//   dealer: string;
+//   principal: string;
+//   buySell: string;
+//   state: string;
+//   qty: number;
+//   contract: string;
+//   rate: number;
+//   userRef: string;
+//   suffixCode: number;
+//   profitCentre: string;
+//   subAccount: string;
+//   origQty: number;
+//   dealtRate: number;
+//   dealtPrice: number;
+//   exchangeRef: string;
+//   tradeDate: Date;
+//   tradeTime: TimeSpan;
+//   matchDate: Date;
+//   matchTime: TimeSpan;
+//   counterParty: string;
+//   price: number;
+//   origin: string;
+//   reason: string;
+//   principleAgency: string;
+//   spotPrice: number;
+//   hitter: boolean;
+// }

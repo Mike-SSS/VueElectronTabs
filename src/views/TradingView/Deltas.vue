@@ -29,11 +29,7 @@
           <div>
             <v-icon
               size="25"
-              :color="
-                socket?.state == 'Connected'
-                  ? 'success'
-                  : 'error'
-              "
+              :color="socket?.state == 'Connected' ? 'success' : 'error'"
               >mdi-circle</v-icon
             >
           </div>
@@ -51,7 +47,7 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0" ref="ResizeHeight">
+      <v-col cols="12" class="pa-0" ref="Reference">
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
@@ -140,7 +136,7 @@
           ><v-row justify="space-between">
             <v-col cols="10"
               >Instrument List ({{
-                marketMessages ? marketMessages.length : -2
+                filteredData ? filteredData.length : -2
               }})</v-col
             >
             <v-col cols="2" sm="auto"
@@ -188,7 +184,7 @@
           <v-data-table
             density="compact"
             class="tableData"
-            :items="marketMessages"
+            :items="filteredData"
             v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
             :group-by="[{ key: 'contractDisplay.instrument' }]"
@@ -252,14 +248,22 @@ import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
 import { useContractsStore } from "@/store/contracts";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
+import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
+
 import { useWebSocket } from "@/utils/useWebsocket";
-import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
+import { FilterCondition, MarketDisplayItemContract as MainModel } from "@/models/marketData";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
+const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
 const endpoint = "/market";
 
-const { socket, data, subscribe } = useWebSocket<MainModel>(useMarketDisplayStore, endpoint);
+
+const filters: FilterCondition[] = [
+  { field: "contractDisplay.flag", value: "C", operator: "!==" },
+  { field: "contractDisplay.flag", value: "P", operator: "!==" },
+];
+const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(useMarketDisplayStore, endpoint, filters);
 
 const props = defineProps({
   class: String,
@@ -283,43 +287,20 @@ function updateHeader(e: Event, i: any) {
 
 onMounted(() => {
   console.log("Mounted Deltas");
-  onWindowResize();
-  window.addEventListener("resize", onWindowResize);
 });
 onBeforeUnmount(() => {
-  window.removeEventListener("resize", onWindowResize);
 });
 
 function getUniqueValues() {
   const field = "contractDisplay";
   const child = "flag";
-  return marketMessages.value.reduce((unique: string[], item: MainModel) => {
+  return filteredData.value.reduce((unique: string[], item: MainModel) => {
     if (!unique.includes(<string>item[field][child])) {
       unique.push(<string>item[field][child]);
     }
     return unique;
   }, []);
 }
-const marketMessages = computed(() =>
-  mainStore.getData.filter((e) => {
-    if (e.contractDisplay.flag != "C" && e.contractDisplay.flag != "P")
-      return false;
-    if (e.contractDisplay.contracT_TYPE !== 5) return false;
-
-    // apply text filter here
-
-    if (state.currentSubscriptions.length > 0) {
-      const found = state.currentSubscriptions.find(
-        (b) => b.contract == e.contract
-      );
-      if (!found) {
-        return e;
-      }
-    } else {
-      return e;
-    }
-  })
-);
 // const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
 // const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
@@ -363,39 +344,6 @@ const state = reactive<{
   currentSubscriptions: [],
   instrumentsToAdd: [],
 });
-const tableHeight = ref(0);
-const ResizeHeight = ref();
-const calculateTableHeight = computed(() => {
-  console.log("Options: ", ResizeHeight.value);
-  if (ResizeHeight && ResizeHeight.value) {
-    const col = ResizeHeight.value.$el as HTMLElement;
-    const height = col.clientHeight;
-    console.log("Height :", height, col.clientHeight, col);
-    // return height;
-    const header = col.querySelector("thead") as HTMLElement;
-    const pagination = col.querySelector(".v-data-table-footer") as HTMLElement;
-    console.log("Check: ", header, pagination);
-    const paginationHeight = pagination ? pagination.offsetHeight : 0;
-
-    const result = height - paginationHeight - 20;
-    console.log("Returned height: ", result, paginationHeight);
-    return result;
-  } else {
-    return 0;
-  }
-});
-
-const onWindowResize = () => {
-  tableHeight.value = calculateTableHeight.value;
-};
-const subscribeToSelected = () => {
-  console.log("Subscribing to : ", state.instrumentsToAdd);
-  subscribe(state.instrumentsToAdd.map((e) => e.contract));
-  state.instrumentsToAdd.forEach((e) => {
-    state.currentSubscriptions.push(e);
-  });
-  state.instrumentsToAdd.splice(0);
-};
 </script>
 <style lang="scss">
 // .v-table > .v-table__wrapper > table > thead > tr > th {

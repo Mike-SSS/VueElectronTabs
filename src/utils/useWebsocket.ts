@@ -1,28 +1,57 @@
-import { ref, onMounted, onUnmounted, Ref, computed } from "vue";
+import {
+  shallowRef,
+  ref,
+  onMounted,
+  onUnmounted,
+  Ref,
+  computed,
+  ComputedRef,
+} from "vue";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-import { instance } from "@/plugins/axios";
-import { useContractsStore } from "@/store/contracts";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
-import { PublishAll, MarketDisplayItemContract } from "@/models/marketData";
-// const mainStore = useContractsStore();
+// import { instance } from "@/plugins/axios";
+// import { useContractsStore } from "@/store/contracts";
+// import { useMarketDisplayStore } from "@/store/marketDisplay";
+// import { useActiveOrdersStore } from "@/store/activeOrders";
+// import { useCompletedOrdersStore } from "@/store/completedOrders";
+import {
+  PublishAll,
+  MarketDisplayItemContract,
+  FilterCondition,
+  ActiveOrder,
+  CompletedOrder,
+} from "@/models/marketData";
 
-type Custom = MarketDisplayItemContract;
-type StoreType = typeof useContractsStore | typeof useMarketDisplayStore;
+import { createBaseStore } from "@/store/baseStore";
+import { CustomActiveOrderActions } from "@/store/customActiveOrders";
+export type CommonStore<T extends WebSocketDataType, U = {}> = ReturnType<
+  typeof createBaseStore<T>
+> &
+  U;
+// export type CommonStore<T> = ReturnType<typeof createBaseStore<T>> & Partial<CustomActiveOrderActions>;
+export type CustomStore<T extends WebSocketDataType, U> = CommonStore<T> & {
+  [K in keyof U]: U[K];
+};
 
-export function useWebSocket<T extends Custom>(
-  store: StoreType,
-  url: string
+type WebSocketDataType =
+  | MarketDisplayItemContract
+  | ActiveOrder
+  | CompletedOrder;
+
+  export function useWebSocket<T extends WebSocketDataType, U = {}>(
+    store: ReturnType<typeof createBaseStore<T, U>>,
+  url: string,
+  filters: FilterCondition[]
 ): {
   socket: Ref<HubConnection | null>;
-  currentSubscriptions: Ref<Custom[]>;
-  instrumentsToAdd: Ref<Custom[]>;
-  filteredData: Ref<Custom[]>;
+  currentSubscriptions: Ref<T[]>;
+  instrumentsToAdd: Ref<T[]>;
+  filteredData: ComputedRef<T[]>;
   subscribeToSelected: () => boolean;
   subscribe: (list: string[]) => Promise<boolean>;
 } {
-  const instrumentsToAdd = ref<Custom[]>([]);
+  const instrumentsToAdd = shallowRef<T[]>([]);
   const socket = ref<HubConnection | null>(null) as Ref<HubConnection | null>;
-  const currentSubscriptions = ref<Custom[]>([]);
+  const currentSubscriptions = shallowRef<T[]>([]);
 
   onMounted(() => {
     connect(url);
@@ -34,37 +63,110 @@ export function useWebSocket<T extends Custom>(
   const subscribeToSelected = () => {
     try {
       console.log("Subscribing to : ", instrumentsToAdd);
-      subscribe(instrumentsToAdd.value.map((e) => e.contract));
-      instrumentsToAdd.value.forEach((e) => {
-        currentSubscriptions.value.push(e);
-      });
-      instrumentsToAdd.value.splice(0);
+      // subscribe(instrumentsToAdd.value.map((e) => e.contract));
+      // instrumentsToAdd.value.forEach((e) => {
+      //   currentSubscriptions.value.push(e);
+      // });
+      // instrumentsToAdd.value.splice(0);
       return true;
     } catch (err) {
       return false;
     }
   };
+  function applyConditions(item: any, conditions: FilterCondition[]): boolean {
+    return conditions.every((condition) => {
+      const fieldValue = condition.field
+        .split(".")
+        .reduce((o, i) => o[i], item);
+      const { operator, value } = condition;
 
-  const filteredData = computed(() =>
-    store().getData.filter((e) => {
-      if (e.contractDisplay.flag !== "F") return false;
-      if (e.contractDisplay.strike !== 0) return false;
-      if (e.contractDisplay.contracT_TYPE == 3) return false;
+      switch (operator) {
+        case "==":
+          if (fieldValue == value) {
+            console.log(
+              "Op full : ",
+              fieldValue,
+              operator,
+              value,
+              fieldValue == value
+            );
+          }
+          return fieldValue == value;
 
-      // apply text filter here
+        case "!==":
+          if (fieldValue !== value) {
+            console.log(
+              "Op full : ",
+              fieldValue,
+              operator,
+              value,
+              fieldValue !== value,
+              fieldValue != value
+            );
+          }
+          return fieldValue !== value;
+        case ">":
+          if (fieldValue <= value) {
+            console.log(
+              "Op full : ",
+              fieldValue,
+              operator,
+              value,
+              fieldValue > value
+            );
+          }
+          return fieldValue > value;
 
-      if (currentSubscriptions.value.length > 0) {
-        const found = currentSubscriptions.value.find(
-          (b) => b.contract == e.contract
-        );
-        if (!found) {
-          return e;
-        }
-      } else {
-        return e;
+        case "<":
+          if (fieldValue >= value) {
+            console.log(
+              "Op full : ",
+              fieldValue,
+              operator,
+              value,
+              fieldValue < value
+            );
+          }
+          return fieldValue < value;
+
+        case ">=":
+          if (fieldValue < value) {
+            console.log(
+              "Op full : ",
+              fieldValue,
+              operator,
+              value,
+              fieldValue >= value
+            );
+          }
+          return fieldValue >= value;
+
+        case "<=":
+          if (fieldValue > value) {
+            console.log(
+              "Op full : ",
+              fieldValue,
+              operator,
+              value,
+              fieldValue <= value
+            );
+          }
+          return fieldValue <= value;
+        default:
+          console.log("Op full default: ", fieldValue, operator, value);
+          return false;
       }
-    })
-  );
+    });
+  }
+
+  const filteredData: ComputedRef<T[]> = computed(() => {
+    return (store().getData as T[]).filter((e) => {
+      if (!applyConditions(e, filters)) {
+        return false;
+      }
+      return e;
+    });
+  });
   const disconnect = (endpoint: string) => {
     console.log("Disconnect futures with subs", endpoint);
     socket.value?.stop();
@@ -83,6 +185,8 @@ export function useWebSocket<T extends Custom>(
       .start()
       .then(async () => {
         // init data here for each panel
+        // replace with init Callback func on the useWebSocket init
+
         console.log("Socket connected here");
         if (socket.value) {
           // socket.value.on("MarketInit", (message: any) => {
@@ -134,24 +238,25 @@ export function useWebSocket<T extends Custom>(
       console.log("Socket message ", message);
     });
   };
-  function createTypedObject<T>(data: string | object): T {
+
+  function createTypedObject<U extends WebSocketDataType>(
+    data: string | object
+  ): U {
     const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-    const typedObject: Partial<T> = {};
+    const typedObject: Partial<U> = {};
 
     for (const key in parsedData) {
       const value = parsedData[key];
 
       if (typeof value === "string" || typeof value === "number") {
-        typedObject[key as keyof T] = value as T[keyof T];
+        typedObject[key as keyof U] = value as U[keyof U];
       } else if (typeof value === "object") {
-        typedObject[key as keyof T] = createTypedObject<T[keyof T]>(
-          value
-        ) as T[keyof T];
+        typedObject[key as keyof U] = createTypedObject(value) as U[keyof U];
       } else {
         throw new Error(`Invalid data for field ${key}`);
       }
     }
-    return typedObject as T;
+    return typedObject as U;
   }
   async function subscribe(list: string[]) {
     console.log("Requested Subscribe on abstract", list);
@@ -173,3 +278,25 @@ export function useWebSocket<T extends Custom>(
     instrumentsToAdd,
   };
 }
+
+
+
+  // function createTypedObject<T extends WebSocketDataType>(data: string | object): T {
+  //   const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+  //   const typedObject: Partial<T> = {};
+
+  //   for (const key in parsedData) {
+  //     const value = parsedData[key];
+
+  //     if (typeof value === "string" || typeof value === "number") {
+  //       typedObject[key as keyof T] = value as T[keyof T];
+  //     } else if (typeof value === "object") {
+  //       typedObject[key as keyof T] = createTypedObject<T[keyof T]>(
+  //         value
+  //       ) as T[keyof T];
+  //     } else {
+  //       throw new Error(`Invalid data for field ${key}`);
+  //     }
+  //   }
+  //   return typedObject as T;
+  // }

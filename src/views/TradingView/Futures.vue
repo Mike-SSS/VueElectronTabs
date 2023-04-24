@@ -33,11 +33,7 @@
           <div>
             <v-icon
               size="25"
-              :color="
-                socket?.state == 'Connected'
-                  ? 'success'
-                  : 'error'
-              "
+              :color="socket?.state == 'Connected' ? 'success' : 'error'"
               >mdi-circle</v-icon
             >
           </div>
@@ -144,7 +140,7 @@
           ><v-row justify="space-between">
             <v-col cols="10"
               >Instrument List ({{
-                marketMessages ? marketMessages.length : -2
+                filteredData ? filteredData.length : -2
               }})</v-col
             >
             <v-col cols="2" sm="auto"
@@ -192,7 +188,7 @@
           <v-data-table
             density="compact"
             class="tableData"
-            :items="marketMessages"
+            :items="filteredData"
             v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
             multi-sort
@@ -257,15 +253,26 @@ import { useContractsStore } from "@/store/contracts";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
 import { useWebSocket } from "@/utils/useWebsocket";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
-import { MarketDisplayItemContract as MainModel, FilterCondition } from "@/models/marketData";
+import {
+  MarketDisplayItemContract as MainModel,
+  FilterCondition,
+} from "@/models/marketData";
 const appStore = useAppStore();
-const mainStore = useContractsStore();
+const mainStore = useMarketDisplayStore();
 
 const endpoint = "/market";
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
-const { socket, data, subscribe } = useWebSocket<MainModel>(
+
+const filters: FilterCondition[] = [
+  { field: "contractDisplay.flag", value: "F", operator: "!==" },
+  { field: "contractDisplay.strike", value: 0, operator: "!==" },
+  { field: "contractDisplay.contracT_TYPE", value: 3, operator: "!==" },
+];
+
+const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
   useMarketDisplayStore,
-  endpoint
+  endpoint,
+  filters
 );
 
 const props = defineProps({
@@ -287,35 +294,6 @@ function updateHeader(e: Event, i: any) {
     state.selectedHeaders.push(i);
   }
 }
-
-const filters: FilterCondition[] = [
-  { field: "contractDisplay.flag", value: "F", nested: true },
-  { field: "contractDisplay.strike", value: 0, nested: true },
-  { field: "contractDisplay.contracT_TYPE", value: 3, nested: true },
-];
-
-const marketMessages = computed(() =>
-  mainStore.getData.filter((e) => {
-    if (e.contractDisplay.flag !== "F") return false;
-    if (e.contractDisplay.strike !== 0) return false;
-    if (e.contractDisplay.contracT_TYPE == 3) return false;
-
-    // apply text filter here
-
-    if (state.currentSubscriptions.length > 0) {
-      const found = state.currentSubscriptions.find(
-        (b) => b.contract == e.contract
-      );
-      if (!found) {
-        return e;
-      }
-    } else {
-      return e;
-    }
-  })
-);
-// const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
-// const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
   { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
@@ -355,14 +333,14 @@ const state = reactive<{
   instrumentsToAdd: [],
 });
 
-const subscribeToSelected = () => {
-  console.log("Subscribing to : ", state.instrumentsToAdd);
-  subscribe(state.instrumentsToAdd.map((e) => e.contract));
-  state.instrumentsToAdd.forEach((e) => {
-    state.currentSubscriptions.push(e);
-  });
-  state.instrumentsToAdd.splice(0);
-};
+// const subscribeToSelected = () => {
+//   console.log("Subscribing to : ", state.instrumentsToAdd);
+//   subscribe(state.instrumentsToAdd.map((e) => e.contract));
+//   state.instrumentsToAdd.forEach((e) => {
+//     state.currentSubscriptions.push(e);
+//   });
+//   state.instrumentsToAdd.splice(0);
+// };
 </script>
 <style lang="scss" scoped>
 .v-data-table {
