@@ -50,8 +50,8 @@
       <v-col cols="12" class="pa-0" ref="Reference">
         <v-data-table
           density="compact"
-          :group-by="[{ key: 'contractDisplay.instrument' }]"
-          :items="state.currentSubscriptions"
+          :group-by="[{ key: 'contract' }]"
+          :items="filteredData"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
@@ -250,7 +250,8 @@ import { useCompletedOrdersStore } from "@/store/completedOrders";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
 import { useWebSocket } from "@/utils/useWebsocket";
-import { FilterCondition, CompletedOrder as MainModel } from "@/models/marketData";
+import { FilterCondition, CompletedOrder as MainModel, PublishAll } from "@/models/marketData";
+import { noAuthInstance } from "@/plugins/axios";
 const appStore = useAppStore();
 const mainStore = useCompletedOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
@@ -259,7 +260,27 @@ const endpoint = "/market";
 
 
 const filters: FilterCondition[] = [];
-const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(useCompletedOrdersStore, endpoint, filters);
+const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
+  useCompletedOrdersStore,
+  endpoint,
+  filters,
+  async () => {
+    console.log("Completed Order init function IE publish all active orders");
+    if (socket.value) {
+      console.log("Has socket");
+      // socket.value?.invoke("PublishAll");
+      const res = await noAuthInstance.get("/api/download/publishall", {
+        params: {
+          publish: true,
+          enumVal: PublishAll.CompletedOrders,
+        },
+      });
+      if (res) {
+        console.log("Publish Completed orders ", res.data);
+      }
+    }
+  }
+);
 
 const props = defineProps({
   class: String,
@@ -299,30 +320,29 @@ function getUniqueValues() {
 }
 // const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
 // const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
-const headers: any[] = [
+  const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
-  { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
-  { title: "Strike", key: "contractDisplay.strike", order: 6 },
-  { title: "Flag", key: "contractDisplay.flag" },
-
+  { title: "Enter Time", key: "enterTime", order: 1 },
+  { title: "Rate", key: "rate", order: 1 },
+  { title: "Spot Price", key: "spotPrice", order: 1 },
+  { title: "U/Member", key: "userMember", order: 6 },
+  { title: "U/Dealer", key: "userDealer" },
+  { title: "Clearing Member", key: "clearingMember" },
+  { title: "Member", key: "member" },
+  { title: "Dealer", key: "dealer" },
+  { title: "Buy/Sell", key: "buySell" },
+  { title: "Reason", key: "reason" },
   {
-    title: "B/QTY",
-    key: "qtyBid",
+    title: "QTY",
+    key: "qty",
     order: 2,
   },
   {
-    title: "Bid",
-    key: "bid",
+    title: "contract",
+    key: "contract",
     order: 3,
   },
-  { title: "Offer", key: "offer", order: 4 },
-  { title: "O/QTY", key: "qtyOffer", order: 5 },
-  { title: "Change", key: "change", order: 6 },
-
-  { title: "Time", key: "time", order: 7 },
-
-  // { title: "Last", key: "last" },
-  { title: "Volume", key: "volume", order: 8 },
+  { title: "Principle Agency", key: "principleAgency", order: 5 },
 ];
 const getSortedHeaders = computed(() =>
   state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))

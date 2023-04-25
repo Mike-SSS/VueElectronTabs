@@ -8,11 +8,6 @@ import {
   ComputedRef,
 } from "vue";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-// import { instance } from "@/plugins/axios";
-// import { useContractsStore } from "@/store/contracts";
-// import { useMarketDisplayStore } from "@/store/marketDisplay";
-// import { useActiveOrdersStore } from "@/store/activeOrders";
-// import { useCompletedOrdersStore } from "@/store/completedOrders";
 import {
   PublishAll,
   MarketDisplayItemContract,
@@ -27,7 +22,6 @@ export type CommonStore<T extends WebSocketDataType, U = {}> = ReturnType<
   typeof createBaseStore<T>
 > &
   U;
-// export type CommonStore<T> = ReturnType<typeof createBaseStore<T>> & Partial<CustomActiveOrderActions>;
 export type CustomStore<T extends WebSocketDataType, U> = CommonStore<T> & {
   [K in keyof U]: U[K];
 };
@@ -37,10 +31,11 @@ type WebSocketDataType =
   | ActiveOrder
   | CompletedOrder;
 
-  export function useWebSocket<T extends WebSocketDataType, U = {}>(
-    store: ReturnType<typeof createBaseStore<T, U>>,
+export function useWebSocket<T extends WebSocketDataType, U = {}>(
+  store: ReturnType<typeof createBaseStore<T, U>>,
   url: string,
-  filters: FilterCondition[]
+  filters: FilterCondition[],
+  onConnect?: () => Promise<void> | void
 ): {
   socket: Ref<HubConnection | null>;
   currentSubscriptions: Ref<T[]>;
@@ -54,7 +49,9 @@ type WebSocketDataType =
   const currentSubscriptions = shallowRef<T[]>([]);
 
   onMounted(() => {
-    connect(url);
+    connect(url, () => {
+      console.log("Callback on connect for socket connection");
+    });
   });
 
   onUnmounted(() => {
@@ -160,19 +157,20 @@ type WebSocketDataType =
   }
 
   const filteredData: ComputedRef<T[]> = computed(() => {
-    return (store().getData as T[]).filter((e) => {
+    return store().getData.filter((e) => {
       if (!applyConditions(e, filters)) {
         return false;
       }
       return e;
     });
   });
+  
   const disconnect = (endpoint: string) => {
     console.log("Disconnect futures with subs", endpoint);
     socket.value?.stop();
   };
 
-  const connect = async (endpoint: string) => {
+  const connect = async (endpoint: string, onSocketConnected: () => void) => {
     console.log("Attempt to connect");
 
     // signalrStore.connect(endpoint);
@@ -181,41 +179,6 @@ type WebSocketDataType =
       .withAutomaticReconnect()
       .build();
 
-    await socket.value
-      .start()
-      .then(async () => {
-        // init data here for each panel
-        // replace with init Callback func on the useWebSocket init
-
-        console.log("Socket connected here");
-        if (socket.value) {
-          // socket.value.on("MarketInit", (message: any) => {
-          //   console.log("Inner market init Message ", message);
-          //   try {
-          //     const temp = createTypedObject<T>(message);
-          //     console.log("Parsed update : ", message, temp);
-          //     mainStore.updateItem(temp);
-          //   } catch (err) {
-          //     console.error("error parsing OPTIONS: ", message, err);
-          //   }
-          // });
-          console.log("Invoke market init");
-          // connectionState.connection.invoke("PublishAll");
-          // const res = await instance.get("/api/download/publishall", {
-          //   params: {
-          //     publish: true,
-          //     enumVal: PublishAll.ContractDate,
-          //   },
-          // });
-          // if (res) {
-          //   console.log("Publish all Result ", res.data);
-          // }
-        }
-      })
-      .catch((err) => {
-        console.error("Error starting socket ", err);
-      });
-
     socket.value.on("connected", (message: string) => {
       console.log("Socket connected ", message, socket.value?.connectionId);
     });
@@ -223,13 +186,26 @@ type WebSocketDataType =
     socket.value.on("message", (message: string) => {
       console.log("Socket message ", message);
     });
-
-    socket.value.on("MarketUpdate", (message: string) => {
-      console.log("Socket Message ", message);
+    socket.value.on("marketInit", (message: string) => {
+      console.log("Market init message ", message);
+    });
+    socket.value.on("MarketInit", (message: string) => {
+      console.log("Market INIT ");
       try {
-        const temp = createTypedObject<T>(message);
-        console.log("Parsed update : ", message, temp);
-        store().updateItem(temp);
+        const temp = createTypedArray<T>(message);
+        console.log("Parsed update : ", temp);
+        store().initData(temp);
+        // store().updateItem(temp);
+      } catch (err) {
+        console.error("error parsing OPTION MARKET UPDATE for ", message, err);
+      }
+    });
+    socket.value.on("MarketDisplay", (message: string) => {
+      console.log("Market Display Update ");
+      try {
+        // const temp = createTypedObject<T>(message);
+        // console.log("Parsed update : ", message, temp);
+        // store().updateItem(temp);
       } catch (err) {
         console.error("error parsing OPTION MARKET UPDATE for ", message, err);
       }
@@ -237,21 +213,58 @@ type WebSocketDataType =
     socket.value.on("marketUpdate", (message: string) => {
       console.log("Socket message ", message);
     });
+
+    await socket.value
+      .start()
+      .then(async () => {
+        // init data here for each panel
+        // replace with init Callback func on the useWebSocket init
+        console.log("Waiting before socket ");
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log("Socket connected here");
+        if (socket.value) {
+          if (onConnect) {
+            console.log("OnConnect exists");
+            await onConnect();
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Error starting socket ", err);
+      });
   };
-
-  function createTypedObject<U extends WebSocketDataType>(
-    data: string | object
-  ): U {
+  function createTypedArray<U extends WebSocketDataType>(
+    data: string | object[]
+  ): U[] {
+    console.log("Create typed array");
     const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+    
+    if (!Array.isArray(parsedData)) {
+      throw new Error("Input data must be an array.");
+    }
+  
+    return parsedData.map((item) => createTypedObject<U>(item));
+  }
+  function pascalToCamel(str: string): string {
+    return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
+      return index === 0 ? word.toLowerCase() : word.toUpperCase();
+    }).replace(/\s+/g, '');
+  }
+  
+  function createTypedObject<U extends WebSocketDataType>(
+    data: Record<string, unknown>
+  ): U {
+    console.log("Create typed object");
     const typedObject: Partial<U> = {};
-
-    for (const key in parsedData) {
-      const value = parsedData[key];
-
-      if (typeof value === "string" || typeof value === "number") {
-        typedObject[key as keyof U] = value as U[keyof U];
-      } else if (typeof value === "object") {
-        typedObject[key as keyof U] = createTypedObject(value) as U[keyof U];
+  
+    for (const key in data) {
+      const camelKey = pascalToCamel(key);
+      const value = data[key];
+  
+      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        typedObject[camelKey as keyof U] = value as U[keyof U];
+      } else if (typeof value === "object" && value !== null) {
+        typedObject[camelKey as keyof U] = createTypedObject(value as Record<string, unknown>) as U[keyof U];
       } else {
         throw new Error(`Invalid data for field ${key}`);
       }
@@ -279,24 +292,22 @@ type WebSocketDataType =
   };
 }
 
+// function createTypedObject<T extends WebSocketDataType>(data: string | object): T {
+//   const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+//   const typedObject: Partial<T> = {};
 
+//   for (const key in parsedData) {
+//     const value = parsedData[key];
 
-  // function createTypedObject<T extends WebSocketDataType>(data: string | object): T {
-  //   const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-  //   const typedObject: Partial<T> = {};
-
-  //   for (const key in parsedData) {
-  //     const value = parsedData[key];
-
-  //     if (typeof value === "string" || typeof value === "number") {
-  //       typedObject[key as keyof T] = value as T[keyof T];
-  //     } else if (typeof value === "object") {
-  //       typedObject[key as keyof T] = createTypedObject<T[keyof T]>(
-  //         value
-  //       ) as T[keyof T];
-  //     } else {
-  //       throw new Error(`Invalid data for field ${key}`);
-  //     }
-  //   }
-  //   return typedObject as T;
-  // }
+//     if (typeof value === "string" || typeof value === "number") {
+//       typedObject[key as keyof T] = value as T[keyof T];
+//     } else if (typeof value === "object") {
+//       typedObject[key as keyof T] = createTypedObject<T[keyof T]>(
+//         value
+//       ) as T[keyof T];
+//     } else {
+//       throw new Error(`Invalid data for field ${key}`);
+//     }
+//   }
+//   return typedObject as T;
+// }

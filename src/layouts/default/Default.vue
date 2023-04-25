@@ -257,7 +257,6 @@
                 v-model="currentLayout"
                 item-title="name"
                 item-value="name"
-                return-object
                 readonly
                 :single-line="false"
                 label="Current Layout"
@@ -274,7 +273,6 @@
                 :single-line="false"
                 item-title="name"
                 item-value="name"
-                return-object
                 :items="layoutOptions"
                 hide-details="auto"
               ></v-select
@@ -403,6 +401,7 @@ import { axiosSymbol } from "@/models/symbols";
 import { LAYOUT } from "@/models/layout";
 
 import AnalogClock from "@/components/AnalogClock.vue";
+import { axiosInstance } from "@/plugins/axios";
 
 // Inject the Axios instance with the defined symbol
 const axios = inject<AxiosInstance>(axiosSymbol);
@@ -500,7 +499,7 @@ const setSelectedLayout = (layout: LAYOUT) => {
 onMounted(async () => {
   // Do something after the component is mounted
   console.log("Mounted Default Layout");
-  if (!axios) {
+  if (!axiosInstance) {
     throw new Error("Axios instance not found");
   }
   const temp = await GetMarketDisplay();
@@ -513,7 +512,7 @@ onMounted(async () => {
 
 const GetMarketDisplay = async () => {
   try {
-    const res = await axios?.get("/api/MarketSubscription/GetMarketDisplay");
+    const res = await axiosInstance.get("/api/MarketSubscription/GetMarketDisplay");
     if (res) return Promise.resolve(res.data);
   } catch (err) {
     console.error(err);

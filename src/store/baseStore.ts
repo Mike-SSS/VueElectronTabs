@@ -10,8 +10,12 @@ export function createBaseStore<T, U = {}>(name: string, customActions?: U) {
     function updateItem(updatedItem: T) {
       console.log("Update item: ", updatedItem);
     }
+    function initData(arr: T[]) {
+      console.log("Init data: ", arr.length, data.value.length);
+      data.value = arr;
+    }
     const getData = computed(() => data.value);
 
-    return { getData, updateItem, setData, ...customActions };
+    return { getData, updateItem, setData, initData, ...customActions };
   });
 }

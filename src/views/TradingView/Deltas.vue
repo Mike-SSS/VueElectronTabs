@@ -251,7 +251,8 @@ import { useMarketDisplayStore } from "@/store/marketDisplay";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
 import { useWebSocket } from "@/utils/useWebsocket";
-import { FilterCondition, MarketDisplayItemContract as MainModel } from "@/models/marketData";
+import { FilterCondition, MarketDisplayItemContract as MainModel, PublishAll } from "@/models/marketData";
+import { noAuthInstance } from "@/plugins/axios";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
@@ -263,8 +264,27 @@ const filters: FilterCondition[] = [
   { field: "contractDisplay.flag", value: "C", operator: "!==" },
   { field: "contractDisplay.flag", value: "P", operator: "!==" },
 ];
-const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(useMarketDisplayStore, endpoint, filters);
-
+const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
+  useContractsStore,
+  endpoint,
+  filters,
+  async () => {
+    console.log("Futures/Market init function");
+    if (socket.value) {
+      console.log("Has socket");
+      // socket.value?.invoke("PublishAll");
+      const res = await noAuthInstance.get("/api/download/publishall", {
+        params: {
+          publish: true,
+          enumVal: PublishAll.ContractDate,
+        },
+      });
+      if (res) {
+        console.log("Publish all Result ", res.data);
+      }
+    }
+  }
+);
 const props = defineProps({
   class: String,
   style: {
@@ -292,14 +312,15 @@ onBeforeUnmount(() => {
 });
 
 function getUniqueValues() {
-  const field = "contractDisplay";
-  const child = "flag";
-  return filteredData.value.reduce((unique: string[], item: MainModel) => {
-    if (!unique.includes(<string>item[field][child])) {
-      unique.push(<string>item[field][child]);
-    }
-    return unique;
-  }, []);
+  // const field = "contractDisplay";
+  // const child = "flag";
+  // return filteredData.value.reduce((unique: string[], item: MainModel) => {
+  //   if (!unique.includes(<string>item[field][child])) {
+  //     unique.push(<string>item[field][child]);
+  //   }
+  //   return unique;
+  // }, []);
+  return [];
 }
 // const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
 // const currentSubscriptions = ref(<MarketDisplayItem[]>[]);

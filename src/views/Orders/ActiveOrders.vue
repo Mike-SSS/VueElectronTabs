@@ -2,7 +2,7 @@
   <VContainer fluid :style="props.style" key="Options" class="bg-grey">
     <VRow :class="props.class" justify="space-between" align="center">
       <VCol cols="auto">
-        <div class="text-h5">Active Orders</div>
+        <div class="text-h5">Active Orders {{ filteredData.length }}</div>
       </VCol>
       <VCol>{{ getUniqueValues() }}</VCol>
       <VCol cols="auto">
@@ -50,8 +50,7 @@
       <VCol cols="12" class="pa-0" ref="Reference">
         <v-data-table
           density="compact"
-          :group-by="[{ key: 'contractDisplay.instrument' }]"
-          :items="state.currentSubscriptions"
+          :items="filteredData"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
@@ -248,29 +247,47 @@ import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
 import { useContractsStore } from "@/store/contracts";
 import { useActiveOrdersStore } from "@/store/activeOrders";
-import {
-  CustomActiveOrderActions,
-  useCustomActiveOrdersStore,
-} from "@/store/customActiveOrders";
+// import {
+//   CustomActiveOrderActions,
+//   useCustomActiveOrdersStore,
+// } from "@/store/activeOrders";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
 import { useWebSocket } from "@/utils/useWebsocket";
-import { FilterCondition, ActiveOrder as MainModel } from "@/models/marketData";
+import {
+  FilterCondition,
+  ActiveOrder as MainModel,
+  PublishAll,
+} from "@/models/marketData";
+import { noAuthInstance } from "@/plugins/axios";
 const appStore = useAppStore();
-const mainStore = useCustomActiveOrdersStore();
+const mainStore = useActiveOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
 const endpoint = "/market";
 const filters: FilterCondition[] = [];
-// const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(useCustomActiveOrderStore, endpoint, filters);
-//   const { socket, filteredData, subscribeToSelected } = useWebSocket<
-//   MainModel,
-//   CustomActiveOrderActions
-// >(useCustomActiveOrderStore, endpoint, filters);
-// const { socket, filteredData, subscribeToSelected } = useWebSocket<
-//   MainModel,
-//   CustomActiveOrderActions
-// >(useCustomActiveOrderStore, endpoint, filters);
-const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(useCustomActiveOrdersStore, endpoint, filters);
+
+const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
+  useActiveOrdersStore,
+  endpoint,
+  filters,
+  async () => {
+    console.log("Active Order init function IE publish all active orders");
+    if (socket.value) {
+      console.log("Has socket");
+      // socket.value?.invoke("PublishAll");
+      const res = await noAuthInstance.get("/api/download/publishall", {
+        params: {
+          publish: true,
+          enumVal: PublishAll.ActiveOrders,
+        },
+      });
+      if (res) {
+        console.log("Publish Active orders ", res.data);
+      }
+    }
+  }
+);
+
 const props = defineProps({
   class: String,
   style: {
@@ -309,28 +326,27 @@ function getUniqueValues() {
 // const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
-  { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
-  { title: "Strike", key: "contractDisplay.strike", order: 6 },
-  { title: "Flag", key: "contractDisplay.flag" },
-
+  { title: "Enter Time", key: "enterTime", order: 1 },
+  { title: "U/Code", key: "userCode", order: 6 },
+  { title: "U/Dealer", key: "userDealer" },
+  { title: "Clearing Member", key: "clearingMember" },
+  { title: "Member", key: "member" },
+  { title: "Dealer", key: "dealer" },
+  { title: "Buy/Sell", key: "buySell" },
+  { title: "Order State", key: "orderState" },
   {
-    title: "B/QTY",
-    key: "qtyBid",
+    title: "QTY",
+    key: "quantity",
     order: 2,
   },
   {
-    title: "Bid",
-    key: "bid",
+    title: "contract",
+    key: "contract",
     order: 3,
   },
-  { title: "Offer", key: "offer", order: 4 },
-  { title: "O/QTY", key: "qtyOffer", order: 5 },
-  { title: "Change", key: "change", order: 6 },
-
-  { title: "Time", key: "time", order: 7 },
-
-  // { title: "Last", key: "last" },
-  { title: "Volume", key: "volume", order: 8 },
+  { title: "Rate", key: "rate", order: 4 },
+  { title: "O/QTY", key: "originalQuantity", order: 5 },
+  { title: "Principle Agency", key: "principleAgency", order: 5 },
 ];
 const getSortedHeaders = computed(() =>
   state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))

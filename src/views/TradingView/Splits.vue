@@ -252,10 +252,15 @@ import { useAppStore } from "@/store/app";
 import { useContractsStore } from "@/store/contracts";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
 
-import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator"
+import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
 import { useWebSocket } from "@/utils/useWebsocket";
-import { FilterCondition, MarketDisplayItemContract as MainModel } from "@/models/marketData";
+import {
+  FilterCondition,
+  MarketDisplayItemContract as MainModel,
+PublishAll,
+} from "@/models/marketData";
+import { noAuthInstance } from "@/plugins/axios";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
 const endpoint = "/market";
@@ -264,10 +269,26 @@ const filters: FilterCondition[] = [
   { field: "contractDisplay.flag", value: "F", operator: "!==" },
   { field: "contractDisplay.contracT_TYPE", value: 3, operator: "!==" },
 ];
-const { socket, filteredData, subscribe } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
+const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
+  useContractsStore,
   endpoint,
-  filters
+  filters,
+  async () => {
+    console.log("Futures/Market init function");
+    if (socket.value) {
+      console.log("Has socket");
+      // socket.value?.invoke("PublishAll");
+      const res = await noAuthInstance.get("/api/download/publishall", {
+        params: {
+          publish: true,
+          enumVal: PublishAll.ContractDate,
+        },
+      });
+      if (res) {
+        console.log("Publish all Result ", res.data);
+      }
+    }
+  }
 );
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
 const props = defineProps({
@@ -292,8 +313,7 @@ function updateHeader(e: Event, i: any) {
 onMounted(() => {
   console.log("Mounted Splits");
 });
-onBeforeUnmount(() => {
-});
+onBeforeUnmount(() => {});
 
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
@@ -333,15 +353,6 @@ const state = reactive<{
   currentSubscriptions: [],
   instrumentsToAdd: [],
 });
-
-const subscribeToSelected = () => {
-  console.log("Subscribing to : ", state.instrumentsToAdd);
-  subscribe(state.instrumentsToAdd.map((e) => e.contract));
-  state.instrumentsToAdd.forEach((e) => {
-    state.currentSubscriptions.push(e);
-  });
-  state.instrumentsToAdd.splice(0);
-};
 </script>
 <style lang="scss" scoped>
 .v-data-table {

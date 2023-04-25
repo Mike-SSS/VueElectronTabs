@@ -50,10 +50,11 @@
         <v-data-table
           density="compact"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
-          :items="currentSubscriptions"
+          :items="filteredData"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
+          
         >
           <template
             v-slot:group-header="{
@@ -165,10 +166,10 @@
               <v-col cols="auto"
                 ><v-btn
                   @click="subscribeToSelected"
-                  :disabled="instrumentsToAdd.length == 0"
+                  :disabled="state.instrumentsToAdd.length == 0"
                   color="primary"
                 >
-                  Add ({{ instrumentsToAdd.length }})</v-btn
+                  Add ({{ state.instrumentsToAdd.length }})</v-btn
                 ></v-col
               >
               <v-col cols="auto"
@@ -184,7 +185,7 @@
             density="compact"
             class="tableData"
             :items="filteredData"
-            v-model="instrumentsToAdd"
+            v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
             :group-by="[{ key: 'contractDisplay.instrument' }]"
             height="60vh"
@@ -242,9 +243,15 @@ import { useMarketDisplayStore } from "@/store/marketDisplay";
 
 import { useWebSocket } from "@/utils/useWebsocket";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
-import { FilterCondition, MarketDisplayItemContract as MainModel } from "@/models/marketData";
+import {
+  FilterCondition,
+  MarketDisplayItemContract as MainModel,
+PublishAll,
+} from "@/models/marketData";
+import { noAuthInstance } from "@/plugins/axios";
+import { useContractsStore } from "@/store/contracts";
 const appStore = useAppStore();
-const mainStore = useMarketDisplayStore();
+const mainStore = useContractsStore();
 
 const endpoint = "/market";
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
@@ -253,14 +260,27 @@ const filters: FilterCondition[] = [
   { field: "contractDisplay.flag", value: "F", operator: "==" },
   { field: "contractDisplay.contracT_TYPE", value: 2, operator: "!==" },
 ];
-const {
-  socket,
-  instrumentsToAdd,
-  subscribeToSelected,
-  currentSubscriptions,
-  filteredData,
-} = useWebSocket<MainModel>(useMarketDisplayStore, endpoint, filters);
-
+const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
+  useContractsStore,
+  endpoint,
+  filters,
+  async () => {
+    console.log("Futures/Market init function");
+    if (socket.value) {
+      console.log("Has socket");
+      // socket.value?.invoke("PublishAll");
+      const res = await noAuthInstance.get("/api/download/publishall", {
+        params: {
+          publish: true,
+          enumVal: PublishAll.ContractDate,
+        },
+      });
+      if (res) {
+        console.log("Publish all Result ", res.data);
+      }
+    }
+  }
+);
 const props = defineProps({
   class: String,
   style: {
@@ -330,10 +350,14 @@ const state = reactive<{
   openHeaderPicker: boolean;
   openInstruments: boolean;
   selectedHeaders: any[];
+  currentSubscriptions: MainModel[];
+  instrumentsToAdd: MainModel[];
 }>({
   openHeaderPicker: false,
   openInstruments: false,
   selectedHeaders: headers.concat([]),
+  currentSubscriptions: [],
+  instrumentsToAdd: [],
 });
 </script>
 <style lang="scss">

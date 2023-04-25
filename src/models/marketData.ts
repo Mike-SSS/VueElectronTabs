@@ -4,6 +4,7 @@ export enum PublishAll {
   Holidays = 3,
   ContractDate = 4,
   Positions = 5,
+  CompletedOrders = 6,
 }
 export type FilterCondition = {
   field: string;
@@ -183,7 +184,7 @@ interface OrderBase {
 
 interface ActiveOrderBase {
   activeOrderSeq: number;
-  enterTime: TimeSpan;
+  enterTime: string;
   userCode: string;
   orderState: string;
   quantity: number;
@@ -194,7 +195,7 @@ interface ActiveOrderBase {
 
 interface CompletedOrderBase {
   completedOrderSeq: number;
-  enterTime: TimeSpan;
+  enterTime: string;
   userMember: string;
   state: string;
   qty: number;
@@ -204,9 +205,9 @@ interface CompletedOrderBase {
   dealtPrice: number;
   exchangeRef: string;
   tradeDate: Date;
-  tradeTime: TimeSpan;
+  tradeTime: string;
   matchDate: Date;
-  matchTime: TimeSpan;
+  matchTime: string;
   counterParty: string;
   price: number;
   origin: string;
@@ -220,17 +221,18 @@ export type ActiveOrder = OrderBase & ActiveOrderBase;
 export type CompletedOrder = OrderBase & CompletedOrderBase;
 
 interface TimeSpan {
-  days: number;
-  hours: number;
-  milliseconds: number;
-  minutes: number;
-  seconds: number;
-  ticks: number;
-  totalDays: number;
-  totalHours: number;
-  totalMilliseconds: number;
-  totalMinutes: number;
-  totalSeconds: number;
+  time: string;
+  // days: number;
+  // hours: number;
+  // milliseconds: number;
+  // minutes: number;
+  // seconds: number;
+  // ticks: number;
+  // totalDays: number;
+  // totalHours: number;
+  // totalMilliseconds: number;
+  // totalMinutes: number;
+  // totalSeconds: number;
 }
 
 // export interface ActiveOrder {

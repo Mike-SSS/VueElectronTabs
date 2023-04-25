@@ -256,9 +256,11 @@ import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 import {
   MarketDisplayItemContract as MainModel,
   FilterCondition,
+PublishAll,
 } from "@/models/marketData";
+import { noAuthInstance } from "@/plugins/axios";
 const appStore = useAppStore();
-const mainStore = useMarketDisplayStore();
+const mainStore = useContractsStore();
 
 const endpoint = "/market";
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
@@ -270,11 +272,26 @@ const filters: FilterCondition[] = [
 ];
 
 const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
+  useContractsStore,
   endpoint,
-  filters
+  filters,
+  async () => {
+    console.log("Futures/Market init function");
+    if (socket.value) {
+      console.log("Has socket");
+      // socket.value?.invoke("PublishAll");
+      const res = await noAuthInstance.get("/api/download/publishall", {
+        params: {
+          publish: true,
+          enumVal: PublishAll.ContractDate,
+        },
+      });
+      if (res) {
+        console.log("Publish all Result ", res.data);
+      }
+    }
+  }
 );
-
 const props = defineProps({
   class: String,
   style: {

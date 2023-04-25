@@ -7,11 +7,8 @@
 // Plugins
 import { loadFonts } from './webfontloader'
 import vuetify from './vuetify'
-import { instance } from "@/plugins/axios";
 import pinia from '../store'
 import router from '../router'
-import { VueMasonryPlugin } from "vue-masonry";
-import { axiosSymbol } from '@/models/symbols';
 // Types
 import type { App } from 'vue'
 
@@ -21,5 +18,4 @@ export function registerPlugins (app: App) {
     .use(vuetify)
     .use(router)
     .use(pinia)
-    .use(VueMasonryPlugin).provide(axiosSymbol, instance)
 }

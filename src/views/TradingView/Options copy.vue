@@ -249,7 +249,7 @@ import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
 import { useContractsStore } from "@/store/contracts";
 
-import { instance } from "@/plugins/axios";
+import { axiosInstance } from "@/plugins/axios";
 
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { MarketDisplayItemContract as MainModel, PublishAll } from "@/models/marketData";
@@ -458,7 +458,7 @@ const connect = async (endpoint: string) => {
         });
         console.log("Invoke market init");
         // connectionState.connection.invoke("PublishAll");
-        const res = await instance.get("/api/download/publishall", {
+        const res = await axiosInstance.get("/api/download/publishall", {
           params: {
             publish: true,
             enumVal: PublishAll.ContractDate
