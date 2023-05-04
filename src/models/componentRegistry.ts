@@ -8,6 +8,12 @@ import Placeholder from "@/views/TradingView/Placeholder.vue";
 import ActiveOrders from "@/views/Orders/ActiveOrders.vue";
 import CompletedOrders from "@/views/Orders/CompletedOrders.vue";
 
+import Positions from "@/views/Positions/Positions.vue";
+import ConsolidatedPositions from "@/views/Positions/ConsolidatedPositions.vue";
+
+import Deals from "@/views/Deals/Deals.vue";
+import UnDeals from "@/views/Positions/Positions.vue";
+
 // import MarketDisplayData from "@/views/Overview/MarketDisplayData.vue";
 
 export type ComponentRegistry = {
@@ -19,6 +25,9 @@ export type ComponentRegistry = {
   Placeholder: typeof Placeholder;
   ActiveOrders: typeof ActiveOrders;
   CompletedOrders: typeof CompletedOrders;
+  Positions: typeof Positions;
+  ConsolidatedPositions: typeof ConsolidatedPositions;
+  Deals: typeof Deals;
   // MarketDisplayData: typeof MarketDisplayData;
   // Add more components as needed
 };
@@ -33,6 +42,9 @@ const componentRegistry: ComponentRegistry = {
     Placeholder,
     CompletedOrders,
     ActiveOrders,
+    Positions,
+    ConsolidatedPositions,
+    Deals,
   // ...register more components as needed
 };
 

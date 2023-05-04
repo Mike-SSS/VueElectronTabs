@@ -1,4 +1,48 @@
 <template>
+  <v-navigation-drawer
+    color="primary"
+    permanent
+    rail-width="60"
+    :rail="true"
+    width="200"
+    location="left"
+  >
+    <v-list density="compact">
+      <v-list-item
+        prepend-icon="mdi-fire"
+        title="Home"
+        value="home"
+        :to="{
+          name: 'Login',
+        }"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-cash"
+        title="My Account"
+        value="account"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-cart-variant"
+        title="Users"
+        value="users"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-chart-gantt"
+        title="Users"
+        value="users"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-chart-timeline-variant-shimmer"
+        title="Users"
+        value="users"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-cog"
+        title="Users"
+        value="users"
+      ></v-list-item>
+    </v-list>
+  </v-navigation-drawer>
   <v-container fluid class="fill-height">
     <!-- <v-row
       :style="{
@@ -49,7 +93,7 @@
           class="grid-item"
           :class="`bg-` + col.color"
           :style="col.grid"
-          :key="col.component"
+          :key="col.component ? col.component.toString() : Math.random() * 100"
           :is="
             col.component
               ? componentRegistry[col.component]
@@ -106,7 +150,7 @@ const storeLayout = useLayoutStore();
 
 const currentLayout = computed(() => storeLayout.currentLayout);
 
-const onNewComp = (event: keyof ComponentRegistry, item: COLUMN) => {
+const onNewComp = (event: keyof ComponentRegistry, item: COLUMN): void => {
   console.log("On New Comp ", event, item.id);
   storeLayout.changeColumnComponent(event, item.id);
 };
@@ -121,6 +165,14 @@ const onNewComp = (event: keyof ComponentRegistry, item: COLUMN) => {
   width: 100%;
   height: 100%;
 }
+/* .grid-container-mini {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(12, 1fr);
+  grid-gap: 2px;
+  width: 100%;
+  height: 100%;
+} */
 
 .grid-item {
   background-color: lightgray;

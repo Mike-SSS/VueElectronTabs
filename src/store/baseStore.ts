@@ -9,6 +9,13 @@ export function createBaseStore<T, U = {}>(name: string, customActions?: U) {
     }
     function updateItem(updatedItem: T) {
       console.log("Update item: ", updatedItem);
+      const temp = data.value.findIndex((e) => e == updatedItem);
+      if (temp == -1) {
+        data.value.push(updatedItem);
+      }
+      else {
+        data.value[temp] = updatedItem;
+      }
     }
     function initData(arr: T[]) {
       console.log("Init data: ", arr.length, data.value.length);

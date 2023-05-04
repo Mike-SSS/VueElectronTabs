@@ -54,6 +54,7 @@
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
+          :items-per-page="-1"
         >
           <template
             v-slot:group-header="{
@@ -77,6 +78,8 @@
               </td>
             </tr>
           </template>
+          <template #bottom></template>
+          <!-- <v-data-table-footer>Hello</v-data-table-footer> -->
         </v-data-table>
       </VCol>
     </VRow>
@@ -222,6 +225,7 @@
             <template #item.contractDisplay.strike="{ item }">
               {{ item.value.contractDisplay.strike }}D
             </template>
+            
           </v-data-table>
         </VCardText>
         <VCardActions>
@@ -263,31 +267,39 @@ import { noAuthInstance } from "@/plugins/axios";
 const appStore = useAppStore();
 const mainStore = useActiveOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
+
 const endpoint = "/market";
 const filters: FilterCondition[] = [];
 
-const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
-  useActiveOrdersStore,
-  endpoint,
-  filters,
-  async () => {
-    console.log("Active Order init function IE publish all active orders");
-    if (socket.value) {
-      console.log("Has socket");
-      // socket.value?.invoke("PublishAll");
-      const res = await noAuthInstance.get("/api/download/publishall", {
-        params: {
-          publish: true,
-          enumVal: PublishAll.ActiveOrders,
-        },
-      });
-      if (res) {
-        console.log("Publish Active orders ", res.data);
+const { socket, filteredData, subscribeToSelected, typedArray } =
+  useWebSocket<MainModel>(
+    useActiveOrdersStore,
+    endpoint,
+    filters,
+    {
+      name: "ActiveOrderUpdate",
+      func: processUpdate,
+    },
+    async () => {
+      console.log("Active Order init function IE publish all active orders");
+      if (socket.value) {
+        console.log("Has socket");
+        socket.value?.invoke("PublishAllData", PublishAll.ActiveOrders);
       }
     }
+  );
+function processUpdate(message: string) {
+  try {
+    const temp = typedArray<MainModel>(message);
+    temp.forEach((e) => {
+      mainStore.updateItem(e);
+    });
+    console.log("Parsed update : ", temp);
+    //
+  } catch (err) {
+    console.error("error parsing OPTION MARKET UPDATE for ", message, err);
   }
-);
-
+}
 const props = defineProps({
   class: String,
   style: {
@@ -327,9 +339,12 @@ function getUniqueValues() {
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
   { title: "Enter Time", key: "enterTime", order: 1 },
-  { title: "U/Code", key: "userCode", order: 6 },
-  { title: "U/Dealer", key: "userDealer" },
-  { title: "Clearing Member", key: "clearingMember" },
+  {
+    title: "Contract",
+    key: "contractDisplay.contractDisplay",
+  },
+  { title: "Principal", key: "userCode" },
+  { title: "Sub Acc", key: "subAccount" },
   { title: "Member", key: "member" },
   { title: "Dealer", key: "dealer" },
   { title: "Buy/Sell", key: "buySell" },
@@ -339,14 +354,10 @@ const headers: any[] = [
     key: "quantity",
     order: 2,
   },
-  {
-    title: "contract",
-    key: "contract",
-    order: 3,
-  },
-  { title: "Rate", key: "rate", order: 4 },
-  { title: "O/QTY", key: "originalQuantity", order: 5 },
-  { title: "Principle Agency", key: "principleAgency", order: 5 },
+
+  { title: "Rate", key: "rate" },
+  { title: "O/QTY", key: "originalQuantity" },
+  { title: "Principle Agency", key: "principleAgency" },
 ];
 const getSortedHeaders = computed(() =>
   state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))

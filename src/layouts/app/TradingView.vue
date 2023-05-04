@@ -1,4 +1,48 @@
 <template>
+  <v-navigation-drawer
+    color="primary"
+    permanent
+    rail-width="60"
+    :rail="true"
+    width="200"
+    location="left"
+  >
+    <v-list density="compact">
+      <v-list-item
+        prepend-icon="mdi-fire"
+        title="Home"
+        value="home"
+        :to="{
+          name: 'Login',
+        }"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-cash"
+        title="My Account"
+        value="account"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-cart-variant"
+        title="Users"
+        value="users"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-chart-gantt"
+        title="Users"
+        value="users"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-chart-timeline-variant-shimmer"
+        title="Users"
+        value="users"
+      ></v-list-item>
+      <v-list-item
+        prepend-icon="mdi-cog"
+        title="Users"
+        value="users"
+      ></v-list-item>
+    </v-list>
+  </v-navigation-drawer>
   <v-main>
     <!-- <div class="side-app-bars">
       <v-app-bar order="4" collapse color="green">

@@ -26,7 +26,7 @@ import { useAuthStore } from "@/store/authStore";
 
 const storeLayout = useAuthStore();
 
-const token = computed(() => storeLayout.token);
+const token = computed(() => storeLayout.getHQ);
 </script>
 
 <style></style>

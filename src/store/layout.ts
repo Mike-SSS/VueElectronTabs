@@ -24,7 +24,7 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "primary",
             content: "Column 1",
-            component: "Futures",
+            component: null,
             id: "first",
           },
           {
@@ -69,7 +69,7 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "primary",
             content: "Column 1",
-            component: "Futures", // futures
+            component: null, // futures
             id: "first",
           },
           {
@@ -79,11 +79,8 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "secondary",
             content: "Column 2",
-            component: "Options", // options
+            component: null, // options
             id: "third",
-            props: {
-              initialValue: 5,
-            },
           },
           {
             grid: {
@@ -92,7 +89,7 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "warning",
             content: "Column 3",
-            component: "Splits",
+            component: null,
             id: "second",
           },
           {
@@ -102,7 +99,7 @@ export const useLayoutStore = defineStore("layout", {
             },
             color: "success",
             content: "Column 4",
-            component: "Deltas",
+            component: null,
             id: "forth",
           },
         ],
@@ -128,9 +125,6 @@ export const useLayoutStore = defineStore("layout", {
             color: "secondary",
             content: "Column 2",
             component: "Options",
-            props: {
-              initialValue: 10,
-            },
             id: "second",
           },
           {
@@ -193,7 +187,7 @@ export const useLayoutStore = defineStore("layout", {
               "grid-column": "5 / span 4",
               "grid-row": "1 / span 6",
             },
-            color: "accent",
+            color: "blue",
             content: "Column 1-2",
             component: null,
             id: "first1",
@@ -268,7 +262,7 @@ export const useLayoutStore = defineStore("layout", {
               "grid-column": "5 / span 4",
               "grid-row": "1 / span 6",
             },
-            color: "accent",
+            color: "blue",
             content: "Column 1-2",
             component: null,
             id: "first1",

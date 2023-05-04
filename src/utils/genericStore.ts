@@ -1,5 +1,4 @@
 // utils/genericStore.ts
-import { CommonStore } from "@/models/store";
 import { defineStore, } from "pinia";
 import { ShallowRef } from "vue";
 import { Ref, shallowRef, ref,computed } from "vue";

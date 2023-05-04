@@ -1,10 +1,14 @@
 <template>
-  <v-container fluid :style="props.style" key="Options" class="bg-grey">
-    <v-row :class="props.class" justify="space-between" align="center">
+  <v-container
+    fluid
+    :style="props.style"
+    id="Futures"
+    class="bg-grey overflow-y-auto d-flex flex-column"
+  >
+    <v-row justify="space-between" align="center">
       <v-col cols="auto">
-        <div class="text-h5">Options</div>
+        <div class="text-h5">Positions</div>
       </v-col>
-      <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
         <v-btn
           density="compact"
@@ -35,6 +39,7 @@
           </div>
           <div>Current status</div>
         </v-tooltip>
+        <!-- lable and Add Instrument button here  -->
         <v-btn
           density="compact"
           color="transparent"
@@ -46,15 +51,14 @@
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0" ref="Reference">
+      <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
           density="compact"
-          :group-by="[{ key: 'contractDisplay.instrument' }]"
-          :items="state.currentSubscriptions"
+          :items="filteredData"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
-          
+          :items-per-page="-1"
         >
           <template
             v-slot:group-header="{
@@ -78,6 +82,7 @@
               </td>
             </tr>
           </template>
+          <template #bottom></template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -187,6 +192,7 @@
             :items="filteredData"
             v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
+            multi-sort
             :group-by="[{ key: 'contractDisplay.instrument' }]"
             height="60vh"
             show-select
@@ -195,6 +201,9 @@
             item-value="contract"
             :items-per-page="-1"
           >
+            <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
+            <!-- { item, columns, toggleGroup, isGroupOpen } -->
+            <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
             <template
               v-slot:group-header="{
                 item,
@@ -238,42 +247,55 @@ import {
   onMounted,
   onBeforeUnmount,
 } from "vue";
-import { useAppStore } from "@/store/app";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
+import { useLayoutStore } from "@/store/layout";
 
+import { useAppStore } from "@/store/app";
+import { useContractsStore } from "@/store/contracts";
+import { usePositionsStore } from "@/store/positions";
 import { useWebSocket } from "@/utils/useWebsocket";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 import {
+  MarketDisplayItemPosition as MainModel,
   FilterCondition,
-  MarketDisplayItemContract as MainModel,
-PublishAll,
+  PublishAll,
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
-import { useContractsStore } from "@/store/contracts";
 const appStore = useAppStore();
-const mainStore = useMarketDisplayStore();
+const mainStore = usePositionsStore();
 
 const endpoint = "/market";
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
-const filters: FilterCondition[] = [
-  { field: "contractDisplay.flag", value: "F", operator: "!==" },
-  { field: "contractDisplay.contracT_TYPE", value: 2, operator: "==" },
-  // { field: "contractDisplay.strike", value: 0, operator: "!==" },
-];
-const { socket, filteredData, subscribe } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
+const filters: FilterCondition[] = [];
+
+const { socket, subscribe, filteredData, typedArray } = useWebSocket<MainModel>(
+  usePositionsStore,
   endpoint,
   filters,
-  "marketUpdate",
+  {
+    name: "PositionUpdate",
+    func: processUpdate,
+  },
   async () => {
-    console.log("Options/Market init function");
+    console.log("Positions init function");
     if (socket.value) {
       console.log("Has socket");
-      // socket.value?.invoke("PublishAllData", PublishAll.ContractDate);
+      socket.value?.invoke("PublishAllData", PublishAll.Positions);
     }
   }
 );
+function processUpdate(message: string) {
+  try {
+    const temp = typedArray<MainModel>(message);
+    temp.forEach((e) => {
+      mainStore.updateItem(e);
+    });
+    console.log("Parsed update : ", temp);
+    //
+  } catch (err) {
+    console.error("error parsing OPTION MARKET UPDATE for ", message, err);
+  }
+}
 const props = defineProps({
   class: String,
   style: {
@@ -293,48 +315,30 @@ function updateHeader(e: Event, i: any) {
     state.selectedHeaders.push(i);
   }
 }
-
-onMounted(() => {
-  console.log("Mounted Options ");
-});
-onBeforeUnmount(() => {});
-
-function getUniqueValues() {
-  const field = "contractDisplay";
-  const child = "flag";
-  return filteredData.value.reduce((unique: string[], item: MainModel) => {
-    item;
-    if (!unique.includes(<string>item[field][child])) {
-      unique.push(<string>item[field][child]);
-    }
-    return unique;
-  }, []);
-}
-
 const headers: any[] = [
-  // { title: "Contract", key: "contract", align: "start" },
-  { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
-  { title: "Strike", key: "contractDisplay.strike", order: 6 },
-  { title: "Flag", key: "contractDisplay.flag" },
+  { title: "Member", key: "member" },
+  { title: "Principal", key: "principal" },
+  { title: "Contract", key: "contractDisplay.contractDisplay", align: "start" },
+  {
+    title: "Open",
+    key: "open",
+  },
+
+  { title: "Bought", key: "bought" },
+  { title: "Sold", key: "sold" },
 
   {
-    title: "B/QTY",
-    key: "qtyBid",
-    order: 2,
+    title: "Close",
+    key: "close",
+    order: 5,
   },
-  {
-    title: "Bid",
-    key: "bid",
-    order: 3,
-  },
-  { title: "Offer", key: "offer", order: 4 },
-  { title: "O/QTY", key: "qtyOffer", order: 5 },
-  { title: "Change", key: "change", order: 6 },
+  // { title: "Offer", key: "offer", order: 4 },
+  // { title: "O/QTY", key: "qtyOffer", order: 5 },
+  // { title: "Change", key: "change", order: 6 },
+  // { title: "Time", key: "time", order: 7 },
 
-  { title: "Time", key: "time", order: 7 },
-
-  // { title: "Last", key: "last" },
-  { title: "Volume", key: "volume", order: 8 },
+  // // { title: "Last", key: "last" },
+  // { title: "Volume", key: "volume", order: 8 },
 ];
 const getSortedHeaders = computed(() =>
   state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
@@ -352,6 +356,7 @@ const state = reactive<{
   currentSubscriptions: [],
   instrumentsToAdd: [],
 });
+
 const subscribeToSelected = () => {
   console.log("Subscribing to : ", state.instrumentsToAdd);
   subscribe(state.instrumentsToAdd.map((e) => e.contract));
@@ -361,7 +366,11 @@ const subscribeToSelected = () => {
   state.instrumentsToAdd.splice(0);
 };
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
+.v-data-table {
+  max-height: 100%;
+  height: 100%;
+}
 // .v-table > .v-table__wrapper > table > thead > tr > th {
 //   padding-left: 5px;
 //   padding-right: 5px;

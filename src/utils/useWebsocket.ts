@@ -14,6 +14,8 @@ import {
   FilterCondition,
   ActiveOrder,
   CompletedOrder,
+  MarketDisplayItemPosition,
+  Deal,
 } from "@/models/marketData";
 
 import { createBaseStore } from "@/store/baseStore";
@@ -28,6 +30,8 @@ export type CustomStore<T extends WebSocketDataType, U> = CommonStore<T> & {
 
 type WebSocketDataType =
   | MarketDisplayItemContract
+  | MarketDisplayItemPosition
+  | Deal
   | ActiveOrder
   | CompletedOrder;
 
@@ -35,18 +39,28 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
   store: ReturnType<typeof createBaseStore<T, U>>,
   url: string,
   filters: FilterCondition[],
+  updateEvent: {
+    name: string,
+    func: (message: string) => void,
+  },
   onConnect?: () => Promise<void> | void
 ): {
   socket: Ref<HubConnection | null>;
-  currentSubscriptions: Ref<T[]>;
-  instrumentsToAdd: Ref<T[]>;
+  // currentSubscriptions: ComputedRef<T[]>;
+  // instrumentsToAdd: Ref<T[]>;
+  // openInstruments: Ref<boolean>;
+  typedArray: <U extends WebSocketDataType>(data: string | object[]) => U[],
   filteredData: ComputedRef<T[]>;
   subscribeToSelected: () => boolean;
   subscribe: (list: string[]) => Promise<boolean>;
 } {
-  const instrumentsToAdd = shallowRef<T[]>([]);
+  const subsToAdd = ref<T[]>([]);
   const socket = ref<HubConnection | null>(null) as Ref<HubConnection | null>;
-  const currentSubscriptions = shallowRef<T[]>([]);
+  const subscriptions = ref<T[]>([]);
+  const openInstruments = ref(false);
+
+  const currentSubscriptions = computed(() => subscriptions.value);
+  const instrumentsToAdd = computed(() => subsToAdd.value);
 
   onMounted(() => {
     connect(url, () => {
@@ -57,14 +71,21 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
   onUnmounted(() => {
     disconnect(url);
   });
+  // const addSubscription = (item: T) => {
+  //   subscriptions.value.push(item);
+  // };
+  
+  // const removeSubscription = (item: T) => {
+  //   subscriptions.value = subscriptions.value.filter((subscription) => subscription !== item);
+  // };
   const subscribeToSelected = () => {
     try {
       console.log("Subscribing to : ", instrumentsToAdd);
-      // subscribe(instrumentsToAdd.value.map((e) => e.contract));
-      // instrumentsToAdd.value.forEach((e) => {
-      //   currentSubscriptions.value.push(e);
-      // });
-      // instrumentsToAdd.value.splice(0);
+      subscribe(instrumentsToAdd.value.map((e) => e.contract));
+      instrumentsToAdd.value.forEach((e) => {
+        // currentSubscriptions.value.push(e);
+      });
+      instrumentsToAdd.value.splice(0);
       return true;
     } catch (err) {
       return false;
@@ -81,7 +102,7 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
         case "==":
           if (fieldValue == value) {
             console.log(
-              "Op full : ",
+              "== full : ",
               fieldValue,
               operator,
               value,
@@ -93,7 +114,7 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
         case "!==":
           if (fieldValue !== value) {
             console.log(
-              "Op full : ",
+              "!== full : ",
               fieldValue,
               operator,
               value,
@@ -105,7 +126,7 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
         case ">":
           if (fieldValue <= value) {
             console.log(
-              "Op full : ",
+              "> full : ",
               fieldValue,
               operator,
               value,
@@ -117,7 +138,7 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
         case "<":
           if (fieldValue >= value) {
             console.log(
-              "Op full : ",
+              "< full : ",
               fieldValue,
               operator,
               value,
@@ -203,16 +224,31 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
     socket.value.on("MarketDisplay", (message: string) => {
       console.log("Market Display Update ");
       try {
-        // const temp = createTypedObject<T>(message);
-        // console.log("Parsed update : ", message, temp);
-        // store().updateItem(temp);
+        const temp = createTypedArray<T>(message);
+        temp.forEach((e) => {
+          store().updateItem(e);
+        })
+        console.log("Parsed update : ", temp);
+        // 
       } catch (err) {
         console.error("error parsing OPTION MARKET UPDATE for ", message, err);
       }
     });
-    socket.value.on("marketUpdate", (message: string) => {
-      console.log("Socket message ", message);
-    });
+    socket.value.on(updateEvent.name, updateEvent.func);
+
+    // socket.value.on(updateEvent, (message: string) => {
+    //   console.log("Socket message ", message);
+    //   try {
+    //     const temp = createTypedArray<T>(message);
+    //     temp.forEach((e) => {
+    //       store().updateItem(e);
+    //     })
+    //     console.log("Parsed update : ", temp);
+    //     // 
+    //   } catch (err) {
+    //     console.error("error parsing OPTION MARKET UPDATE for ", message, err);
+    //   }
+    // });
 
     await socket.value
       .start()
@@ -240,7 +276,9 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
     const parsedData = typeof data === "string" ? JSON.parse(data) : data;
     
     if (!Array.isArray(parsedData)) {
-      throw new Error("Input data must be an array.");
+      // throw new Error("Input data must be an array.");
+      // parsedData = [parsedData]
+      return [createTypedObject<U>(parsedData)]
     }
   
     return parsedData.map((item) => createTypedObject<U>(item));
@@ -286,9 +324,11 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
     socket,
     subscribeToSelected,
     filteredData,
+    typedArray: createTypedArray,
+    // openInstruments,
     subscribe,
-    currentSubscriptions,
-    instrumentsToAdd,
+    // currentSubscriptions,
+    // instrumentsToAdd,
   };
 }
 

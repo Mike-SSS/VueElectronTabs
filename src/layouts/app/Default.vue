@@ -20,7 +20,7 @@
       <v-card min-width="300">
         <v-list nav>
           <v-list-item
-            prepend-icon="mdi-leaf"
+            prepend-icon="mdi-account"
             title="BVG"
             subtitle="Online Trader"
           >
@@ -29,58 +29,75 @@
 
         <v-divider></v-divider>
 
-        <v-list>
-          <v-list-item>Menu Items</v-list-item>
-          <v-list-item>Menu Items</v-list-item>
-          <v-list-item>Menu Items</v-list-item>
-          <v-list-item>Menu Items</v-list-item>
-          <v-list-item>Menu Items</v-list-item>
-          <v-list-item>Menu Items</v-list-item>
+        <v-list @click="drawer = false">
+          <v-list-item @click="goToTrading">Trading</v-list-item>
+          <v-list-item @click="goToProfile">Profile</v-list-item>
+          <v-list-item>Logout</v-list-item>
         </v-list>
       </v-card>
     </v-menu>
 
     <v-app-bar-title class="text-white text-left">BVG Trader</v-app-bar-title>
     <v-spacer></v-spacer>
-    <v-btn color="white" variant="text" @click="openLayoutManager"
-      >Layout Manager</v-btn
-    >
-    <v-menu offset-y>
-      <template #activator="props">
-        <v-btn color="primary" variant="elevated" v-bind="props.props">{{
-          currentLayout?.name || "Select Layout"
-        }}</v-btn>
-      </template>
-      <v-list min-width="250" lines="one" select-strategy="classic">
-        <v-list-item
-          prepend-icon="mdi-cog"
-          key="configure_current"
-          active-class="bg-amber"
-          active-color="primary"
-          select-strategy="classic"
-          @click="configureSelectedLayout"
-          >Configure Current</v-list-item
-        >
-        <v-divider></v-divider>
-        <v-list-item
-          v-for="(layout, index) in layoutOptions"
-          :key="index"
-          :value="layout.name"
-          :active="currentLayout == layout"
-          active-class="bg-amber"
-          active-color="primary"
-          select-strategy="classic"
-          @click="setSelectedLayout(layout)"
-        >
-          <template v-slot:prepend="{ isActive }">
-            <v-list-item-action start>
-              <v-checkbox-btn :model-value="isActive"></v-checkbox-btn>
-            </v-list-item-action>
-          </template>
-          <v-list-item-title>{{ layout.name }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+    <template v-if="$route.name == 'Trading'">
+      <v-btn color="white" variant="text" @click="openLayoutManager"
+        >Layout Manager</v-btn
+      >
+      <v-menu offset-y>
+        <template #activator="props">
+          <v-btn color="primary" variant="elevated" v-bind="props.props">{{
+            currentLayout?.name || "Select Layout"
+          }}</v-btn>
+        </template>
+        <v-list min-width="300" lines="one" select-strategy="classic">
+          <v-list-item
+            prepend-icon="mdi-cog"
+            key="configure_current"
+            active-class="bg-amber"
+            active-color="primary"
+            select-strategy="classic"
+            @click="configureSelectedLayout"
+            >Configure Current</v-list-item
+          >
+          <v-divider></v-divider>
+          <v-list-item
+            v-for="(layout, index) in layoutOptions"
+            :key="index"
+            :value="layout.name"
+            :active="currentLayout == layout"
+            active-class="bg-amber"
+            active-color="primary"
+            select-strategy="classic"
+            @click="setSelectedLayout(layout)"
+          >
+            <template v-slot:prepend="{ isActive }">
+              <v-list-item-action start>
+                <v-checkbox-btn :model-value="isActive"></v-checkbox-btn>
+              </v-list-item-action>
+            </template>
+            <v-list-item-title>
+              <v-container>
+                <v-row>
+                  <v-col
+                    ><div>{{ layout.name }}</div></v-col
+                  >
+                  <v-col cols="4" class="grid-container-mini" v-if="layout">
+                    <div
+                      v-for="(col, index) in layout.columns"
+                      :key="col.id"
+                      :class="`bg-` + col.color"
+                      class="text-center align-center"
+                      :style="col.grid"
+                    ></div>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </template>
+
     <template #extension>
       <v-container fluid v-if="false">
         <v-row dense>
@@ -151,33 +168,6 @@
       </v-container>
     </template>
   </v-app-bar>
-  <!-- <v-app-bar floating order="3" collapse  color="blue">
-      <v-btn icon>
-        <v-icon>mdi-magnify</v-icon>
-      </v-btn>
-
-      <v-btn icon>
-        <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn>
-    </v-app-bar>
-    <v-app-bar floating order="4" collapse  color="blue">
-      <v-btn icon>
-        <v-icon>mdi-magnify</v-icon>
-      </v-btn>
-
-      <v-btn icon>
-        <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn>
-    </v-app-bar>
-    <v-app-bar floating order="5" collapse  color="blue">
-      <v-btn icon>
-        <v-icon>mdi-magnify</v-icon>
-      </v-btn>
-
-      <v-btn icon>
-        <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn>
-    </v-app-bar> -->
   <v-dialog width="1000" v-model="state.isLayoutConfiguratorOpen" scrollable>
     <v-card min-height="250">
       <v-card-title class="d-flex justify-space-between align-center"
@@ -196,7 +186,7 @@
           <v-row>
             <v-col cols="12">
               <div>
-                <div class="grid-container" v-if="currentLayout">
+                <div class="grid-container-mini" v-if="currentLayout">
                   <div
                     v-for="(col, index) in currentLayout.columns"
                     :key="col.id"
@@ -204,7 +194,7 @@
                     class="text-center align-center"
                     :style="col.grid"
                   >
-                    {{ col.id }}
+                    {{ col.id }} {{ col.component }}
                   </div>
                 </div>
               </div>
@@ -251,12 +241,47 @@
       </v-card-subtitle>
       <v-card-text>
         <v-container>
+          <v-row>
+            <v-col cols="6">
+              <div>
+                <div class="grid-container-mini" v-if="currentLayout">
+                  <div
+                    v-for="(col, index) in currentLayout.columns"
+                    :key="col.id"
+                    :class="`bg-` + col.color"
+                    class="text-center align-center"
+                    :style="col.grid"
+                  >
+                    <div>{{ col.id }}</div>
+                    <div>{{ col.component ? col.component : "None" }}</div>
+                  </div>
+                </div>
+              </div>
+            </v-col>
+            <v-col cols="6">
+              <div>
+                <div class="grid-container-mini" v-if="state.changeToLayout">
+                  <div
+                    v-for="(col, index) in state.changeToLayout.columns"
+                    :key="col.id"
+                    :class="`bg-` + col.color"
+                    class="text-center align-center"
+                    :style="col.grid"
+                  >
+                    <div>{{ col.id }}</div>
+                    <div>{{ col.component ? col.component : "None" }}</div>
+                  </div>
+                </div>
+              </div>
+            </v-col>
+          </v-row>
           <v-row align="center" justify="space-between">
             <v-col cols="5">
               <v-select
                 v-model="currentLayout"
                 item-title="name"
                 item-value="name"
+                :return-object="true"
                 readonly
                 :single-line="false"
                 label="Current Layout"
@@ -270,6 +295,7 @@
               ><v-select
                 v-model="state.changeToLayout"
                 label="New Layout"
+                :return-object="true"
                 :single-line="false"
                 item-title="name"
                 item-value="name"
@@ -289,7 +315,9 @@
                 class="comparison-card"
                 v-if="currentLayout.columns[rowIndex]"
               >
-                <v-card-title>Panel {{ rowIndex }}</v-card-title>
+                <v-card-title>{{
+                  currentLayout.columns[rowIndex].id
+                }}</v-card-title>
                 <v-card-text class="text-subtitle-1">
                   <div v-if="currentLayout && currentLayout.columns[rowIndex]">
                     Component:
@@ -313,7 +341,9 @@
                   state.changeToLayout && state.changeToLayout.columns[rowIndex]
                 "
               >
-                <v-card-title>Panel {{ rowIndex }}</v-card-title>
+                <v-card-title>{{
+                  state.changeToLayout.columns[rowIndex].id
+                }}</v-card-title>
                 <v-card-text class="text-subtitle-1">
                   <div
                     v-if="
@@ -340,56 +370,13 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-navigation-drawer
-    color="primary"
-    permanent
-    rail-width="60"
-    :rail="true"
-    width="200"
-    location="left"
-  >
-    <v-list density="compact">
-      <v-list-item
-        prepend-icon="mdi-fire"
-        title="Home"
-        value="home"
-        :to="{
-          name: 'Login',
-        }"
-      ></v-list-item>
-      <v-list-item
-        prepend-icon="mdi-cash"
-        title="My Account"
-        value="account"
-      ></v-list-item>
-      <v-list-item
-        prepend-icon="mdi-cart-variant"
-        title="Users"
-        value="users"
-      ></v-list-item>
-      <v-list-item
-        prepend-icon="mdi-chart-gantt"
-        title="Users"
-        value="users"
-      ></v-list-item>
-      <v-list-item
-        prepend-icon="mdi-chart-timeline-variant-shimmer"
-        title="Users"
-        value="users"
-      ></v-list-item>
-      <v-list-item
-        prepend-icon="mdi-cog"
-        title="Users"
-        value="users"
-      ></v-list-item>
-    </v-list>
-  </v-navigation-drawer>
-  <default-view />
+  <v-main>
+    <router-view />
+  </v-main>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import { onMounted, computed, reactive, markRaw, inject, ref } from "vue";
-import DefaultView from "./View.vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
@@ -402,6 +389,7 @@ import { LAYOUT } from "@/models/layout";
 
 import AnalogClock from "@/components/AnalogClock.vue";
 import { axiosInstance } from "@/plugins/axios";
+import router from "@/router";
 
 // Inject the Axios instance with the defined symbol
 const axios = inject<AxiosInstance>(axiosSymbol);
@@ -414,7 +402,7 @@ const state = reactive<{
   isLayoutManagerOpen: boolean;
   isLayoutConfiguratorOpen: boolean;
   lm_mode: "configure" | "change";
-  changeToLayout: LAYOUT | null;
+  changeToLayout: LAYOUT | undefined;
   dragOptions: {
     animation: number;
     group: string;
@@ -429,7 +417,7 @@ const state = reactive<{
   isLayoutManagerOpen: false,
   isLayoutConfiguratorOpen: false,
   lm_mode: "change",
-  changeToLayout: null,
+  changeToLayout: undefined,
 });
 const draggedData: any = ref(null);
 const onStart = (event: any) => {
@@ -439,6 +427,17 @@ const onStart = (event: any) => {
       component: currentLayout.value.columns[event.oldIndex].component,
     };
   }
+};
+
+const goToProfile = async () => {
+  await router.push({
+    name: "UserProfile",
+  });
+};
+const goToTrading = async () => {
+  await router.push({
+    name: "Trading",
+  });
 };
 const onEnd = (event: any) => {
   console.log("onEnd", event);
@@ -455,17 +454,13 @@ const onEnd = (event: any) => {
     currentLayout.value.columns[event.oldIndex].component = targetComponent;
   }
 };
-// const currentColumns = computed({
-//   get() {
-//     return currentLayout.value?.columns;
-//   },
-//   set(value) {
-//     console.log("SEt", value);
-//   },
-// });
 const largestLayoutSize = computed(() => {
   // if (currentLayout.value?.columns.length > state.changeToLayout)
-  if (currentLayout.value && state.changeToLayout != null) {
+  if (
+    currentLayout.value &&
+    state.changeToLayout &&
+    state.changeToLayout.columns
+  ) {
     if (
       currentLayout.value.columns.length > state.changeToLayout.columns.length
     ) {
@@ -512,23 +507,27 @@ onMounted(async () => {
 
 const GetMarketDisplay = async () => {
   try {
-    const res = await axiosInstance.get("/api/MarketSubscription/GetMarketDisplay");
+    const res = await axiosInstance.get(
+      "/api/MarketSubscription/GetMarketDisplay",
+      {
+        params: {
+          publish: true,
+        },
+      }
+    );
     if (res) return Promise.resolve(res.data);
   } catch (err) {
     console.error(err);
   }
 };
-
-// const PublishAll = async () => {
-//   try {
-//     const res = await axios?.get("/api/Download/publishall");
-
-//     if (res) {
-//       console.log("Publish All : ", res.data);
-//       return Promise.resolve(res.data);
-//     }
-//   } catch (err) {
-//     console.error(err);
-//   }
-// };
 </script>
+<style>
+.grid-container-mini {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(12, 1fr);
+  grid-gap: 2px;
+  width: 100%;
+  height: 100%;
+}
+</style>

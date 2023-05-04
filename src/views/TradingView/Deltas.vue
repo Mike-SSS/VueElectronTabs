@@ -246,7 +246,6 @@ import {
 } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
-import { useContractsStore } from "@/store/contracts";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
@@ -261,27 +260,20 @@ const endpoint = "/market";
 
 
 const filters: FilterCondition[] = [
-  { field: "contractDisplay.flag", value: "C", operator: "!==" },
-  { field: "contractDisplay.flag", value: "P", operator: "!==" },
+  { field: "contractDisplay.flag", value: "F", operator: "!==" },
+  { field: "contractDisplay.strike", value: "0", operator: "!==" },
+  { field: "contractDisplay.contracT_TYPE", value: 5, operator: "==" },
 ];
-const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
-  useContractsStore,
+const { socket, filteredData, subscribe } = useWebSocket<MainModel>(
+  useMarketDisplayStore,
   endpoint,
   filters,
+  "marketUpdate",
   async () => {
-    console.log("Futures/Market init function");
+    console.log("Deltas/Market init function");
     if (socket.value) {
       console.log("Has socket");
-      // socket.value?.invoke("PublishAll");
-      const res = await noAuthInstance.get("/api/download/publishall", {
-        params: {
-          publish: true,
-          enumVal: PublishAll.ContractDate,
-        },
-      });
-      if (res) {
-        console.log("Publish all Result ", res.data);
-      }
+      // socket.value?.invoke("PublishAllData", PublishAll.ContractDate);
     }
   }
 );
@@ -365,6 +357,14 @@ const state = reactive<{
   currentSubscriptions: [],
   instrumentsToAdd: [],
 });
+const subscribeToSelected = () => {
+  console.log("Subscribing to : ", state.instrumentsToAdd);
+  subscribe(state.instrumentsToAdd.map((e) => e.contract));
+  state.instrumentsToAdd.forEach((e) => {
+    state.currentSubscriptions.push(e);
+  });
+  state.instrumentsToAdd.splice(0);
+};
 </script>
 <style lang="scss">
 // .v-table > .v-table__wrapper > table > thead > tr > th {

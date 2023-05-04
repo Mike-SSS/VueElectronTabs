@@ -254,7 +254,7 @@ import { useMarketDisplayStore } from "@/store/marketDisplay";
 import {
   FilterCondition,
   MarketDisplayItemContract as MainModel,
-PublishAll,
+  PublishAll,
 } from "@/models/marketData";
 
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
@@ -265,27 +265,27 @@ const mainStore = useMarketDisplayStore();
 
 const endpoint = "/market";
 const filters: FilterCondition[] = [
-  { field: "contractDisplay.flag", value: "F", operator: "!==" },
-  { field: "contractDisplay.contracT_TYPE", value: 4, operator: "!==" },
+{ field: "contractDisplay.contracT_TYPE", value: 3, operator: "==" },
 ];
-const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
-  useContractsStore,
+const { socket, filteredData, subscribe } = useWebSocket<MainModel>(
+  useMarketDisplayStore,
   endpoint,
   filters,
+  "marketUpdate",
   async () => {
-    console.log("Futures/Market init function");
+    console.log("Spreads/Market init function");
     if (socket.value) {
       console.log("Has socket");
-      // socket.value?.invoke("PublishAll");
-      const res = await noAuthInstance.get("/api/download/publishall", {
-        params: {
-          publish: true,
-          enumVal: PublishAll.ContractDate,
-        },
-      });
-      if (res) {
-        console.log("Publish all Result ", res.data);
-      }
+      // socket.value?.invoke("PublishAllData", PublishAll.ContractDate);
+      // const res = await noAuthInstance.get("/api/download/publishall", {
+      //   params: {
+      //     publish: true,
+      //     enumVal: PublishAll.ContractDate,
+      //   },
+      // });
+      // if (res) {
+      //   console.log("Publish all Result ", res.data);
+      // }
     }
   }
 );
@@ -354,6 +354,14 @@ const state = reactive<{
   currentSubscriptions: [],
   instrumentsToAdd: [],
 });
+const subscribeToSelected = () => {
+  console.log("Subscribing to : ", state.instrumentsToAdd);
+  subscribe(state.instrumentsToAdd.map((e) => e.contract));
+  state.instrumentsToAdd.forEach((e) => {
+    state.currentSubscriptions.push(e);
+  });
+  state.instrumentsToAdd.splice(0);
+};
 </script>
 <style lang="scss" scoped>
 .v-data-table {

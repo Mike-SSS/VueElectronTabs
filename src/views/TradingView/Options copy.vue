@@ -457,7 +457,7 @@ const connect = async (endpoint: string) => {
 
         });
         console.log("Invoke market init");
-        // connectionState.connection.invoke("PublishAll");
+        socket.value?.invoke("PublishAllData", PublishAll.ActiveOrders);
         const res = await axiosInstance.get("/api/download/publishall", {
           params: {
             publish: true,

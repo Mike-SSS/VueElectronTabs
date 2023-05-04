@@ -66,6 +66,42 @@ export interface MarketDisplayItemInstrument {
   physicallSettlement: boolean;
   groupDescription: string;
 }
+export interface Deal {
+  dealSeq: number;
+  orderSeq: number;
+  dealTime: string; // Using string to represent TimeSpan since there's no direct equivalent in TypeScript
+  clearingMember: string;
+  member: string;
+  dealer: string;
+  principal: string;
+  buySell: string;
+  origin: string;
+  quantity: number;
+  contract: string;
+  dealtRate: number;
+  userRef: string;
+  exchangeSuffix: number;
+  portfolio: string;
+  profitCentre: string;
+  subAccount: string;
+  exchangeRef: string;
+  dealtPrice: number;
+  dealConsideration: number;
+  settlementDate: Date;
+  bookingFeeFlag: string;
+  reason: string;
+  markToMarket: number;
+  fee: number;
+  commited: string;
+  settled: string;
+  clearingMemberFees: number;
+  memberFees: number;
+  principleAgency: string;
+  feeDelta: number;
+  makerQty: number;
+  reportOnlyQty: number;
+}
+
 export interface MarketDisplayItemPosition {
   positionSeq: number;
   clearingMember: string;
@@ -73,6 +109,7 @@ export interface MarketDisplayItemPosition {
   dealer: string;
   principal: string;
   contract: string;
+  contractDisplay: ContractDisplay;
   open: number;
   bought: number;
   sold: number;
@@ -175,6 +212,7 @@ interface OrderBase {
   principal: string;
   buySell: string;
   contract: string;
+  contractDisplay: ContractDisplay;
   rate: number;
   suffixCode: number;
   profitCentre: string;

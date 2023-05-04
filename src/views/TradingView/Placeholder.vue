@@ -89,19 +89,9 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  initialValue: {
-    type: Number,
-    default: 0,
-  },
 });
 onMounted(() => {
-  console.log("Mounted ", count);
 });
-
-const count = ref(props.initialValue);
-const increase = () => {
-  count.value++;
-};
 const openSubMenu = (category: MenuItem) => {
   categories.value.forEach((cat) => {
     if (cat.id === category.id) {
@@ -139,9 +129,32 @@ const categories: Ref<MenuItem[]> = ref([
     ],
     subMenu: false,
   },
+  {
+    id: 5,
+    name: "Orders",
+    items: [
+      { id: 6, name: "Active Orders", component: "ActiveOrders" as const },
+      { id: 7, name: "Completed Orders", component: "CompletedOrders" as const },
+    ],
+    subMenu: false,
+  },
+  {
+    id: 8,
+    name: "Positions",
+    items: [
+      { id: 9, name: "Consolidated positions", component: "ConsolidatedPositions" as const },
+      { id: 10, name: "Positions", component: "Positions" as const },
+    ],
+    subMenu: false,
+  },
+  {
+    id: 11,
+    name: "Deals",
+    items: [
+      // { id: 3, name: "Unsolid Deals", component: "Deals" as const },
+      { id: 12, name: "Deals", component: "Deals" as const },
+    ],
+    subMenu: false,
+  },
 ]);
-
-const decrease = () => {
-  count.value--;
-};
 </script>

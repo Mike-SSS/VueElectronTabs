@@ -50,11 +50,11 @@
       <v-col cols="12" class="pa-0" ref="Reference">
         <v-data-table
           density="compact"
-          :group-by="[{ key: 'contract' }]"
           :items="filteredData"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
+          :items-per-page="-1"
         >
           <template
             v-slot:group-header="{
@@ -78,6 +78,7 @@
               </td>
             </tr>
           </template>
+          <template #bottom></template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -250,7 +251,11 @@ import { useCompletedOrdersStore } from "@/store/completedOrders";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
 import { useWebSocket } from "@/utils/useWebsocket";
-import { FilterCondition, CompletedOrder as MainModel, PublishAll } from "@/models/marketData";
+import {
+  FilterCondition,
+  CompletedOrder as MainModel,
+  PublishAll,
+} from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
 const appStore = useAppStore();
 const mainStore = useCompletedOrdersStore();
@@ -258,30 +263,44 @@ const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
 const endpoint = "/market";
 
-
 const filters: FilterCondition[] = [];
-const { socket, filteredData, subscribeToSelected } = useWebSocket<MainModel>(
+const { socket, filteredData, subscribeToSelected, typedArray } = useWebSocket<MainModel>(
   useCompletedOrdersStore,
   endpoint,
   filters,
+  {
+    name: "CompletedOrderUpdate",
+    func: processUpdate,
+  },
   async () => {
     console.log("Completed Order init function IE publish all active orders");
     if (socket.value) {
       console.log("Has socket");
-      // socket.value?.invoke("PublishAll");
-      const res = await noAuthInstance.get("/api/download/publishall", {
-        params: {
-          publish: true,
-          enumVal: PublishAll.CompletedOrders,
-        },
-      });
-      if (res) {
-        console.log("Publish Completed orders ", res.data);
-      }
+      socket.value?.invoke("PublishAllData", PublishAll.CompletedOrders);
+      // const res = await noAuthInstance.get("/api/download/publishall", {
+      //   params: {
+      //     publish: true,
+      //     enumVal: PublishAll.CompletedOrders,
+      //   },
+      // });
+      // if (res) {
+      //   console.log("Publish Completed orders ", res.data);
+      // }
     }
   }
 );
-
+function processUpdate(message: string) {
+  try {
+    const temp = typedArray<MainModel>(message);
+    temp.forEach((e) => {
+      mainStore.updateItem(e);
+    });
+    console.log("Parsed update : ", temp);
+    //
+  } catch (err) {
+    console.error("error parsing OPTION MARKET UPDATE for ", message, err);
+  }
+}
 const props = defineProps({
   class: String,
   style: {
@@ -305,8 +324,7 @@ function updateHeader(e: Event, i: any) {
 onMounted(() => {
   console.log("Mounted Deltas");
 });
-onBeforeUnmount(() => {
-});
+onBeforeUnmount(() => {});
 
 function getUniqueValues() {
   // const field = "contractDisplay";
@@ -318,10 +336,7 @@ function getUniqueValues() {
   //   return unique;
   // }, []);
 }
-// const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
-// const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
-  const headers: any[] = [
-  // { title: "Contract", key: "contract", align: "start" },
+const headers: any[] = [
   { title: "Enter Time", key: "enterTime", order: 1 },
   { title: "Rate", key: "rate", order: 1 },
   { title: "Spot Price", key: "spotPrice", order: 1 },

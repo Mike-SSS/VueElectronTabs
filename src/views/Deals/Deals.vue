@@ -1,60 +1,60 @@
 <template>
-  <v-container fluid :style="props.style" key="Options" class="bg-grey">
-    <v-row :class="props.class" justify="space-between" align="center">
-      <v-col cols="auto">
-        <div class="text-h5">Options</div>
-      </v-col>
-      <v-col>{{ getUniqueValues() }}</v-col>
-      <v-col cols="auto">
-        <v-btn
+  <VContainer fluid :style="props.style" key="Options" class="bg-grey">
+    <VRow :class="props.class" justify="space-between" align="center">
+      <VCol cols="auto">
+        <div class="text-h5">Deals {{ filteredData.length }}</div>
+      </VCol>
+      <VCol>{{ getUniqueValues() }}</VCol>
+      <VCol cols="auto">
+        <VBtn
           density="compact"
           color="transparent"
           variant="flat"
           icon
           @click="state.openHeaderPicker = true"
-          ><v-icon>mdi-table-headers-eye</v-icon></v-btn
+          ><VIcon>mdi-table-headers-eye</VIcon></VBtn
         >
-        <v-tooltip>
+        <VTooltip>
           <template v-slot:activator="{ props }">
-            <v-btn
+            <VBtn
               density="compact"
               color="transparent"
               variant="flat"
               v-bind="props"
               icon
-              ><v-icon>mdi-information</v-icon></v-btn
+              ><VIcon>mdi-information</VIcon></VBtn
             >
           </template>
           <div>Current status</div>
           <div>
-            <v-icon
+            <VIcon
               size="25"
               :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</v-icon
+              >mdi-circle</VIcon
             >
           </div>
           <div>Current status</div>
-        </v-tooltip>
-        <v-btn
+        </VTooltip>
+        <!-- lable and Add Instrument button here  -->
+        <VBtn
           density="compact"
           color="transparent"
           variant="flat"
           icon
           @click="state.openInstruments = true"
-          ><v-icon>mdi-plus</v-icon></v-btn
+          ><VIcon>mdi-plus</VIcon></VBtn
         >
-      </v-col>
-    </v-row>
-    <v-row class="fill-height">
-      <v-col cols="12" class="pa-0" ref="Reference">
+      </VCol>
+    </VRow>
+    <VRow class="fill-height">
+      <VCol cols="12" class="pa-0" ref="Reference">
         <v-data-table
           density="compact"
-          :group-by="[{ key: 'contractDisplay.instrument' }]"
-          :items="state.currentSubscriptions"
+          :items="filteredData"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
-          
+          :items-per-page="-1"
         >
           <template
             v-slot:group-header="{
@@ -78,33 +78,34 @@
               </td>
             </tr>
           </template>
+          <template #bottom></template>
         </v-data-table>
-      </v-col>
-    </v-row>
-    <v-dialog
+      </VCol>
+    </VRow>
+    <VDialog
       v-model="state.openHeaderPicker"
       scrollable
       width="auto"
       key="Futures_addInstruments"
     >
-      <v-card height="80vh" min-width="300" color="white">
-        <v-card-title class="bg-primary"
-          ><v-row justify="space-between" align="center">
-            <v-col cols="10" sm="9">Instrument Headers</v-col>
-            <v-col cols="2" sm="auto"
-              ><v-btn
+      <VCard height="80vh" min-width="300" color="white">
+        <VCardTitle class="bg-primary"
+          ><VRow justify="space-between" align="center">
+            <VCol cols="10" sm="9">Instrument Headers</VCol>
+            <VCol cols="2" sm="auto"
+              ><VBtn
                 @click="state.openHeaderPicker = false"
                 size="small"
                 icon
                 color="transparent"
                 flat
               >
-                <v-icon icon="mdi-close"></v-icon> </v-btn
-            ></v-col> </v-row
-        ></v-card-title>
-        <v-card-text>
-          <v-list>
-            <v-list-item
+                <VIcon icon="mdi-close"></VIcon> </VBtn
+            ></VCol> </VRow
+        ></VCardTitle>
+        <VCardText>
+          <VList>
+            <VListItem
               lines="one"
               v-for="header in headers"
               :key="header.title"
@@ -112,75 +113,75 @@
               :id="header.title"
             >
               <template v-slot:prepend>
-                <v-list-item-action start>
-                  <v-checkbox-btn
+                <VListItemAction start>
+                  <VCheckboxBtn
                     @change="updateHeader($event, header)"
                     :model-value="state.selectedHeaders.find((e: any) => e.key == header.key) != null"
-                  ></v-checkbox-btn>
-                </v-list-item-action>
+                  ></VCheckboxBtn>
+                </VListItemAction>
               </template>
-            </v-list-item>
-          </v-list>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+            </VListItem>
+          </VList>
+        </VCardText>
+      </VCard>
+    </VDialog>
 
-    <v-dialog
+    <VDialog
       v-model="state.openInstruments"
       scrollable
       width="auto"
       key="Futures_addInstruments"
     >
-      <v-card height="80vh" width="80vw">
-        <v-card-title class="bg-primary"
-          ><v-row justify="space-between">
-            <v-col cols="10"
+      <VCard height="80vh" width="80vw">
+        <VCardTitle class="bg-primary"
+          ><VRow justify="space-between">
+            <VCol cols="10"
               >Instrument List ({{
                 filteredData ? filteredData.length : -2
-              }})</v-col
+              }})</VCol
             >
-            <v-col cols="2" sm="auto"
-              ><v-btn icon size="20" color="error" flat></v-btn
-              ><v-btn
+            <VCol cols="2" sm="auto"
+              ><VBtn icon size="20" color="error" flat></VBtn
+              ><VBtn
                 @click="state.openInstruments = false"
                 size="small"
                 icon
                 color="transparent"
                 flat
               >
-                <v-icon icon="mdi-close"></v-icon> </v-btn
-            ></v-col> </v-row
-        ></v-card-title>
-        <v-card-subtitle>
-          <v-container fluid
-            ><v-row align="center">
-              <v-col cols="4"
-                ><v-text-field
+                <VIcon icon="mdi-close"></VIcon> </VBtn
+            ></VCol> </VRow
+        ></VCardTitle>
+        <VCardSubtitle>
+          <VContainer fluid
+            ><VRow align="center">
+              <VCol cols="4"
+                ><VTextField
                   hide-details
                   label="Search"
                   append-inner-icon="mdi-magnify"
                   variant="outlined"
-                ></v-text-field
-              ></v-col>
-              <v-spacer></v-spacer>
-              <v-col cols="auto"
-                ><v-btn
+                ></VTextField
+              ></VCol>
+              <VSpacer></VSpacer>
+              <VCol cols="auto"
+                ><VBtn
                   @click="subscribeToSelected"
                   :disabled="state.instrumentsToAdd.length == 0"
                   color="primary"
                 >
-                  Add ({{ state.instrumentsToAdd.length }})</v-btn
-                ></v-col
+                  Add ({{ state.instrumentsToAdd.length }})</VBtn
+                ></VCol
               >
-              <v-col cols="auto"
-                ><v-btn @click="state.openInstruments = false" color="primary">
-                  Done</v-btn
-                ></v-col
+              <VCol cols="auto"
+                ><VBtn @click="state.openInstruments = false" color="primary">
+                  Done</VBtn
+                ></VCol
               >
-            </v-row></v-container
+            </VRow></VContainer
           >
-        </v-card-subtitle>
-        <v-card-text>
+        </VCardSubtitle>
+        <VCardText>
           <v-data-table
             density="compact"
             class="tableData"
@@ -195,6 +196,9 @@
             item-value="contract"
             :items-per-page="-1"
           >
+            <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
+            <!-- { item, columns, toggleGroup, isGroupOpen } -->
+            <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
             <template
               v-slot:group-header="{
                 item,
@@ -217,16 +221,19 @@
                 </td>
               </tr>
             </template>
+            <template #item.contractDisplay.strike="{ item }">
+              {{ item.value.contractDisplay.strike }}D
+            </template>
           </v-data-table>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" block @click="state.openInstruments = false"
-            >Close Instruments</v-btn
+        </VCardText>
+        <VCardActions>
+          <VBtn color="primary" block @click="state.openInstruments = false"
+            >Close Instruments</VBtn
           >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+  </VContainer>
 </template>
 
 <script lang="ts" setup>
@@ -238,42 +245,59 @@ import {
   onMounted,
   onBeforeUnmount,
 } from "vue";
+import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
+import { useContractsStore } from "@/store/contracts";
+import { useDealsStore } from "@/store/deals";
+// import {
+//   CustomActiveOrderActions,
+//   useCustomActiveOrdersStore,
+// } from "@/store/activeOrders";
+import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
 import { useWebSocket } from "@/utils/useWebsocket";
-import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 import {
   FilterCondition,
-  MarketDisplayItemContract as MainModel,
-PublishAll,
+  Deal as MainModel,
+  PublishAll,
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
-import { useContractsStore } from "@/store/contracts";
 const appStore = useAppStore();
-const mainStore = useMarketDisplayStore();
-
-const endpoint = "/market";
+const mainStore = useDealsStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
-const filters: FilterCondition[] = [
-  { field: "contractDisplay.flag", value: "F", operator: "!==" },
-  { field: "contractDisplay.contracT_TYPE", value: 2, operator: "==" },
-  // { field: "contractDisplay.strike", value: 0, operator: "!==" },
-];
-const { socket, filteredData, subscribe } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
-  endpoint,
-  filters,
-  "marketUpdate",
-  async () => {
-    console.log("Options/Market init function");
-    if (socket.value) {
-      console.log("Has socket");
-      // socket.value?.invoke("PublishAllData", PublishAll.ContractDate);
+const endpoint = "/market";
+const filters: FilterCondition[] = [];
+
+const { socket, filteredData, subscribeToSelected, typedArray } =
+  useWebSocket<MainModel>(
+    useDealsStore,
+    endpoint,
+    filters,
+    {
+      name: "DealsUpdate",
+      func: processUpdate,
+    },
+    async () => {
+      console.log("Deals init function IE publish all deals??");
+      // if (socket.value) {
+      //   console.log("Has socket");
+      //   socket.value?.invoke("PublishAllData", PublishAll.ActiveOrders);
+      // }
     }
+  );
+function processUpdate(message: string) {
+  try {
+    const temp = typedArray<MainModel>(message);
+    temp.forEach((e) => {
+      mainStore.updateItem(e);
+    });
+    console.log("Parsed update : ", temp);
+    //
+  } catch (err) {
+    console.error("error parsing OPTION MARKET UPDATE for ", message, err);
   }
-);
+}
 const props = defineProps({
   class: String,
   style: {
@@ -281,7 +305,6 @@ const props = defineProps({
     required: true,
   },
 });
-
 function updateHeader(e: Event, i: any) {
   console.log("Update header ", (e?.target as any).value, i);
   const foundSelected = state.selectedHeaders.findIndex(
@@ -295,46 +318,45 @@ function updateHeader(e: Event, i: any) {
 }
 
 onMounted(() => {
-  console.log("Mounted Options ");
+  console.log("Mounted Deltas");
 });
 onBeforeUnmount(() => {});
 
 function getUniqueValues() {
-  const field = "contractDisplay";
-  const child = "flag";
-  return filteredData.value.reduce((unique: string[], item: MainModel) => {
-    item;
-    if (!unique.includes(<string>item[field][child])) {
-      unique.push(<string>item[field][child]);
-    }
-    return unique;
-  }, []);
+  // const field = "contractDisplay";
+  // const child = "flag";
+  // return filteredData.value.reduce((unique: string[], item: MainModel) => {
+  //   if (!unique.includes(<string>item[field][child])) {
+  //     unique.push(<string>item[field][child]);
+  //   }
+  //   return unique;
+  // }, []);
 }
-
+// const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
+// const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
-  { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
-  { title: "Strike", key: "contractDisplay.strike", order: 6 },
-  { title: "Flag", key: "contractDisplay.flag" },
-
+  { title: "Enter Time", key: "enterTime", order: 1 },
+  { title: "U/Code", key: "userCode", order: 6 },
+  { title: "U/Dealer", key: "userDealer" },
+  { title: "Clearing Member", key: "clearingMember" },
+  { title: "Member", key: "member" },
+  { title: "Dealer", key: "dealer" },
+  { title: "Buy/Sell", key: "buySell" },
+  { title: "Order State", key: "orderState" },
   {
-    title: "B/QTY",
-    key: "qtyBid",
+    title: "QTY",
+    key: "quantity",
     order: 2,
   },
   {
-    title: "Bid",
-    key: "bid",
+    title: "contract",
+    key: "contract",
     order: 3,
   },
-  { title: "Offer", key: "offer", order: 4 },
-  { title: "O/QTY", key: "qtyOffer", order: 5 },
-  { title: "Change", key: "change", order: 6 },
-
-  { title: "Time", key: "time", order: 7 },
-
-  // { title: "Last", key: "last" },
-  { title: "Volume", key: "volume", order: 8 },
+  { title: "Rate", key: "rate", order: 4 },
+  { title: "O/QTY", key: "originalQuantity", order: 5 },
+  { title: "Principle Agency", key: "principleAgency", order: 5 },
 ];
 const getSortedHeaders = computed(() =>
   state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
@@ -352,14 +374,6 @@ const state = reactive<{
   currentSubscriptions: [],
   instrumentsToAdd: [],
 });
-const subscribeToSelected = () => {
-  console.log("Subscribing to : ", state.instrumentsToAdd);
-  subscribe(state.instrumentsToAdd.map((e) => e.contract));
-  state.instrumentsToAdd.forEach((e) => {
-    state.currentSubscriptions.push(e);
-  });
-  state.instrumentsToAdd.splice(0);
-};
 </script>
 <style lang="scss">
 // .v-table > .v-table__wrapper > table > thead > tr > th {
