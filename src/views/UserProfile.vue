@@ -12,7 +12,7 @@
             </div></v-card-subtitle
           >
           <v-card-text class="text-body-1">
-            <div>{{ token ? token : "No token detected. Login not valid" }}</div>
+            <div class="text-left"><pre>{{ token ? token : "No token detected. Login not valid" }}</pre></div>
           </v-card-text>
         </v-card>
       </v-col>

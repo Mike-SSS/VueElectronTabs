@@ -40,16 +40,13 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
   url: string,
   filters: FilterCondition[],
   updateEvent: {
-    name: string,
-    func: (message: string) => void,
+    name: string;
+    func: (message: string) => void;
   },
   onConnect?: () => Promise<void> | void
 ): {
   socket: Ref<HubConnection | null>;
-  // currentSubscriptions: ComputedRef<T[]>;
-  // instrumentsToAdd: Ref<T[]>;
-  // openInstruments: Ref<boolean>;
-  typedArray: <U extends WebSocketDataType>(data: string | object[]) => U[],
+  typedArray: <U extends WebSocketDataType>(data: string | object[]) => U[];
   filteredData: ComputedRef<T[]>;
   subscribeToSelected: () => boolean;
   subscribe: (list: string[]) => Promise<boolean>;
@@ -71,13 +68,6 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
   onUnmounted(() => {
     disconnect(url);
   });
-  // const addSubscription = (item: T) => {
-  //   subscriptions.value.push(item);
-  // };
-  
-  // const removeSubscription = (item: T) => {
-  //   subscriptions.value = subscriptions.value.filter((subscription) => subscription !== item);
-  // };
   const subscribeToSelected = () => {
     try {
       console.log("Subscribing to : ", instrumentsToAdd);
@@ -185,7 +175,7 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
       return e;
     });
   });
-  
+
   const disconnect = (endpoint: string) => {
     console.log("Disconnect futures with subs", endpoint);
     socket.value?.stop();
@@ -227,28 +217,14 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
         const temp = createTypedArray<T>(message);
         temp.forEach((e) => {
           store().updateItem(e);
-        })
+        });
         console.log("Parsed update : ", temp);
-        // 
+        //
       } catch (err) {
         console.error("error parsing OPTION MARKET UPDATE for ", message, err);
       }
     });
     socket.value.on(updateEvent.name, updateEvent.func);
-
-    // socket.value.on(updateEvent, (message: string) => {
-    //   console.log("Socket message ", message);
-    //   try {
-    //     const temp = createTypedArray<T>(message);
-    //     temp.forEach((e) => {
-    //       store().updateItem(e);
-    //     })
-    //     console.log("Parsed update : ", temp);
-    //     // 
-    //   } catch (err) {
-    //     console.error("error parsing OPTION MARKET UPDATE for ", message, err);
-    //   }
-    // });
 
     await socket.value
       .start()
@@ -274,35 +250,65 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
   ): U[] {
     console.log("Create typed array");
     const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-    
+
     if (!Array.isArray(parsedData)) {
       // throw new Error("Input data must be an array.");
       // parsedData = [parsedData]
-      return [createTypedObject<U>(parsedData)]
+      return [createTypedObject<U>(parsedData)];
     }
-  
+
     return parsedData.map((item) => createTypedObject<U>(item));
   }
   function pascalToCamel(str: string): string {
-    return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
-      return index === 0 ? word.toLowerCase() : word.toUpperCase();
-    }).replace(/\s+/g, '');
+    return str
+      .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
+        return index === 0 ? word.toLowerCase() : word.toUpperCase();
+      })
+      .replace(/\s+/g, "");
   }
-  
+  function getTypeGuard(obj: any): ((data: any) => boolean) | null {
+    if (isMarketDisplayItemContract(obj)) {
+      return isMarketDisplayItemContract;
+    }
+
+    if (isMarketDisplayItemPosition(obj)) {
+      return isMarketDisplayItemPosition;
+    }
+
+    // Add more type guards for remaining types
+
+    return null;
+  }
   function createTypedObject<U extends WebSocketDataType>(
     data: Record<string, unknown>
   ): U {
     console.log("Create typed object");
+    const exampleInstance = {} as U;
+    const typeGuard = getTypeGuard(exampleInstance);
+    if (!typeGuard) {
+      throw new Error("No type guard found for the expected type");
+    }
+
+    if (!typeGuard(data)) {
+      throw new Error("Invalid data structure for the expected type");
+    }
+
     const typedObject: Partial<U> = {};
-  
+
     for (const key in data) {
       const camelKey = pascalToCamel(key);
       const value = data[key];
-  
-      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+      ) {
         typedObject[camelKey as keyof U] = value as U[keyof U];
       } else if (typeof value === "object" && value !== null) {
-        typedObject[camelKey as keyof U] = createTypedObject(value as Record<string, unknown>) as U[keyof U];
+        typedObject[camelKey as keyof U] = createTypedObject(
+          value as Record<string, unknown>
+        ) as U[keyof U];
       } else {
         throw new Error(`Invalid data for field ${key}`);
       }

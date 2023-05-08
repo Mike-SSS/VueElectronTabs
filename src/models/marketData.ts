@@ -11,7 +11,7 @@ export type FilterCondition = {
   operator: "==" | "!==" | ">" | "<" | ">=" | "<=";
   value: any;
 };
-interface ContractDisplay {
+export interface ContractDisplay {
   instrument: string;
   contractDate: string;
   strike: number;

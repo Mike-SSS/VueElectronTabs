@@ -40,9 +40,9 @@
     <v-app-bar-title class="text-white text-left">BVG Trader</v-app-bar-title>
     <v-spacer></v-spacer>
     <template v-if="$route.name == 'Trading'">
-      <v-btn color="white" variant="text" @click="openLayoutManager"
+      <!-- <v-btn color="white" variant="text" @click="openLayoutManager"
         >Layout Manager</v-btn
-      >
+      > -->
       <v-menu offset-y>
         <template #activator="props">
           <v-btn color="primary" variant="elevated" v-bind="props.props">{{
@@ -50,6 +50,15 @@
           }}</v-btn>
         </template>
         <v-list min-width="300" lines="one" select-strategy="classic">
+          <v-list-item
+            prepend-icon="mdi-wrench"
+            key="layout_manager"
+            active-class="bg-amber"
+            active-color="primary"
+            select-strategy="classic"
+            @click="openLayoutManager"
+            >Layout Manager</v-list-item
+          >
           <v-list-item
             prepend-icon="mdi-cog"
             key="configure_current"
@@ -241,8 +250,54 @@
       </v-card-subtitle>
       <v-card-text>
         <v-container>
-          <v-row>
-            <v-col cols="6">
+          <v-row v-if="currentLayout">
+            <v-col class="d-flex"
+              ><div class="text-h4">Current Layout:</div>
+              <v-spacer></v-spacer>
+              <div style="width: 200px">
+                <v-select
+                  v-if="currentLayout"
+                  density="compact"
+                  disabled
+                  v-model="currentLayout"
+                  label="Current Layout"
+                  :return-object="true"
+                  :single-line="true"
+                  item-title="name"
+                  item-value="name"
+                  :items="layoutOptions"
+                  hide-details="auto"
+                >
+                  <template #item="{ item }">
+                    <v-list-item :title="item.title" :value="item">
+                      <template v-slot:append>
+                        <v-container>
+                          <v-row>
+                            <v-col
+                              ><div>{{ item.raw.name }}</div></v-col
+                            >
+                            <v-col
+                              cols="4"
+                              class="grid-container-mini"
+                              v-if="item.raw"
+                            >
+                              <div
+                                v-for="(col, index) in item.raw.columns"
+                                :key="col.id"
+                                :class="`bg-` + col.color"
+                                class="text-center align-center"
+                                :style="col.grid"
+                              ></div>
+                            </v-col>
+                          </v-row>
+                        </v-container>
+                      </template>
+                    </v-list-item>
+                  </template>
+                </v-select>
+              </div>
+            </v-col>
+            <v-col cols="12">
               <div>
                 <div class="grid-container-mini" v-if="currentLayout">
                   <div
@@ -252,30 +307,172 @@
                     class="text-center align-center"
                     :style="col.grid"
                   >
-                    <div>{{ col.id }}</div>
-                    <div>{{ col.component ? col.component : "None" }}</div>
+                    <v-select
+                      v-if="currentLayout != null"
+                      hide-details="auto"
+                      :value="col.component"
+                      :menu-props="{
+                        closeOnContentClick: true,
+                      }"
+                      variant="filled"
+                      :hide-no-data="false"
+                      density="compact"
+                      placeholder="-- Swap current component --"
+                      :items="
+                        currentLayout.columns.filter(
+                          (e) => e.component != null && col.id != e.id
+                        )
+                      "
+                      item-value="component"
+                      item-title="id"
+                    >
+                      <template #selection="{ item }">
+                        {{ item.raw.component }}
+                      </template>
+                      <template #no-data></template>
+                      <template #prepend-item>
+                        <v-list-item
+                          title="None"
+                          active-class="bg-amber"
+                          active-color="primary"
+                          :value="null"
+                          @click="col.component = null"
+                        >
+                        </v-list-item>
+                      </template>
+                      <template #item="{ item, index }">
+                        <v-list-item
+                          :subtitle="item.raw.component?.toString()"
+                          :title="item.raw.id"
+                          :value="item"
+                          active-class="bg-amber"
+                          active-color="primary"
+                          @click="onSwapComponents(item.raw, col)"
+                        >
+                          <template v-slot:prepend>
+                            <v-avatar icon="mdi-sync" :color="item.raw.color">
+                            </v-avatar>
+                          </template>
+                        </v-list-item>
+                      </template>
+                    </v-select>
                   </div>
                 </div>
               </div>
             </v-col>
-            <v-col cols="6">
+          </v-row>
+          <v-row>
+            <v-col class="d-flex"
+              ><div class="text-h4">Switch to:</div>
+              <v-spacer></v-spacer>
+              <div style="width: 200px">
+                <v-select
+                  density="compact"
+                  v-model="state.changeToLayout"
+                  placeholder="-- Presets --"
+                  :return-object="false"
+                  :menu-props="{
+                    closeOnContentClick: true,
+                  }"
+                  item-title="name"
+                  item-value="name"
+                  :items="layoutOptions"
+                  hide-details="auto"
+                >
+                  <template #item="{ item }">
+                    <v-list-item
+                      active-class="bg-amber"
+                      active-color="primary"
+                      density="compact"
+                      :title="item.title"
+                      :value="item"
+                      @click="state.changeToLayout = item.raw"
+                    >
+                      <template v-slot:append>
+                        <v-container>
+                          <v-row>
+                            <v-col
+                              cols="4"
+                              class="grid-container-mini"
+                              v-if="item.raw"
+                            >
+                              <div
+                                v-for="(col, index) in item.raw.columns"
+                                :key="col.id"
+                                :class="`bg-` + col.color"
+                                class="text-center align-center"
+                                :style="col.grid"
+                              ></div>
+                            </v-col>
+                          </v-row>
+                        </v-container>
+                      </template>
+                    </v-list-item>
+                  </template>
+                </v-select>
+              </div>
+            </v-col>
+            <v-col cols="12">
               <div>
                 <div class="grid-container-mini" v-if="state.changeToLayout">
                   <div
                     v-for="(col, index) in state.changeToLayout.columns"
                     :key="col.id"
                     :class="`bg-` + col.color"
-                    class="text-center align-center"
+                    class="text-center align-center pa-2"
                     :style="col.grid"
                   >
-                    <div>{{ col.id }}</div>
-                    <div>{{ col.component ? col.component : "None" }}</div>
+                    <v-select
+                      hide-details="auto"
+                      v-model="col.component"
+                      :menu-props="{
+                        closeOnBack: true,
+                      }"
+                      variant="filled"
+                      active-class="bg-amber"
+                      active-color="primary"
+                      density="compact"
+                      placeholder="-- Current component --"
+                      :items="
+                        currentLayout
+                          ? currentLayout.columns.filter(
+                              (e) => e.component != null
+                            )
+                          : []
+                      "
+                      item-value="component"
+                      item-title="component"
+                    >
+                      <template #no-data></template>
+                      <template #prepend-item>
+                        <v-list-item
+                          active-class="bg-amber"
+                          active-color="primary"
+                        >
+                          <Placeholder
+                            class="bg-transparent"
+                            :style="{}"
+                          ></Placeholder>
+                        </v-list-item>
+                        <v-divider></v-divider>
+                        <v-list-item
+                          title="None"
+                          active-class="bg-amber"
+                          active-color="primary"
+                          :value="null"
+                          @click="col.component = null"
+                        >
+                        </v-list-item>
+                      </template>
+                    </v-select>
+                    <!-- <div>{{ col.id }}</div>
+                    <div>{{ col.component ? col.component : "None" }}</div> -->
                   </div>
                 </div>
               </div>
             </v-col>
           </v-row>
-          <v-row align="center" justify="space-between">
+          <!-- <v-row align="center" justify="space-between">
             <v-col cols="5">
               <v-select
                 v-model="currentLayout"
@@ -303,8 +500,8 @@
                 hide-details="auto"
               ></v-select
             ></v-col>
-          </v-row>
-          <v-row
+          </v-row> -->
+          <!-- <v-row
             dense
             v-if="currentLayout"
             v-for="(largestColumnIndex, rowIndex) in largestLayoutSize"
@@ -344,25 +541,51 @@
                 <v-card-title>{{
                   state.changeToLayout.columns[rowIndex].id
                 }}</v-card-title>
-                <v-card-text class="text-subtitle-1">
-                  <div
-                    v-if="
-                      state.changeToLayout &&
-                      state.changeToLayout.columns[rowIndex]
-                    "
-                  >
-                    Component:
-                    {{
-                      state.changeToLayout.columns[rowIndex].component
-                        ? state.changeToLayout.columns[rowIndex].component
-                        : "None"
-                    }}
-                  </div>
-                  <div v-else>Empty</div>
+                <v-card-text class="text-subtitle-1 pb-1">
+                  <v-container>
+                    <v-row>
+                      <v-col cols="9">
+                        <v-select
+                          v-model="
+                            state.changeToLayout.columns[rowIndex].component
+                          "
+                          :items="
+                            currentLayout.columns.filter(
+                              (e) => e.component != null
+                            )
+                          "
+                          item-value="component"
+                          item-title="component"
+                        ></v-select>
+                        <div
+                          v-if="
+                            state.changeToLayout &&
+                            state.changeToLayout.columns[rowIndex]
+                          "
+                        >
+                          Component:
+                          {{
+                            state.changeToLayout.columns[rowIndex].component
+                              ? state.changeToLayout.columns[rowIndex].component
+                              : "None"
+                          }}
+                        </div>
+                        <div v-else>Empty</div></v-col
+                      >
+                      <v-col cols="3"
+                        ><v-btn size="small" icon
+                          ><v-icon>mdi-delete</v-icon></v-btn
+                        >
+                        <v-btn size="small" icon
+                          ><v-icon>mdi-sync</v-icon></v-btn
+                        >
+                      </v-col>
+                    </v-row>
+                  </v-container>
                 </v-card-text>
               </v-card>
             </v-col>
-          </v-row>
+          </v-row> -->
         </v-container>
       </v-card-text>
       <v-card-actions class="justify-end">
@@ -385,11 +608,12 @@ import draggable from "vuedraggable";
 
 import { AxiosInstance } from "axios";
 import { axiosSymbol } from "@/models/symbols";
-import { LAYOUT } from "@/models/layout";
+import { COLUMN, LAYOUT } from "@/models/layout";
 
 import AnalogClock from "@/components/AnalogClock.vue";
 import { axiosInstance } from "@/plugins/axios";
 import router from "@/router";
+import Placeholder from "@/views/TradingView/Placeholder.vue";
 
 // Inject the Axios instance with the defined symbol
 const axios = inject<AxiosInstance>(axiosSymbol);
@@ -439,6 +663,15 @@ const goToTrading = async () => {
     name: "Trading",
   });
 };
+
+function onSwapComponents(selected: COLUMN, current: COLUMN) {
+  // Your custom function to handle the value change
+  console.log("Value changed to:", selected, current);
+  const currentCol = current.component;
+  current.component = selected.component;
+  selected.component = currentCol;
+  // Add your complex swapping logic here
+}
 const onEnd = (event: any) => {
   console.log("onEnd", event);
   if (currentLayout.value && event.oldIndex !== event.newIndex) {

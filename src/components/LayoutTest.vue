@@ -587,13 +587,13 @@ const setSelectedLayout = (layout: Layout) => {
   grid-row-end: span 3;
 } */
 
-.grid-container {
+/* .grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   grid-auto-rows: minmax(100px, max-content);
   grid-gap: 10px;
   width: 100%;
-}
+} */
 
 .panel {
   background-color: #ccc;

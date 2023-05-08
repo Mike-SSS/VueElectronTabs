@@ -1,3 +1,7 @@
 @use 'vuetify/settings' with (
   $button-height: 40px,
+  $switch-thumb-height: 15px,
+  $switch-thumb-width: 15px,
+  $switch-track-height: 10px,
+  $switch-inset-track-height: 25px,
 );

@@ -1,68 +1,124 @@
 <template>
-  <v-container fluid class="loginWrapper">
+  <v-container fluid class="loginWrapper align-center d-flex">
     <v-row justify="center">
-      <v-col cols="auto">
-        <v-img
-          :width="300"
-          aspect-ratio="16/9"
-          cover
-          src="@/assets/BvgLogo.png"
-        ></v-img>
-      </v-col>
-    </v-row>
-    <v-row justify="center">
-      <v-col cols="11" sm="6">
-        <v-card color="primary" width="100%" height="100%" min-height="200px">
-          <v-card-title>LOGIN</v-card-title>
+      <v-col cols="12" sm="8" md="4" xl="3">
+        <v-card
+          color="white"
+          width="100%"
+          height="100%"
+          min-height="200px"
+          rounded="lg"
+        >
+          <v-card-title class="text-center"
+            ><v-img
+              :width="300"
+              class="ma-auto"
+              aspect-ratio="16/9"
+              cover
+              src="@/assets/BvgLogo.png"
+            ></v-img
+          ></v-card-title>
           <v-card-text>
-            <v-container fluid>
-              <v-row justify="center">
-                <v-col cols="11">
-                  <v-text-field
-                    v-model="credentials.username"
-                    variant="underlined"
-                    label="EMAIL"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="11">
-                  <v-text-field
-                    v-model="credentials.password"
-                    append-inner-icon="mdi-eye"
-                    variant="underlined"
-                    label="PASSWORD"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row dense justify="end">
-                <v-col cols="auto">
-                  <v-btn size="small" variant="text"
-                    >Forgot your password?</v-btn
+            <v-form @submit.prevent="submitLogin" v-model="valid">
+              <v-container fluid>
+                <v-row justify="center">
+                  <v-col cols="12">
+                    <div
+                      class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
+                    >
+                      Account
+                    </div>
+                    <v-text-field
+                      clearable
+                      name="bvg-trader-username"
+                      placeholder="Email address"
+                      density="compact"
+                      hide-details
+                      prepend-inner-icon="mdi-email-outline"
+                      v-model="credentials.username"
+                      variant="outlined"
+                      :rules="emailRules"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12">
+                    <div
+                      class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
+                    >
+                      Password
+
+                      <a
+                        class="text-caption text-decoration-none text-blue"
+                        href="#"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        Forgot login password?</a
+                      >
+                    </div>
+                    <v-text-field
+                      clearable
+                      name="bvg-trader-password"
+                      placeholder="Enter your password"
+                      prepend-inner-icon="mdi-lock-outline"
+                      density="compact"
+                      hide-details
+                      v-model="credentials.password"
+                      :append-inner-icon="
+                        credentials.reveal ? 'mdi-eye' : 'mdi-eye-off'
+                      "
+                      :type="credentials.reveal ? 'text' : 'password'"
+                      variant="outlined"
+                      @click:append-inner="
+                        credentials.reveal = !credentials.reveal
+                      "
+                      :rules="passwordRules"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="auto">
+                    <v-switch
+                      color="primary"
+                      inset
+                      density="compact"
+                      hide-details
+                      label="Remember me"
+                    ></v-switch>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col
+                    ><v-card
+                      class="mb-12"
+                      color="surface-variant"
+                      variant="tonal"
+                    >
+                      <v-card-text class="text-medium-emphasis text-caption">
+                        Warning: After 3 consecutive failed login attempts, you
+                        account will be temporarily locked for three hours. If
+                        you must login now, you can also click "Forgot login
+                        password?" below to reset the login password.
+                      </v-card-text>
+                    </v-card></v-col
                   >
-                </v-col>
-              </v-row>
-              <v-row dense>
-                <v-col cols="auto">
-                  <v-switch hide-details label="Remember me"></v-switch>
-                </v-col>
-              </v-row>
-              <v-row dense justify="center">
-                <v-col cols="10">
-                  <v-btn
-                    class="text-white"
-                    color="light-green"
-                    block
-                    :disabled="
-                      credentials.password == null ||
-                      credentials.username == null
-                    "
-                    size="x-large"
-                    variant="elevated"
-                    @click="submitLogin"
-                    >Login</v-btn
-                  >
-                </v-col>
-              </v-row>
-            </v-container>
+                </v-row>
+                <v-row justify="center">
+                  <v-col cols="12">
+                    <v-btn
+                      :loading="loading"
+                      class="text-white"
+                      color="primary"
+                      block
+                      :disabled="!valid"
+                      size="x-large"
+                      variant="elevated"
+                      type="submit"
+                      >Login</v-btn
+                    >
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-form>
           </v-card-text>
         </v-card>
       </v-col>
@@ -83,12 +139,42 @@ onMounted(() => {
   console.log("Mounted Login");
 });
 
+const loading = ref(false);
+
+const passwordRules = [
+  (value: string | undefined) => {
+    if (value) return true;
+
+    return "Password is requred.";
+  },
+  (value: string) => {
+    if (value?.length > 5) return true;
+
+    return "Password must be more than 5 characters.";
+  },
+];
+
+const emailRules = [
+  (value: string | undefined) => {
+    if (value) return true;
+
+    return "E-mail is requred.";
+  },
+  (value: string) => {
+    if (/.+@.+\..+/.test(value)) return true;
+
+    return "E-mail must be valid.";
+  },
+];
+const valid = ref(false);
 const credentials: Ref<{
   username: string | null;
   password: string | null;
+  reveal: boolean;
 }> = ref({
   username: null,
   password: null,
+  reveal: false,
 });
 /**
  * Gets the user profile object from HQ
@@ -101,15 +187,16 @@ async function getHQAccessProfile(): Promise<unknown> {
     // Make call to backend to login - all call need /api/{controller}
     const res = await axiosInstance.get("/api/authenticate/getHQAccess");
     if (res && res.data) {
-      // Assign data to the store 
+      // Assign data to the store
       console.log("Data for hq: ", res.data);
+
       authStore.setHQ(res.data);
       return res.data;
     }
   } catch (err) {
     return Promise.reject(err);
   }
-  return false
+  return false;
 }
 
 /**
@@ -133,6 +220,7 @@ async function submitLogin(): Promise<boolean> {
     return false;
   }
   try {
+    loading.value = true;
     // Make call to backend to login - all call need /api/{controller}
     const res = await noAuthInstance.post("/api/authenticate/login", {
       email: credentials.value.username,
@@ -143,20 +231,23 @@ async function submitLogin(): Promise<boolean> {
       authStore.setLoginResponse(res.data);
       if (authStore.token != null) {
         // Get HQ access data model
-      const hq = await getHQAccessProfile();
-      if (hq) {
-        router.push({
-          name: "Trading"
-        })
-      }
-      console.log("HQ ", hq);
+        const hq = await getHQAccessProfile();
+        if (hq) {
+          return (
+            (await router.push({
+              name: "Trading",
+            })) == undefined
+          );
+        }
+        console.log("HQ ", hq);
       } else {
         return false;
       }
-      
     }
   } catch (err) {
     return Promise.reject(err);
+  } finally {
+    loading.value = false;
   }
 
   return false;
