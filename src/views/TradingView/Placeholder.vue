@@ -11,7 +11,7 @@
             :close-on-content-click="false"
             location="right"
           >
-            <v-list>
+            <v-list density="compact" color="green">
               <!-- <v-list-group> -->
               <v-list-item
                 v-for="category in categories"
@@ -25,7 +25,7 @@
                   activator="parent"
                   location="right"
                 >
-                  <v-list>
+                  <v-list density="compact">
                     <v-list-item
                       @click="openComponent(item.component)"
                       v-for="item in category.items"
@@ -77,10 +77,10 @@ interface MenuItem {
   }[];
 }
 const menu = ref(false);
-const emit = defineEmits(["newComp"]);
+const emits = defineEmits(["newComp"]);
 
 const openComponent = (item: keyof ComponentRegistry | null) => {
-  emit("newComp", item);
+  emits("newComp", item);
 };
 
 const props = defineProps({

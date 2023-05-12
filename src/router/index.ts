@@ -46,7 +46,10 @@
 
 
 // Composables
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from "@/store/authStore"
+
+
 
 const routes = [
   {
@@ -94,8 +97,9 @@ const router = createRouter({
 
 // Implement route guards
 router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
-  const isAuthenticated = true;
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+  const authStore = useAuthStore();
+  const isAuthenticated = authStore.isLoggedIn;
 
   if (requiresAuth && !isAuthenticated) {
     next({ name: 'Login' })

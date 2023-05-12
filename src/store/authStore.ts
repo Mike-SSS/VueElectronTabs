@@ -3,8 +3,33 @@ import { defineStore } from 'pinia';
 
 interface State {
   login: LoginResponse | null;
-  hq: any;
+  hq: HQ | null;
 }
+
+interface HQ {
+  _id: number;
+  userId: string;
+  uniqueCode: string;
+  setup: string;
+  branch: string[];
+  dealer: string[];
+  safexCodes: string[];
+  client: string[];
+  tradingSystem: string;
+  defaultCode: string;
+  username: string;
+  masterdealer: boolean;
+  admin: boolean;
+  viewOnly: boolean;
+  onScreenLimit: number;
+  optionLimit: number;
+  reportOnlyLimit: number;
+  createdBy: string;
+  createdDate: string;
+  updatedBy: string;
+  updatedDate: string;
+}
+
 
 export const useAuthStore = defineStore('auth', {
   // define the state using the State interface

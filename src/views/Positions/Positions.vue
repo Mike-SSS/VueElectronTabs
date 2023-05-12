@@ -72,12 +72,12 @@
           >
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
-                <VBtn
+                <v-btn
                   size="small"
                   variant="text"
                   :icon="isGroupOpen(item) ? '$expand' : '$next'"
                   @click="toggleGroup(item)"
-                ></VBtn>
+                ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
@@ -216,12 +216,12 @@
             >
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
-                  <VBtn
+                  <v-btn
                     size="small"
                     variant="text"
                     :icon="isGroupOpen(item) ? '$expand' : '$next'"
                     @click="toggleGroup(item)"
-                  ></VBtn>
+                  ></v-btn>
                   {{ item.value }}
                 </td>
               </tr>

@@ -1,53 +1,54 @@
 <template>
-  <VContainer fluid :style="props.style" key="Options" class="bg-grey">
-    <VRow :class="props.class" justify="space-between" align="center">
-      <VCol cols="auto">
+  <v-container fluid :style="props.style" key="Options" class="bg-grey">
+    <v-row :class="props.class" justify="space-between" align="center">
+      <v-col cols="auto" class="d-flex align-center">
+        <v-btn @click="closeComponent" icon size="20" class="mr-2"><v-icon size="12">mdi-close</v-icon></v-btn>
         <div class="text-h5">Active Orders {{ filteredData.length }}</div>
-      </VCol>
-      <VCol>{{ getUniqueValues() }}</VCol>
-      <VCol cols="auto">
-        <VBtn
+      </v-col>
+      <v-col>{{ getUniqueValues() }}</v-col>
+      <v-col cols="auto">
+        <v-btn
           density="compact"
           color="transparent"
           variant="flat"
           icon
           @click="state.openHeaderPicker = true"
-          ><VIcon>mdi-table-headers-eye</VIcon></VBtn
+          ><v-icon>mdi-table-headers-eye</v-icon></v-btn
         >
-        <VTooltip>
+        <v-tooltip>
           <template v-slot:activator="{ props }">
-            <VBtn
+            <v-btn
               density="compact"
               color="transparent"
               variant="flat"
               v-bind="props"
               icon
-              ><VIcon>mdi-information</VIcon></VBtn
+              ><v-icon>mdi-information</v-icon></v-btn
             >
           </template>
           <div>Current status</div>
           <div>
-            <VIcon
+            <v-icon
               size="25"
               :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</VIcon
+              >mdi-circle</v-icon
             >
           </div>
           <div>Current status</div>
-        </VTooltip>
+        </v-tooltip>
         <!-- lable and Add Instrument button here  -->
-        <VBtn
+        <v-btn
           density="compact"
           color="transparent"
           variant="flat"
           icon
           @click="state.openInstruments = true"
-          ><VIcon>mdi-plus</VIcon></VBtn
+          ><v-icon>mdi-plus</v-icon></v-btn
         >
-      </VCol>
-    </VRow>
-    <VRow class="fill-height">
-      <VCol cols="12" class="pa-0" ref="Reference">
+      </v-col>
+    </v-row>
+    <v-row class="fill-height">
+      <v-col cols="12" class="pa-0" ref="Reference">
         <v-data-table
           density="compact"
           :items="filteredData"
@@ -68,12 +69,12 @@
           >
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
-                <VBtn
+                <v-btn
                   size="small"
                   variant="text"
                   :icon="isGroupOpen(item) ? '$expand' : '$next'"
                   @click="toggleGroup(item)"
-                ></VBtn>
+                ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
@@ -81,8 +82,8 @@
           <template #bottom></template>
           <!-- <v-data-table-footer>Hello</v-data-table-footer> -->
         </v-data-table>
-      </VCol>
-    </VRow>
+      </v-col>
+    </v-row>
     <VDialog
       v-model="state.openHeaderPicker"
       scrollable
@@ -91,18 +92,18 @@
     >
       <VCard height="80vh" min-width="300" color="white">
         <VCardTitle class="bg-primary"
-          ><VRow justify="space-between" align="center">
-            <VCol cols="10" sm="9">Instrument Headers</VCol>
-            <VCol cols="2" sm="auto"
-              ><VBtn
+          ><v-row justify="space-between" align="center">
+            <v-col cols="10" sm="9">Instrument Headers</v-col>
+            <v-col cols="2" sm="auto"
+              ><v-btn
                 @click="state.openHeaderPicker = false"
                 size="small"
                 icon
                 color="transparent"
                 flat
               >
-                <VIcon icon="mdi-close"></VIcon> </VBtn
-            ></VCol> </VRow
+                <v-icon icon="mdi-close"></v-icon> </v-btn
+            ></v-col> </v-row
         ></VCardTitle>
         <VCardText>
           <VList>
@@ -135,51 +136,51 @@
     >
       <VCard height="80vh" width="80vw">
         <VCardTitle class="bg-primary"
-          ><VRow justify="space-between">
-            <VCol cols="10"
+          ><v-row justify="space-between">
+            <v-col cols="10"
               >Instrument List ({{
                 filteredData ? filteredData.length : -2
-              }})</VCol
+              }})</v-col
             >
-            <VCol cols="2" sm="auto"
-              ><VBtn icon size="20" color="error" flat></VBtn
-              ><VBtn
+            <v-col cols="2" sm="auto"
+              ><v-btn icon size="20" color="error" flat></v-btn
+              ><v-btn
                 @click="state.openInstruments = false"
                 size="small"
                 icon
                 color="transparent"
                 flat
               >
-                <VIcon icon="mdi-close"></VIcon> </VBtn
-            ></VCol> </VRow
+                <v-icon icon="mdi-close"></v-icon> </v-btn
+            ></v-col> </v-row
         ></VCardTitle>
         <VCardSubtitle>
-          <VContainer fluid
-            ><VRow align="center">
-              <VCol cols="4"
+          <v-container fluid
+            ><v-row align="center">
+              <v-col cols="4"
                 ><VTextField
                   hide-details
                   label="Search"
                   append-inner-icon="mdi-magnify"
                   variant="outlined"
                 ></VTextField
-              ></VCol>
+              ></v-col>
               <VSpacer></VSpacer>
-              <VCol cols="auto"
-                ><VBtn
+              <v-col cols="auto"
+                ><v-btn
                   @click="subscribeToSelected"
                   :disabled="state.instrumentsToAdd.length == 0"
                   color="primary"
                 >
-                  Add ({{ state.instrumentsToAdd.length }})</VBtn
-                ></VCol
+                  Add ({{ state.instrumentsToAdd.length }})</v-btn
+                ></v-col
               >
-              <VCol cols="auto"
-                ><VBtn @click="state.openInstruments = false" color="primary">
-                  Done</VBtn
-                ></VCol
+              <v-col cols="auto"
+                ><v-btn @click="state.openInstruments = false" color="primary">
+                  Done</v-btn
+                ></v-col
               >
-            </VRow></VContainer
+            </v-row></v-container
           >
         </VCardSubtitle>
         <VCardText>
@@ -212,12 +213,12 @@
             >
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
-                  <VBtn
+                  <v-btn
                     size="small"
                     variant="text"
                     :icon="isGroupOpen(item) ? '$expand' : '$next'"
                     @click="toggleGroup(item)"
-                  ></VBtn>
+                  ></v-btn>
                   {{ item.value }}
                 </td>
               </tr>
@@ -229,13 +230,13 @@
           </v-data-table>
         </VCardText>
         <VCardActions>
-          <VBtn color="primary" block @click="state.openInstruments = false"
-            >Close Instruments</VBtn
+          <v-btn color="primary" block @click="state.openInstruments = false"
+            >Close Instruments</v-btn
           >
         </VCardActions>
       </VCard>
     </VDialog>
-  </VContainer>
+  </v-container>
 </template>
 
 <script lang="ts" setup>
@@ -264,9 +265,13 @@ import {
   PublishAll,
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
+import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 const appStore = useAppStore();
 const mainStore = useActiveOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
+
+const emits = defineEmits(['newComp', 'closeComp']);;
+const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
 const filters: FilterCondition[] = [];

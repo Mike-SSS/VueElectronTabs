@@ -6,8 +6,9 @@
     class="bg-grey overflow-y-auto d-flex flex-column"
   >
     <v-row justify="space-between" align="center">
-      <v-col cols="auto">
-        <div class="text-h5">Splits</div>
+      <v-col cols="auto" class="d-flex align-center">
+        <v-btn @click="closeComponent" icon size="20" class="mr-2"><v-icon size="12">mdi-close</v-icon></v-btn>
+        <div class="text-h5">Splits {{ filteredData.length }}</div>
       </v-col>
       <v-col cols="auto">
         <v-btn
@@ -72,12 +73,12 @@
           >
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
-                <VBtn
+                <v-btn
                   size="small"
                   variant="text"
                   :icon="isGroupOpen(item) ? '$expand' : '$next'"
                   @click="toggleGroup(item)"
-                ></VBtn>
+                ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
@@ -215,12 +216,12 @@
             >
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
-                  <VBtn
+                  <v-btn
                     size="small"
                     variant="text"
                     :icon="isGroupOpen(item) ? '$expand' : '$next'"
                     @click="toggleGroup(item)"
-                  ></VBtn>
+                  ></v-btn>
                   {{ item.value }}
                 </td>
               </tr>
@@ -240,7 +241,6 @@
 <script lang="ts" setup>
 import {
   computed,
-  defineProps,
   ref,
   reactive,
   onMounted,
@@ -261,18 +261,25 @@ import {
 PublishAll,
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
+import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
+const emits = defineEmits(['newComp', 'closeComp']);;
+const { closeComponent } = useCommonComponentFunctions(emits);
+
 const endpoint = "/market";
 
 const filters: FilterCondition[] = [
   { field: "contractDisplay.contracT_TYPE", value: 4, operator: "==" },
 ];
-const { socket, filteredData, subscribe } = useWebSocket<MainModel>(
+const { socket, filteredData, subscribe, typedArray } = useWebSocket<MainModel>(
   useMarketDisplayStore,
   endpoint,
   filters,
-  "marketUpdate",
+  {
+      name: "marketUpdate",
+      func: processUpdate,
+    },
   async () => {
     console.log("Splits/Market init function");
     if (socket.value) {
@@ -290,6 +297,18 @@ const { socket, filteredData, subscribe } = useWebSocket<MainModel>(
     }
   }
 );
+function processUpdate(message: string) {
+  try {
+    const temp = typedArray<MainModel>(message);
+    temp.forEach((e) => {
+      mainStore.updateItem(e);
+    });
+    console.log("Parsed update : ", temp);
+    //
+  } catch (err) {
+    console.error("error parsing OPTION MARKET UPDATE for ", message, err);
+  }
+}
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
 const props = defineProps({
   class: String,

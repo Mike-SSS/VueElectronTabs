@@ -5,6 +5,7 @@ export enum PublishAll {
   ContractDate = 4,
   Positions = 5,
   CompletedOrders = 6,
+  Deals = 7,
 }
 export type FilterCondition = {
   field: string;
@@ -82,7 +83,7 @@ export interface Deal {
   userRef: string;
   exchangeSuffix: number;
   portfolio: string;
-  profitCentre: string;
+  profitCentre: string | null;
   subAccount: string;
   exchangeRef: string;
   dealtPrice: number;

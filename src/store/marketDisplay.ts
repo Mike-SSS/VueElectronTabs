@@ -9,7 +9,30 @@ type THEME = "light" | "dark";
 interface State {
   marketDisplayData: MainModel[];
 }
-export const useMarketDisplayStore = createBaseStore<MainModel>("marketDisplay");
+export const useMarketDisplayStore = createBaseStore<MainModel>(
+  "marketDisplay",
+  {
+    updateEvent: updateStore,
+  }
+);
+
+function updateStore(updatedItem: MainModel) {
+  console.log(
+    "Update market: ",
+    updatedItem.contract,
+    useMarketDisplayStore().getData
+  );
+  const found = useMarketDisplayStore().getData.findIndex(
+    (e) => updatedItem.contract == e.contract
+  );
+  if (found == -1) {
+    console.log("AO: Add");
+    useMarketDisplayStore().getData.push(updatedItem);
+  } else {
+    console.log("AO: Update");
+    useMarketDisplayStore().getData[found] = updatedItem;
+  }
+}
 // export const useMarketDisplayStore = defineStore("marketDisplay", {
 //   state: (): State => ({
 //     marketDisplayData: [],

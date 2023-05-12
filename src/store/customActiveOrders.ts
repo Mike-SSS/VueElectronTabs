@@ -15,7 +15,7 @@ const customActions: CustomActiveOrderActions = {
   },
 };
 
-export const useCustomActiveOrdersStore = createBaseStore<MainModel, typeof customActions>("activeOrder", customActions);
+export const useCustomActiveOrdersStore = createBaseStore<MainModel, typeof customActions>("activeOrder", undefined,customActions);
 
 // export function useCustomActiveOrderStore(): CustomStore<ActiveOrder, CustomActiveOrderActions> {
 //   const storeInstance = baseStore();

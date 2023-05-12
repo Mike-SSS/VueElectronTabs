@@ -267,13 +267,13 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
       .replace(/\s+/g, "");
   }
   function getTypeGuard(obj: any): ((data: any) => boolean) | null {
-    if (isMarketDisplayItemContract(obj)) {
-      return isMarketDisplayItemContract;
-    }
+    // if (isMarketDisplayItemContract(obj)) {
+    //   return isMarketDisplayItemContract;
+    // }
 
-    if (isMarketDisplayItemPosition(obj)) {
-      return isMarketDisplayItemPosition;
-    }
+    // if (isMarketDisplayItemPosition(obj)) {
+    //   return isMarketDisplayItemPosition;
+    // }
 
     // Add more type guards for remaining types
 
@@ -284,14 +284,14 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
   ): U {
     console.log("Create typed object");
     const exampleInstance = {} as U;
-    const typeGuard = getTypeGuard(exampleInstance);
-    if (!typeGuard) {
-      throw new Error("No type guard found for the expected type");
-    }
+    // const typeGuard = getTypeGuard(exampleInstance);
+    // if (!typeGuard) {
+    //   throw new Error("No type guard found for the expected type");
+    // }
 
-    if (!typeGuard(data)) {
-      throw new Error("Invalid data structure for the expected type");
-    }
+    // if (!typeGuard(data)) {
+    //   throw new Error("Invalid data structure for the expected type");
+    // }
 
     const typedObject: Partial<U> = {};
 
@@ -310,7 +310,7 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
           value as Record<string, unknown>
         ) as U[keyof U];
       } else {
-        throw new Error(`Invalid data for field ${key}`);
+        throw new Error(`Invalid data for field ${key} ${camelKey} ${value}`);
       }
     }
     return typedObject as U;

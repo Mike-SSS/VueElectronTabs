@@ -86,20 +86,28 @@
         </div>
     </div> -->
     <div class="grid-container" v-if="currentLayout">
+      <!-- v-bind="col.props ? col.props : {
+            style: { }
+          }" -->
       <keep-alive>
         <component
-          @newComp="onNewComp($event, col)"
           v-for="(col, index) in currentLayout.columns"
           class="grid-item"
           :class="`bg-` + col.color"
           :style="col.grid"
-          :key="col.component ? col.component.toString() : Math.random() * 100"
+          :key="
+            col.component
+              ? col.component.toString()
+              : (Math.random() * 100).toString()
+          "
           :is="
             col.component
               ? componentRegistry[col.component]
               : componentRegistry['Placeholder']
-          "
-          v-bind="col.props"
+          "          
+          @newComp="onNewComp($event, col)"
+          @closeComp="closeComp(col)"
+          
         >
         </component>
       </keep-alive>
@@ -132,14 +140,11 @@
       </v-col>
     </v-row>
   </v-container>
-  <!-- <TestSocketConnection />
-  <LayoutTest /> -->
 </template>
 
 <script lang="ts" setup>
 import { computed } from "vue";
 import { useLayoutStore } from "@/store/layout";
-import TestSocketConnection from "@/components/TestSocketConnection.vue";
 import LayoutTest from "@/components/LayoutTest.vue";
 import componentRegistry, {
   ComponentRegistry,
@@ -154,9 +159,14 @@ const onNewComp = (event: keyof ComponentRegistry, item: COLUMN): void => {
   console.log("On New Comp ", event, item.id);
   storeLayout.changeColumnComponent(event, item.id);
 };
+
+function closeComp(col: COLUMN) {
+  console.log("Close column comp ", col.component);
+  col.component = null;
+}
 </script>
 
-<style>
+<style lang="scss">
 .grid-container {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -187,4 +197,13 @@ const onNewComp = (event: keyof ComponentRegistry, item: COLUMN): void => {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
 } */
+.v-data-table__tr.v-data-table__tr--clickable:hover {
+  .v-data-table__td {
+    background: lightgreen;
+  }
+}
+.v-list-item:hover > .v-list-item__overlay {
+  background: green;
+    opacity: calc(0.5 * var(--v-theme-overlay-multiplier));
+}
 </style>

@@ -1,7 +1,8 @@
 <template>
   <v-container fluid :style="props.style" key="Options" class="bg-grey">
     <v-row :class="props.class" justify="space-between" align="center">
-      <v-col cols="auto">
+      <v-col cols="auto" class="d-flex align-center">
+        <v-btn @click="closeComponent" icon size="20" class="mr-2"><v-icon size="12">mdi-close</v-icon></v-btn>
         <div class="text-h5">Completed Orders</div>
       </v-col>
       <v-col>{{ getUniqueValues() }}</v-col>
@@ -68,12 +69,12 @@
           >
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
-                <VBtn
+                <v-btn
                   size="small"
                   variant="text"
                   :icon="isGroupOpen(item) ? '$expand' : '$next'"
                   @click="toggleGroup(item)"
-                ></VBtn>
+                ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
@@ -211,12 +212,12 @@
             >
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
-                  <VBtn
+                  <v-btn
                     size="small"
                     variant="text"
                     :icon="isGroupOpen(item) ? '$expand' : '$next'"
                     @click="toggleGroup(item)"
-                  ></VBtn>
+                  ></v-btn>
                   {{ item.value }}
                 </td>
               </tr>
@@ -257,9 +258,13 @@ import {
   PublishAll,
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
+import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 const appStore = useAppStore();
 const mainStore = useCompletedOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
+
+const emits = defineEmits(['newComp', 'closeComp']);;
+const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
 
@@ -337,10 +342,11 @@ function getUniqueValues() {
   // }, []);
 }
 const headers: any[] = [
-  { title: "Enter Time", key: "enterTime", order: 1 },
-  { title: "Rate", key: "rate", order: 1 },
-  { title: "Spot Price", key: "spotPrice", order: 1 },
-  { title: "U/Member", key: "userMember", order: 6 },
+  { title: "Enter Date", key: "enterDate" },
+  { title: "Enter Time", key: "enterTime"  },
+  { title: "Rate", key: "rate", },
+  { title: "Spot Price", key: "spotPrice"  },
+  { title: "U/Member", key: "userMember" },
   { title: "U/Dealer", key: "userDealer" },
   { title: "Clearing Member", key: "clearingMember" },
   { title: "Member", key: "member" },
