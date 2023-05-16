@@ -3,12 +3,31 @@
     fluid
     :style="props.style"
     id="Splits"
-    class="bg-grey overflow-y-auto d-flex flex-column"
+    class="bg-grey d-flex flex-column"
   >
     <v-row justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
-        <v-btn @click="closeComponent" icon size="20" class="mr-2"><v-icon size="12">mdi-close</v-icon></v-btn>
-        <div class="text-h5">Splits {{ filteredData.length }}</div>
+        <v-btn @click="closeComponent" icon size="20" class="mr-2"
+          ><v-icon size="12">mdi-close</v-icon></v-btn
+        >
+        <div class="text-h5">
+          Splits ({{ filteredData.length }})
+          <v-tooltip width="200" activator="parent" location="end">
+            <div class="d-flex align-center">
+              <v-icon
+                size="15"
+                class="mr-2"
+                :color="socket?.state == 'Connected' ? 'success' : 'error'"
+                >mdi-circle</v-icon
+              >
+              <div>WS: {{ socket?.state }}</div>
+            </div>
+            <div class="text-body-1">
+              This is more information on splits. Example description "All
+              splits below"
+            </div>
+          </v-tooltip>
+        </div>
       </v-col>
       <v-col cols="auto">
         <v-btn
@@ -18,28 +37,7 @@
           icon
           @click="state.openHeaderPicker = true"
           ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >
-        <v-tooltip>
-          <template v-slot:activator="{ props }">
-            <v-btn
-              density="compact"
-              color="transparent"
-              variant="flat"
-              v-bind="props"
-              icon
-              ><v-icon>mdi-information</v-icon></v-btn
-            >
-          </template>
-          <div>Current status</div>
-          <div>
-            <v-icon
-              size="25"
-              :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</v-icon
-            >
-          </div>
-          <div>Current status</div>
-        </v-tooltip>
+        >        
         <!-- lable and Add Instrument button here  -->
         <v-btn
           density="compact"
@@ -58,7 +56,7 @@
           :group-by="[{ key: 'contractDisplay.instrument' }]"
           :items="state.currentSubscriptions"
           :headers="getSortedHeaders"
-          :height="calculateTableHeight"
+          height="100%"
           fixed-header
         >
           <template
@@ -83,6 +81,7 @@
               </td>
             </tr>
           </template>
+          <template #bottom></template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -239,13 +238,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
+import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
 
 import { useAppStore } from "@/store/app";
@@ -258,13 +251,13 @@ import { useWebSocket } from "@/utils/useWebsocket";
 import {
   FilterCondition,
   MarketDisplayItemContract as MainModel,
-PublishAll,
+  PublishAll,
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
-const emits = defineEmits(['newComp', 'closeComp']);;
+const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
@@ -277,9 +270,9 @@ const { socket, filteredData, subscribe, typedArray } = useWebSocket<MainModel>(
   endpoint,
   filters,
   {
-      name: "marketUpdate",
-      func: processUpdate,
-    },
+    name: "marketUpdate",
+    func: processUpdate,
+  },
   async () => {
     console.log("Splits/Market init function");
     if (socket.value) {

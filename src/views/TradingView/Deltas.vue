@@ -1,9 +1,24 @@
 <template>
-  <v-container fluid :style="props.style" key="Options" class="bg-grey">
+  <v-container fluid :style="props.style" key="Options" id="Deltas" class="bg-grey d-flex flex-column">
     <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
         <v-btn @click="closeComponent" icon size="20" class="mr-2"><v-icon size="12">mdi-close</v-icon></v-btn>
-        <div class="text-h5">Deltas {{ filteredData.length }}</div>
+        <div class="text-h5">Deltas ({{ filteredData.length }})
+          <v-tooltip width="200" activator="parent" location="end">
+              <div class="d-flex align-center">
+                <v-icon
+                  size="15"
+                  class="mr-2"
+                  :color="socket?.state == 'Connected' ? 'success' : 'error'"
+                  >mdi-circle</v-icon
+                >
+                <div>WS: {{ socket?.state }}</div>
+              </div>
+              <div class="text-body-1">
+                This is more information on deltas. Example description
+                "All deltas below"
+              </div>
+          </v-tooltip></div>
       </v-col>
       <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
@@ -14,28 +29,7 @@
           icon
           @click="state.openHeaderPicker = true"
           ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >
-        <v-tooltip>
-          <template v-slot:activator="{ props }">
-            <v-btn
-              density="compact"
-              color="transparent"
-              variant="flat"
-              v-bind="props"
-              icon
-              ><v-icon>mdi-information</v-icon></v-btn
-            >
-          </template>
-          <div>Current status</div>
-          <div>
-            <v-icon
-              size="25"
-              :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</v-icon
-            >
-          </div>
-          <div>Current status</div>
-        </v-tooltip>
+        >        
         <!-- lable and Add Instrument button here  -->
         <v-btn
           density="compact"
@@ -54,8 +48,9 @@
           :group-by="[{ key: 'contractDisplay.instrument' }]"
           :items="state.currentSubscriptions"
           :headers="getSortedHeaders"
-          :height="calculateTableHeight"
+          height="100%"
           fixed-header
+
         >
           <template
             v-slot:group-header="{
@@ -79,6 +74,7 @@
               </td>
             </tr>
           </template>
+          <template #bottom></template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -86,7 +82,7 @@
       v-model="state.openHeaderPicker"
       scrollable
       width="auto"
-      key="Futures_addInstruments"
+      key="Deltas_addInstruments"
     >
       <v-card height="80vh" min-width="300" color="white">
         <v-card-title class="bg-primary"

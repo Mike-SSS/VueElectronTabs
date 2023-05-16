@@ -1,9 +1,9 @@
 <template>
-  <v-container fluid :style="props.style" key="Options" class="bg-grey">
+  <v-container fluid :style="props.style" key="Options" class="bg-grey d-flex flex-column">
     <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
         <v-btn @click="closeComponent" icon size="20" class="mr-2"><v-icon size="12">mdi-close</v-icon></v-btn>
-        <div class="text-h5">Completed Orders</div>
+        <div class="text-h5">Completed Orders ({{ filteredData.length }})</div>
       </v-col>
       <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
@@ -14,36 +14,6 @@
           icon
           @click="state.openHeaderPicker = true"
           ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >
-        <v-tooltip>
-          <template v-slot:activator="{ props }">
-            <v-btn
-              density="compact"
-              color="transparent"
-              variant="flat"
-              v-bind="props"
-              icon
-              ><v-icon>mdi-information</v-icon></v-btn
-            >
-          </template>
-          <div>Current status</div>
-          <div>
-            <v-icon
-              size="25"
-              :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</v-icon
-            >
-          </div>
-          <div>Current status</div>
-        </v-tooltip>
-        <!-- lable and Add Instrument button here  -->
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openInstruments = true"
-          ><v-icon>mdi-plus</v-icon></v-btn
         >
       </v-col>
     </v-row>
@@ -87,7 +57,7 @@
       v-model="state.openHeaderPicker"
       scrollable
       width="auto"
-      key="Futures_addInstruments"
+      key="completedOrders_headers"
     >
       <v-card height="80vh" min-width="300" color="white">
         <v-card-title class="bg-primary"
@@ -125,115 +95,7 @@
           </v-list>
         </v-card-text>
       </v-card>
-    </v-dialog>
-
-    <v-dialog
-      v-model="state.openInstruments"
-      scrollable
-      width="auto"
-      key="Futures_addInstruments"
-    >
-      <v-card height="80vh" width="80vw">
-        <v-card-title class="bg-primary"
-          ><v-row justify="space-between">
-            <v-col cols="10"
-              >Instrument List ({{
-                filteredData ? filteredData.length : -2
-              }})</v-col
-            >
-            <v-col cols="2" sm="auto"
-              ><v-btn icon size="20" color="error" flat></v-btn
-              ><v-btn
-                @click="state.openInstruments = false"
-                size="small"
-                icon
-                color="transparent"
-                flat
-              >
-                <v-icon icon="mdi-close"></v-icon> </v-btn
-            ></v-col> </v-row
-        ></v-card-title>
-        <v-card-subtitle>
-          <v-container fluid
-            ><v-row align="center">
-              <v-col cols="4"
-                ><v-text-field
-                  hide-details
-                  label="Search"
-                  append-inner-icon="mdi-magnify"
-                  variant="outlined"
-                ></v-text-field
-              ></v-col>
-              <v-spacer></v-spacer>
-              <v-col cols="auto"
-                ><v-btn
-                  @click="subscribeToSelected"
-                  :disabled="state.instrumentsToAdd.length == 0"
-                  color="primary"
-                >
-                  Add ({{ state.instrumentsToAdd.length }})</v-btn
-                ></v-col
-              >
-              <v-col cols="auto"
-                ><v-btn @click="state.openInstruments = false" color="primary">
-                  Done</v-btn
-                ></v-col
-              >
-            </v-row></v-container
-          >
-        </v-card-subtitle>
-        <v-card-text>
-          <v-data-table
-            density="compact"
-            class="tableData"
-            :items="filteredData"
-            v-model="state.instrumentsToAdd"
-            :headers="state.selectedHeaders"
-            :group-by="[{ key: 'contractDisplay.instrument' }]"
-            height="60vh"
-            show-select
-            return-object
-            fixed-header
-            item-value="contract"
-            :items-per-page="-1"
-          >
-            <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
-            <!-- { item, columns, toggleGroup, isGroupOpen } -->
-            <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
-              }"
-            >
-              <tr :id="'group_' + item.value">
-                <td :colspan="columns.length">
-                  <v-btn
-                    size="small"
-                    variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
-                    @click="toggleGroup(item)"
-                  ></v-btn>
-                  {{ item.value }}
-                </td>
-              </tr>
-            </template>
-            <template #item.contractDisplay.strike="{ item }">
-              {{ item.value.contractDisplay.strike }}D
-            </template>
-          </v-data-table>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" block @click="state.openInstruments = false"
-            >Close Instruments</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    </v-dialog>    
   </v-container>
 </template>
 

@@ -3,12 +3,31 @@
     fluid
     :style="props.style"
     id="Splits"
-    class="bg-grey overflow-y-auto d-flex flex-column"
+    class="bg-grey d-flex flex-column"
   >
     <v-row justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
-        <v-btn @click="closeComponent" icon size="20" class="mr-2"><v-icon size="12">mdi-close</v-icon></v-btn>
-        <div class="text-h5">Spreads {{ filteredData.length }}</div>
+        <v-btn @click="closeComponent" icon size="20" class="mr-2"
+          ><v-icon size="12">mdi-close</v-icon></v-btn
+        >
+        <div class="text-h5">
+          Spreads ({{ filteredData.length }})
+          <v-tooltip width="200" activator="parent" location="end">
+            <div class="d-flex align-center">
+              <v-icon
+                size="15"
+                class="mr-2"
+                :color="socket?.state == 'Connected' ? 'success' : 'error'"
+                >mdi-circle</v-icon
+              >
+              <div>WS: {{ socket?.state }}</div>
+            </div>
+            <div class="text-body-1">
+              This is more information on spreads. Example description "All
+              spreads below"
+            </div>
+          </v-tooltip>
+        </div>
       </v-col>
       <v-col cols="auto">
         <v-btn
@@ -19,27 +38,6 @@
           @click="state.openHeaderPicker = true"
           ><v-icon>mdi-table-headers-eye</v-icon></v-btn
         >
-        <v-tooltip>
-          <template v-slot:activator="{ props }">
-            <v-btn
-              density="compact"
-              color="transparent"
-              variant="flat"
-              v-bind="props"
-              icon
-              ><v-icon>mdi-information</v-icon></v-btn
-            >
-          </template>
-          <div>Current status</div>
-          <div>
-            <v-icon
-              size="25"
-              :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</v-icon
-            >
-          </div>
-          <div>Current status</div>
-        </v-tooltip>
         <!-- lable and Add Instrument button here  -->
         <v-btn
           density="compact"
@@ -60,6 +58,7 @@
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
+          :items-per-page="-1"
         >
           <template
             v-slot:group-header="{
@@ -83,6 +82,7 @@
               </td>
             </tr>
           </template>
+          <template #bottom></template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -261,7 +261,7 @@ import {
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
-const emits = defineEmits(['newComp', 'closeComp']);;
+const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
 const appStore = useAppStore();
@@ -269,16 +269,16 @@ const mainStore = useMarketDisplayStore();
 
 const endpoint = "/market";
 const filters: FilterCondition[] = [
-{ field: "contractDisplay.contracT_TYPE", value: 3, operator: "==" },
+  { field: "contractDisplay.contracT_TYPE", value: 3, operator: "==" },
 ];
 const { socket, filteredData, subscribe, typedArray } = useWebSocket<MainModel>(
   useMarketDisplayStore,
   endpoint,
   filters,
   {
-      name: "marketUpdate",
-      func: processUpdate,
-    },
+    name: "marketUpdate",
+    func: processUpdate,
+  },
   async () => {
     console.log("Spreads/Market init function");
     if (socket.value) {

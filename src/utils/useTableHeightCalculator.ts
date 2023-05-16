@@ -2,6 +2,7 @@ import { computed, onMounted, ref, onBeforeUnmount } from "vue";
 
 export function useTableHeightCalculator() {
   const Reference = ref();
+  const ReferenceTitle = ref();
   const tableHeight = ref(0);
   const onWindowResize = () => {
     tableHeight.value = calculateTableHeight.value;

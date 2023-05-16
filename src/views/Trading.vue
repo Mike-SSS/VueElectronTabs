@@ -92,7 +92,6 @@
       <keep-alive>
         <component
           v-for="(col, index) in currentLayout.columns"
-          class="grid-item"
           :class="`bg-` + col.color"
           :style="col.grid"
           :key="
@@ -205,5 +204,9 @@ function closeComp(col: COLUMN) {
 .v-list-item:hover > .v-list-item__overlay {
   background: green;
     opacity: calc(0.5 * var(--v-theme-overlay-multiplier));
+}
+.v-data-table {
+  max-height: 100%;
+  height: 100%;
 }
 </style>

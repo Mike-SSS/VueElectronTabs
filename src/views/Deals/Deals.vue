@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid :style="props.style" key="Options" class="bg-grey">
+  <v-container fluid :style="props.style" key="Deals" class="bg-grey  d-flex flex-column">
     <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
         <v-btn
@@ -11,7 +11,21 @@
           class="mr-2"
           ><v-icon size="14">mdi-close</v-icon></v-btn
         >
-        <div class="text-h5">Deals ({{ filteredData.length }})</div>
+        <div class="text-h5">Deals ({{ filteredData.length }}) <v-tooltip width="200" activator="parent" location="end">
+              <div class="d-flex align-center">
+                <v-icon
+                  size="15"
+                  class="mr-2"
+                  :color="socket?.state == 'Connected' ? 'success' : 'error'"
+                  >mdi-circle</v-icon
+                >
+                <div>WS: {{ socket?.state }}</div>
+              </div>
+              <div class="text-body-1">
+                This is more information on deals. Example description
+                "All deals below"
+              </div>
+          </v-tooltip></div>
       </v-col>
       <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
@@ -28,7 +42,7 @@
           </template>
           <v-list density="compact" active-color="primary" color="pink">
             <v-list-item
-              :disabled="state.selectedDeals.length != 1"
+              :disabled="state.selectedRows.length != 1"
               @click="openSplits"
               value="split"
               active-class="purple"
@@ -37,35 +51,35 @@
               <v-list-item-title>Split</v-list-item-title>
             </v-list-item>
             <v-list-item
-              :disabled="state.selectedDeals.length != 2"
+              :disabled="state.selectedRows.length != 2"
               @click="cumulate"
               value="cumulate"
             >
               <v-list-item-title>Cumulate</v-list-item-title>
             </v-list-item>
             <v-list-item
-              :disabled="state.selectedDeals.length != 1"
+              :disabled="state.selectedRows.length != 1"
               @click="openTripartite"
               value="tripartite"
             >
               <v-list-item-title>Tripartite</v-list-item-title>
             </v-list-item>
             <v-list-item
-              :disabled="state.selectedDeals.length != 1"
+              :disabled="state.selectedRows.length != 1"
               @click="openAssignMember"
               value="assignToMember"
             >
               <v-list-item-title>Assign to Member</v-list-item-title>
             </v-list-item>
             <v-list-item
-              :disabled="state.selectedDeals.length != 1"
+              :disabled="state.selectedRows.length != 1"
               @click="openCorrectPrinciple"
               value="correctPrincliple"
             >
               <v-list-item-title>Correct Principle</v-list-item-title>
             </v-list-item>
             <v-list-item
-              :disabled="state.selectedDeals.length != 1"
+              :disabled="state.selectedRows.length != 1"
               @click="openSubAccount"
               value="subAccount"
             >
@@ -81,51 +95,21 @@
           icon
           @click="state.openHeaderPicker = true"
           ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >
-        <v-tooltip content-class="bg-black">
-          <template v-slot:activator="{ props }">
-            <v-btn
-              density="compact"
-              color="transparent"
-              variant="flat"
-              v-bind="props"
-              icon
-              ><v-icon>mdi-information</v-icon></v-btn
-            >
-          </template>
-          <div class="d-flex align-center">
-            <v-icon
-              size="15"
-              class="mr-2"
-              :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</v-icon
-            >
-            <div>WS: {{ socket?.state }}</div>
-          </div>
-        </v-tooltip>
-        <!-- lable and Add Instrument button here  -->
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openInstruments = true"
-          ><v-icon>mdi-plus</v-icon></v-btn
-        >
+        >        
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0" ref="Reference">
+      <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <!--  -->
         <v-data-table
           density="compact"
           :items="filteredData"
-          v-model="state.selectedDeals"
+          v-model="state.selectedRows"
           :headers="getSortedHeaders"
           item-value="dealSeq"
           item-title="dealSeq"
           return-object
-          :height="calculateTableHeight"
+          height="100%"
           fixed-header
           show-select
           @click:row="onRowClicked"
@@ -137,8 +121,8 @@
             <v-checkbox-btn
               color="primary"
               :disabled="
-                state.selectedDeals.length >= 2 &&
-                state.selectedDeals.find(
+                state.selectedRows.length >= 2 &&
+                state.selectedRows.find(
                   (e) => e.dealSeq == item.value.dealSeq
                 ) == null
               "
@@ -356,114 +340,7 @@
           <v-btn density="compact" variant="tonal">Delete</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
-    <VDialog
-      v-model="state.openInstruments"
-      scrollable
-      width="auto"
-      key="Futures_addInstruments"
-    >
-      <VCard height="80vh" width="80vw">
-        <VCardTitle class="bg-primary"
-          ><v-row justify="space-between">
-            <v-col cols="10"
-              >Instrument List ({{
-                filteredData ? filteredData.length : -2
-              }})</v-col
-            >
-            <v-col cols="2" sm="auto"
-              ><v-btn icon size="20" color="error" flat></v-btn
-              ><v-btn
-                @click="state.openInstruments = false"
-                size="small"
-                icon
-                color="transparent"
-                flat
-              >
-                <v-icon icon="mdi-close"></v-icon> </v-btn
-            ></v-col> </v-row
-        ></VCardTitle>
-        <VCardSubtitle>
-          <v-container fluid
-            ><v-row align="center">
-              <v-col cols="4"
-                ><VTextField
-                  hide-details
-                  label="Search"
-                  append-inner-icon="mdi-magnify"
-                  variant="outlined"
-                ></VTextField
-              ></v-col>
-              <VSpacer></VSpacer>
-              <v-col cols="auto"
-                ><v-btn
-                  @click="subscribeToSelected"
-                  :disabled="state.instrumentsToAdd.length == 0"
-                  color="primary"
-                >
-                  Add ({{ state.instrumentsToAdd.length }})</v-btn
-                ></v-col
-              >
-              <v-col cols="auto"
-                ><v-btn @click="state.openInstruments = false" color="primary">
-                  Done</v-btn
-                ></v-col
-              >
-            </v-row></v-container
-          >
-        </VCardSubtitle>
-        <VCardText>
-          <v-data-table
-            density="compact"
-            class="tableData"
-            :items="filteredData"
-            v-model="state.instrumentsToAdd"
-            :headers="state.selectedHeaders"
-            :group-by="[{ key: 'contractDisplay.instrument' }]"
-            height="60vh"
-            show-select
-            return-object
-            fixed-header
-            item-value="contract"
-            :items-per-page="-1"
-          >
-            <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
-            <!-- { item, columns, toggleGroup, isGroupOpen } -->
-            <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
-              }"
-            >
-              <tr :id="'group_' + item.value">
-                <td :colspan="columns.length">
-                  <v-btn
-                    size="small"
-                    variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
-                    @click="toggleGroup(item)"
-                  ></v-btn>
-                  {{ item.value }}
-                </td>
-              </tr>
-            </template>
-            <template #item.contractDisplay.strike="{ item }">
-              {{ item.value.contractDisplay.strike }}D
-            </template>
-          </v-data-table>
-        </VCardText>
-        <VCardActions>
-          <v-btn color="primary" block @click="state.openInstruments = false"
-            >Close Instruments</v-btn
-          >
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    </v-dialog>    
   </v-container>
 </template>
 
@@ -639,13 +516,13 @@ const state = reactive<{
   openHeaderPicker: boolean;
   openInstruments: boolean;
   selectedHeaders: any[];
-  selectedDeals: MainModel[];
+  selectedRows: MainModel[];
   currentSubscriptions: MainModel[];
   instrumentsToAdd: MainModel[];
 }>({
   openHeaderPicker: false,
   openInstruments: false,
-  selectedDeals: [],
+  selectedRows: [],
   selectedHeaders: headers.value.concat([]),
   currentSubscriptions: [],
   instrumentsToAdd: [],

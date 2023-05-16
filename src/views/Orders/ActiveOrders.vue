@@ -1,12 +1,73 @@
 <template>
-  <v-container fluid :style="props.style" key="Options" class="bg-grey">
+  <v-container fluid :style="props.style" key="ActiveOrders" class="bg-grey  d-flex flex-column">
     <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
-        <v-btn @click="closeComponent" icon size="20" class="mr-2"><v-icon size="12">mdi-close</v-icon></v-btn>
-        <div class="text-h5">Active Orders {{ filteredData.length }}</div>
+        <v-btn @click="closeComponent" icon size="20" class="mr-2"
+          ><v-icon size="12">mdi-close</v-icon></v-btn
+        >
+        <div class="text-h5">
+          Active Orders ({{ filteredData.length }})
+          <v-tooltip width="200" activator="parent" location="end">
+              <div class="d-flex align-center">
+                <v-icon
+                  size="15"
+                  class="mr-2"
+                  :color="socket?.state == 'Connected' ? 'success' : 'error'"
+                  >mdi-circle</v-icon
+                >
+                <div>WS: {{ socket?.state }}</div>
+              </div>
+              <div class="text-body-1">
+                This is more information on active order. Example description
+                "All active orders below"
+              </div>
+          </v-tooltip>
+        </div>
       </v-col>
       <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
+        <v-menu>
+          <template v-slot:activator="{ props }">
+            <v-btn
+              density="compact"
+              color="transparent"
+              variant="flat"
+              icon
+              v-bind="props"
+              ><v-icon>mdi-function-variant</v-icon></v-btn
+            >
+          </template>
+          <v-list density="compact" active-color="primary" color="pink">
+            <v-list-item
+              value="deleteAll"
+              active-class="purple"
+              color="primary"
+            >
+              <v-list-item-title>Delete All</v-list-item-title>
+            </v-list-item>
+            <v-list-item value="suspendAll">
+              <v-list-item-title>Suspend All</v-list-item-title>
+            </v-list-item>
+            <v-list-item value="deleteOrder">
+              <v-list-item-title>Delete Order</v-list-item-title>
+            </v-list-item>
+            <v-list-item value="reduceOrder">
+              <v-list-item-title>Reduce Order</v-list-item-title>
+            </v-list-item>
+            <v-list-item value="suspendOrder">
+              <v-list-item-title>Suspend Order</v-list-item-title>
+            </v-list-item>
+            <v-list-item value="changePrice">
+              <v-list-item-title>Change Price</v-list-item-title>
+            </v-list-item>
+            <v-list-item value="editSuspended">
+              <v-list-item-title>Edit suspended order</v-list-item-title>
+            </v-list-item>
+            <v-list-item value="editSuspended">
+              <v-list-item-title>Re-submit suspended order</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn
           density="compact"
           color="transparent"
@@ -14,41 +75,11 @@
           icon
           @click="state.openHeaderPicker = true"
           ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >
-        <v-tooltip>
-          <template v-slot:activator="{ props }">
-            <v-btn
-              density="compact"
-              color="transparent"
-              variant="flat"
-              v-bind="props"
-              icon
-              ><v-icon>mdi-information</v-icon></v-btn
-            >
-          </template>
-          <div>Current status</div>
-          <div>
-            <v-icon
-              size="25"
-              :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</v-icon
-            >
-          </div>
-          <div>Current status</div>
-        </v-tooltip>
-        <!-- lable and Add Instrument button here  -->
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openInstruments = true"
-          ><v-icon>mdi-plus</v-icon></v-btn
-        >
+        >        
       </v-col>
     </v-row>
     <v-row class="fill-height">
-      <v-col cols="12" class="pa-0" ref="Reference">
+      <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
           density="compact"
           :items="filteredData"
@@ -126,116 +157,7 @@
           </VList>
         </VCardText>
       </VCard>
-    </VDialog>
-
-    <VDialog
-      v-model="state.openInstruments"
-      scrollable
-      width="auto"
-      key="Futures_addInstruments"
-    >
-      <VCard height="80vh" width="80vw">
-        <VCardTitle class="bg-primary"
-          ><v-row justify="space-between">
-            <v-col cols="10"
-              >Instrument List ({{
-                filteredData ? filteredData.length : -2
-              }})</v-col
-            >
-            <v-col cols="2" sm="auto"
-              ><v-btn icon size="20" color="error" flat></v-btn
-              ><v-btn
-                @click="state.openInstruments = false"
-                size="small"
-                icon
-                color="transparent"
-                flat
-              >
-                <v-icon icon="mdi-close"></v-icon> </v-btn
-            ></v-col> </v-row
-        ></VCardTitle>
-        <VCardSubtitle>
-          <v-container fluid
-            ><v-row align="center">
-              <v-col cols="4"
-                ><VTextField
-                  hide-details
-                  label="Search"
-                  append-inner-icon="mdi-magnify"
-                  variant="outlined"
-                ></VTextField
-              ></v-col>
-              <VSpacer></VSpacer>
-              <v-col cols="auto"
-                ><v-btn
-                  @click="subscribeToSelected"
-                  :disabled="state.instrumentsToAdd.length == 0"
-                  color="primary"
-                >
-                  Add ({{ state.instrumentsToAdd.length }})</v-btn
-                ></v-col
-              >
-              <v-col cols="auto"
-                ><v-btn @click="state.openInstruments = false" color="primary">
-                  Done</v-btn
-                ></v-col
-              >
-            </v-row></v-container
-          >
-        </VCardSubtitle>
-        <VCardText>
-          <v-data-table
-            density="compact"
-            class="tableData"
-            :items="filteredData"
-            v-model="state.instrumentsToAdd"
-            :headers="state.selectedHeaders"
-            :group-by="[{ key: 'contractDisplay.instrument' }]"
-            height="60vh"
-            show-select
-            return-object
-            fixed-header
-            item-value="contract"
-            :items-per-page="-1"
-          >
-            <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
-            <!-- { item, columns, toggleGroup, isGroupOpen } -->
-            <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
-              }"
-            >
-              <tr :id="'group_' + item.value">
-                <td :colspan="columns.length">
-                  <v-btn
-                    size="small"
-                    variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
-                    @click="toggleGroup(item)"
-                  ></v-btn>
-                  {{ item.value }}
-                </td>
-              </tr>
-            </template>
-            <template #item.contractDisplay.strike="{ item }">
-              {{ item.value.contractDisplay.strike }}D
-            </template>
-            
-          </v-data-table>
-        </VCardText>
-        <VCardActions>
-          <v-btn color="primary" block @click="state.openInstruments = false"
-            >Close Instruments</v-btn
-          >
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    </VDialog>    
   </v-container>
 </template>
 
@@ -270,7 +192,7 @@ const appStore = useAppStore();
 const mainStore = useActiveOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
-const emits = defineEmits(['newComp', 'closeComp']);;
+const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
@@ -371,10 +293,12 @@ const state = reactive<{
   openHeaderPicker: boolean;
   openInstruments: boolean;
   selectedHeaders: any[];
+  selectedRows: MainModel[];
   currentSubscriptions: MainModel[];
   instrumentsToAdd: MainModel[];
 }>({
   openHeaderPicker: false,
+  selectedRows: [],
   openInstruments: false,
   selectedHeaders: headers.concat([]),
   currentSubscriptions: [],

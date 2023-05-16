@@ -122,7 +122,7 @@ const categories: Ref<MenuItem[]> = ref([
   },
   {
     id: 2,
-    name: "Views",
+    name: "Orders",
     items: [
       { id: 3, name: "Active Orders", component: "ActiveOrders" as const },
       { id: 4, name: "Completed Orders", component: "CompletedOrders" as const },
@@ -131,28 +131,19 @@ const categories: Ref<MenuItem[]> = ref([
   },
   {
     id: 5,
-    name: "Orders",
+    name: "Positions",
     items: [
-      { id: 6, name: "Active Orders", component: "ActiveOrders" as const },
-      { id: 7, name: "Completed Orders", component: "CompletedOrders" as const },
+      { id: 6, name: "Consolidated positions", component: "ConsolidatedPositions" as const },
+      { id: 7, name: "Positions", component: "Positions" as const },
     ],
     subMenu: false,
   },
   {
     id: 8,
-    name: "Positions",
-    items: [
-      { id: 9, name: "Consolidated positions", component: "ConsolidatedPositions" as const },
-      { id: 10, name: "Positions", component: "Positions" as const },
-    ],
-    subMenu: false,
-  },
-  {
-    id: 11,
     name: "Deals",
     items: [
       // { id: 3, name: "Unsolid Deals", component: "Deals" as const },
-      { id: 12, name: "Deals", component: "Deals" as const },
+      { id: 9, name: "Deals", component: "Deals" as const },
     ],
     subMenu: false,
   },
