@@ -42,6 +42,7 @@
         value="users"
       ></v-list-item>
     </v-list>
+    <v-icon color="white">mdi-circle</v-icon>
   </v-navigation-drawer>
   <v-main>
     <!-- <div class="side-app-bars">

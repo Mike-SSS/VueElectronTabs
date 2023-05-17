@@ -31,20 +31,21 @@
 
         <v-list nav>
           <v-list-item @click="goToTrading">Trading</v-list-item>
-          <v-list-item @click="goToProfile">Profile</v-list-item>
-          <v-list-group value="Config">
+          <!-- <v-list-item @click="goToProfile">Profile</v-list-item> -->
+          <v-list-item @click="state.isUserConfigurationOpen = true; drawer = false">Prefences</v-list-item>
+          <!-- <v-list-group value="Config">
             <template v-slot:activator="{ props }">
               <v-list-item v-bind="props" title="Config"></v-list-item>
             </template>
 
             <v-list-item
-              @click="state.isUserConfigurationOpen = true"
+              @click="state.isUserConfigurationOpen = true; drawer = false"
               prepend-icon="mdi-cog"
               value="config"
               >Config</v-list-item
             >
-          </v-list-group>
-          <v-list-item>Logout</v-list-item>
+          </v-list-group> -->
+          <v-list-item @click="logout">Logout</v-list-item>
         </v-list>
       </v-card>
     </v-menu>
@@ -200,12 +201,11 @@
 import { onMounted, computed, reactive, markRaw, inject, ref } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
+import { useAuthStore } from "@/store/authStore";
 import { useMarketDisplayStore } from "@/store/marketDisplay";
 
 import PreferencesModal from "@/views/preferences/PreferencesModal.vue";
 import LayoutConfigurationModal from "@/views/preferences/LayoutConfigurationModal.vue";
-
-import draggable from "vuedraggable";
 
 import { AxiosInstance } from "axios";
 import { axiosSymbol } from "@/models/symbols";
@@ -222,6 +222,7 @@ const currentToolbar = ref(null);
 const storeLayout = useLayoutStore();
 const marketDisplayStore = useMarketDisplayStore();
 const appStore = useAppStore();
+const authStore = useAuthStore();
 const admins = [
   ["Management", "mdi-account-multiple-outline"],
   ["Settings", "mdi-cog-outline"],
@@ -239,7 +240,12 @@ const state = reactive<{
   isLayoutConfiguratorOpen: false,
   lm_mode: "change",
 });
-
+const logout = () => {
+  authStore.logout();
+  router.push({
+    name: "Login"
+  })
+}
 const goToProfile = async () => {
   await router.push({
     name: "UserProfile",

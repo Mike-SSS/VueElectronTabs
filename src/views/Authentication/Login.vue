@@ -229,6 +229,9 @@ async function submitLogin(): Promise<boolean> {
     if (res && res.data) {
       // Assign data to the store
       authStore.setLoginResponse(res.data);
+      if (res.data.token) {
+        authStore.setToken(res.data.token);
+      }
       if (authStore.token != null) {
         // Get HQ access data model
         const hq = await getHQAccessProfile();

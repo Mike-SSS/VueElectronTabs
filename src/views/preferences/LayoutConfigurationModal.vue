@@ -365,8 +365,7 @@ import { useLayoutStore } from "@/store/layout";
 import { reactive } from "vue";
 import { ref } from "vue";
 
-import UserProfile from "@/views/preferences/UserProfile.vue";
-import Flags from "@/views/preferences/Flags.vue";
+import Placeholder from "@/views/TradingView/Placeholder.vue";
 import { watchEffect } from "vue";
 import { COLUMN, LAYOUT } from "@/models/layout";
 

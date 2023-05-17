@@ -40,12 +40,6 @@ export const useAppStore = defineStore("app", {
     setLanguage(language: LANGUAGE) {
       this.language = language;
     },
-    login() {
-      this.isLoggedIn = true;
-    },
-    logout() {
-      this.isLoggedIn = false;
-    },
   },
 
   getters: {

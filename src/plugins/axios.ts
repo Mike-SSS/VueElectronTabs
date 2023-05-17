@@ -1,5 +1,8 @@
 import axios, { isCancel, AxiosError } from "axios";
 import { useAuthStore } from "@/store/authStore";
+import { useToastStore } from '@/store/toastStore';
+
+const toastStore = useToastStore();
 
 const authStore = useAuthStore();
 
@@ -20,6 +23,27 @@ instance.interceptors.request.use((config) => {
   }
   return config;
 });
+
+instance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    console.log("Error axios: ", error);
+    // If there was an error, show a toast with the error message
+    if (error.response && error.response.data) {
+      const msg = error.response.data as string;
+      toastStore.addToast(msg.substring(0,300) + "...");
+    } else if (error.message) {
+      toastStore.addToast(error.message);
+    } else {
+      toastStore.addToast("An unknown error occurred");
+    }
+
+    // Then throw the error to allow any individual request handlers to catch it as well
+    return Promise.reject(error);
+  }
+);
 
 const noAuthInstance = axios.create({
   baseURL: import.meta.env.VITE_APP_API_URL,

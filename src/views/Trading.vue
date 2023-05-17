@@ -40,8 +40,27 @@
         prepend-icon="mdi-cog"
         title="Users"
         value="users"
-      ></v-list-item>
-    </v-list>
+      ></v-list-item> </v-list
+    ><template v-slot:append>
+      <v-tooltip>
+        <template v-slot:activator="{ props }">
+          <v-btn
+            class="mb-2"
+            density="compact"
+            color="transparent"
+            variant="flat"
+            v-bind="props"
+            icon
+          >
+            <v-icon color="error">mdi-circle</v-icon>
+          </v-btn>
+        </template>
+        <div class="text-h5">WS Heartbeat X:</div>
+        <div class="text-h5">WS Heartbeat X:</div>
+        <div class="text-h5">WS Heartbeat X:</div>
+        <div class="text-h5">WS Heartbeat X:</div>
+      </v-tooltip></template
+    >
   </v-navigation-drawer>
   <v-container fluid class="fill-height">
     <!-- <v-row
@@ -103,10 +122,9 @@
             col.component
               ? componentRegistry[col.component]
               : componentRegistry['Placeholder']
-          "          
+          "
           @newComp="onNewComp($event, col)"
           @closeComp="closeComp(col)"
-          
         >
         </component>
       </keep-alive>
@@ -203,7 +221,7 @@ function closeComp(col: COLUMN) {
 }
 .v-list-item:hover > .v-list-item__overlay {
   background: green;
-    opacity: calc(0.5 * var(--v-theme-overlay-multiplier));
+  opacity: calc(0.5 * var(--v-theme-overlay-multiplier));
 }
 .v-data-table {
   max-height: 100%;
