@@ -5,7 +5,16 @@
     id="Futures"
     class="bg-grey overflow-y-auto d-flex flex-column"
   >
-    <v-row justify="space-between" align="center">
+    <CommonToolbar
+      :socket-state="socket?.state"
+      :class="props.class"
+      :close-component="closeComponent"
+      :data-length="filteredData.length"
+      :action-buttons="actionButtons"
+      title="Positions"
+      tooltip="This is more information on positions. Example description"
+    ></CommonToolbar>
+    <!-- <v-row justify="space-between" align="center">
       <v-col cols="auto">
         <div class="text-h5">Positions</div>
       </v-col>
@@ -39,7 +48,6 @@
           </div>
           <div>Current status</div>
         </v-tooltip>
-        <!-- lable and Add Instrument button here  -->
         <v-btn
           density="compact"
           color="transparent"
@@ -49,7 +57,7 @@
           ><v-icon>mdi-plus</v-icon></v-btn
         >
       </v-col>
-    </v-row>
+    </v-row> -->
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
@@ -259,9 +267,46 @@ import {
   FilterCondition,
   PublishAll,
 } from "@/models/marketData";
+
 import { noAuthInstance } from "@/plugins/axios";
+
+import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
+
+import CommonToolbar from "@/components/CommonToolbar.vue";
+import { ActionButton } from "@/models/UI";
+
 const appStore = useAppStore();
 const mainStore = usePositionsStore();
+
+const emits = defineEmits(["newComp", "closeComp"]);
+const { closeComponent } = useCommonComponentFunctions(emits);
+
+const actionButtons = ref<ActionButton[]>([
+  {
+    id: "1",
+    tooltip: "Instruments",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-plus",
+    textField: null,
+    action: () => {
+      state.openInstruments = true;
+    },
+  },
+  {
+    id: "2",
+    tooltip: "Table Headers",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-table-headers-eye",
+    textField: null,
+    action: () => {
+      state.openHeaderPicker = true;
+    },
+  },
+]);
 
 const endpoint = "/market";
 const { calculateTableHeight, Reference } = useTableHeightCalculator();

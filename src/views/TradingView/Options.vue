@@ -1,6 +1,15 @@
 <template>
   <v-container fluid :style="props.style" key="Options" class="bg-grey d-flex flex-column">
-    <v-row :class="props.class" justify="space-between" align="center">
+    <CommonToolbar
+      :socket-state="socket?.state"
+      :class="props.class"
+      :close-component="closeComponent"
+      :data-length="filteredData.length"
+      :action-buttons="actionButtons"
+      title="Options"
+      tooltip="This is more information on options. Example description"
+    ></CommonToolbar>
+    <!-- <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
         <v-btn @click="closeComponent" icon size="20" class="mr-2"
           ><v-icon size="12">mdi-close</v-icon></v-btn
@@ -41,7 +50,7 @@
           ><v-icon>mdi-plus</v-icon></v-btn
         >
       </v-col>
-    </v-row>
+    </v-row> -->
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0" ref="Reference">
         <v-data-table
@@ -248,6 +257,8 @@ import {
 import { noAuthInstance } from "@/plugins/axios";
 import { useContractsStore } from "@/store/contracts";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
+import CommonToolbar from "@/components/CommonToolbar.vue";
+import { ActionButton } from "@/models/UI";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
 
@@ -256,6 +267,33 @@ const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
+
+const actionButtons = ref<ActionButton[]>([
+  {
+    id: "1",
+    tooltip: "Instruments",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-plus",
+    textField: null,
+    action: () => {
+      state.openInstruments = true
+    },
+  },
+  {
+    id: "2",
+    tooltip: "Table Headers",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-table-headers-eye",
+    textField: null,
+    action: () => {
+      state.openHeaderPicker = true;
+    },
+  },
+]);
 
 const filters: FilterCondition[] = [
   { field: "contractDisplay.flag", value: "F", operator: "!==" },

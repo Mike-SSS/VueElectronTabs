@@ -1,22 +1,19 @@
 <template>
-  <v-container fluid :style="props.style" key="Options" class="bg-grey d-flex flex-column">
-    <v-row :class="props.class" justify="space-between" align="center">
-      <v-col cols="auto" class="d-flex align-center">
-        <v-btn @click="closeComponent" icon size="20" class="mr-2"><v-icon size="12">mdi-close</v-icon></v-btn>
-        <div class="text-h5">Completed Orders ({{ filteredData.length }})</div>
-      </v-col>
-      <v-col>{{ getUniqueValues() }}</v-col>
-      <v-col cols="auto">
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openHeaderPicker = true"
-          ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >
-      </v-col>
-    </v-row>
+  <v-container
+    fluid
+    :style="props.style"
+    key="Options"
+    class="bg-grey d-flex flex-column"
+  >
+    <CommonToolbar
+      :socket-state="socket?.state"
+      :class="props.class"
+      :close-component="closeComponent"
+      :data-length="filteredData.length"
+      :action-buttons="actionButtons"
+      title="Completed Orders"
+      tooltip="This is more information on Completed orders. Example description"
+    ></CommonToolbar>
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0" ref="Reference">
         <v-data-table
@@ -95,7 +92,7 @@
           </v-list>
         </v-card-text>
       </v-card>
-    </v-dialog>    
+    </v-dialog>
   </v-container>
 </template>
 
@@ -121,41 +118,58 @@ import {
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
+import { ActionButton } from "@/models/UI";
+import CommonToolbar from "@/components/CommonToolbar.vue";
 const appStore = useAppStore();
 const mainStore = useCompletedOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
-const emits = defineEmits(['newComp', 'closeComp']);;
+const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
+const actionButtons = ref<ActionButton[]>([
+  {
+    id: "9",
+    tooltip: "Table Headers",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-table-headers-eye",
+    textField: null,
+    action: () => {
+      state.openHeaderPicker = true;
+    },
+  },
+]);
 
 const filters: FilterCondition[] = [];
-const { socket, filteredData, subscribeToSelected, typedArray } = useWebSocket<MainModel>(
-  useCompletedOrdersStore,
-  endpoint,
-  filters,
-  {
-    name: "CompletedOrderUpdate",
-    func: processUpdate,
-  },
-  async () => {
-    console.log("Completed Order init function IE publish all active orders");
-    if (socket.value) {
-      console.log("Has socket");
-      socket.value?.invoke("PublishAllData", PublishAll.CompletedOrders);
-      // const res = await noAuthInstance.get("/api/download/publishall", {
-      //   params: {
-      //     publish: true,
-      //     enumVal: PublishAll.CompletedOrders,
-      //   },
-      // });
-      // if (res) {
-      //   console.log("Publish Completed orders ", res.data);
-      // }
+const { socket, filteredData, subscribeToSelected, typedArray } =
+  useWebSocket<MainModel>(
+    useCompletedOrdersStore,
+    endpoint,
+    filters,
+    {
+      name: "CompletedOrderUpdate",
+      func: processUpdate,
+    },
+    async () => {
+      console.log("Completed Order init function IE publish all active orders");
+      if (socket.value) {
+        console.log("Has socket");
+        socket.value?.invoke("PublishAllData", PublishAll.CompletedOrders);
+        // const res = await noAuthInstance.get("/api/download/publishall", {
+        //   params: {
+        //     publish: true,
+        //     enumVal: PublishAll.CompletedOrders,
+        //   },
+        // });
+        // if (res) {
+        //   console.log("Publish Completed orders ", res.data);
+        // }
+      }
     }
-  }
-);
+  );
 function processUpdate(message: string) {
   try {
     const temp = typedArray<MainModel>(message);
@@ -205,9 +219,9 @@ function getUniqueValues() {
 }
 const headers: any[] = [
   { title: "Enter Date", key: "enterDate" },
-  { title: "Enter Time", key: "enterTime"  },
-  { title: "Rate", key: "rate", },
-  { title: "Spot Price", key: "spotPrice"  },
+  { title: "Enter Time", key: "enterTime" },
+  { title: "Rate", key: "rate" },
+  { title: "Spot Price", key: "spotPrice" },
   { title: "U/Member", key: "userMember" },
   { title: "U/Dealer", key: "userDealer" },
   { title: "Clearing Member", key: "clearingMember" },

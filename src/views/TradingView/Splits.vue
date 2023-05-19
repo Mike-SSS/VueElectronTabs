@@ -5,7 +5,16 @@
     id="Splits"
     class="bg-grey d-flex flex-column"
   >
-    <v-row justify="space-between" align="center">
+    <CommonToolbar
+      :socket-state="socket?.state"
+      :class="props.class"
+      :close-component="closeComponent"
+      :data-length="filteredData.length"
+      :action-buttons="actionButtons"
+      title="Splits"
+      tooltip="This is more information on splits. Example description"
+    ></CommonToolbar>
+    <!-- <v-row justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
         <v-btn @click="closeComponent" icon size="20" class="mr-2"
           ><v-icon size="12">mdi-close</v-icon></v-btn
@@ -37,8 +46,7 @@
           icon
           @click="state.openHeaderPicker = true"
           ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >        
-        <!-- lable and Add Instrument button here  -->
+        >
         <v-btn
           density="compact"
           color="transparent"
@@ -48,7 +56,7 @@
           ><v-icon>mdi-plus</v-icon></v-btn
         >
       </v-col>
-    </v-row>
+    </v-row> -->
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
@@ -255,12 +263,43 @@ import {
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
+
+import CommonToolbar from "@/components/CommonToolbar.vue";
+import { ActionButton } from "@/models/UI";
+
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
 const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
+
+const actionButtons = ref<ActionButton[]>([
+  {
+    id: "1",
+    tooltip: "Instruments",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-plus",
+    textField: null,
+    action: () => {
+      state.openInstruments = true;
+    },
+  },
+  {
+    id: "2",
+    tooltip: "Table Headers",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-table-headers-eye",
+    textField: null,
+    action: () => {
+      state.openHeaderPicker = true;
+    },
+  },
+]);
 
 const filters: FilterCondition[] = [
   { field: "contractDisplay.contracT_TYPE", value: 4, operator: "==" },
