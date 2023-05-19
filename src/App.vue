@@ -21,10 +21,10 @@ onMounted(() => {
   if (token) {
     authStore.setToken(token);
   }
-  intervalId.value = setInterval(() => {
-    const randomToast = `Random toast ${Math.floor(Math.random() * 1000)}`;
-    toastStore.addToast(randomToast);
-  }, 10000);
+  // intervalId.value = setInterval(() => {
+  //   const randomToast = `Random toast ${Math.floor(Math.random() * 1000)}`;
+  //   toastStore.addToast(randomToast);
+  // }, 10000);
 });
 onUnmounted(() => {
   if (intervalId.value) clearInterval(intervalId.value);

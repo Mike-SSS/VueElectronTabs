@@ -11,9 +11,11 @@ import './samples/node-api'
 
 // Plugins
 import { registerPlugins } from '@/plugins'
+import CloseComponentButtonVue from './components/CloseComponentButton.vue'
 
 
 const app = createApp(App);
+app.component("close-comp-button", CloseComponentButtonVue);
 registerPlugins(app);
 app.mount('#app')
   .$nextTick(() => {

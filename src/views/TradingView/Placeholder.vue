@@ -2,8 +2,8 @@
   <v-container fluid :class="props.class" :style="props.style">
     <v-row justify="center" align="center" class="fill-height">
       <v-col cols="auto"
-        ><v-btn flat icon
-          ><v-icon>mdi-plus</v-icon>
+        ><v-btn flat icon color="white"
+          ><v-icon color="black">mdi-plus</v-icon>
 
           <v-menu
             v-model="menu"

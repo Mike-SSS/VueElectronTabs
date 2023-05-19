@@ -1,91 +1,32 @@
 <template>
-  <v-container fluid :style="props.style" key="ActiveOrders" class="bg-grey  d-flex flex-column">
-    <v-row :class="props.class" justify="space-between" align="center">
-      <v-col cols="auto" class="d-flex align-center">
-        <v-btn @click="closeComponent" icon size="20" class="mr-2"
-          ><v-icon size="12">mdi-close</v-icon></v-btn
-        >
-        <div class="text-h5">
-          Active Orders ({{ filteredData.length }})
-          <v-tooltip width="200" activator="parent" location="end">
-              <div class="d-flex align-center">
-                <v-icon
-                  size="15"
-                  class="mr-2"
-                  :color="socket?.state == 'Connected' ? 'success' : 'error'"
-                  >mdi-circle</v-icon
-                >
-                <div>WS: {{ socket?.state }}</div>
-              </div>
-              <div class="text-body-1">
-                This is more information on active order. Example description
-                "All active orders below"
-              </div>
-          </v-tooltip>
-        </div>
-      </v-col>
-      <v-col>{{ getUniqueValues() }}</v-col>
-      <v-col cols="auto">
-        <v-menu>
-          <template v-slot:activator="{ props }">
-            <v-btn
-              density="compact"
-              color="transparent"
-              variant="flat"
-              icon
-              v-bind="props"
-              ><v-icon>mdi-function-variant</v-icon></v-btn
-            >
-          </template>
-          <v-list density="compact" active-color="primary" color="pink">
-            <v-list-item
-              value="deleteAll"
-              active-class="purple"
-              color="primary"
-            >
-              <v-list-item-title>Delete All</v-list-item-title>
-            </v-list-item>
-            <v-list-item value="suspendAll">
-              <v-list-item-title>Suspend All</v-list-item-title>
-            </v-list-item>
-            <v-list-item value="deleteOrder">
-              <v-list-item-title>Delete Order</v-list-item-title>
-            </v-list-item>
-            <v-list-item value="reduceOrder">
-              <v-list-item-title>Reduce Order</v-list-item-title>
-            </v-list-item>
-            <v-list-item value="suspendOrder">
-              <v-list-item-title>Suspend Order</v-list-item-title>
-            </v-list-item>
-            <v-list-item value="changePrice">
-              <v-list-item-title>Change Price</v-list-item-title>
-            </v-list-item>
-            <v-list-item value="editSuspended">
-              <v-list-item-title>Edit suspended order</v-list-item-title>
-            </v-list-item>
-            <v-list-item value="editSuspended">
-              <v-list-item-title>Re-submit suspended order</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openHeaderPicker = true"
-          ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >        
-      </v-col>
-    </v-row>
+  <v-container
+    fluid
+    :style="props.style"
+    key="ActiveOrders"
+    class="bg-grey d-flex flex-column"
+  >
+    <CommonToolbar
+      :socket-state="socket?.state"
+      :class="props.class"
+      :close-component="closeComponent"
+      :data-length="filteredData.length"
+      :action-buttons="actionButtons"
+      title="Active Orders"
+      tooltip="This is more information on active order. Example description. All active orders below"
+    ></CommonToolbar>
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
+          v-model="state.selectedRows"
           density="compact"
           :items="filteredData"
+          item-value="activeOrderSeq"
+          item-title="activeOrderSeq"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
+          show-select
+          @click:row="onRowClicked"
           :items-per-page="-1"
         >
           <template
@@ -109,6 +50,21 @@
                 {{ item.value }}
               </td>
             </tr>
+          </template>
+          <template
+            v-slot:item.data-table-select="{ item, toggleSelect, isSelected }"
+          >
+            <v-checkbox-btn
+              color="primary"
+              :disabled="
+                state.selectedRows.length >= 2 &&
+                state.selectedRows.find(
+                  (e) => e.activeOrderSeq == item.value.activeOrderSeq
+                ) == null
+              "
+              :model-value="isSelected([item])"
+              @click.stop.prevent="() => toggleSelect(item)"
+            ></v-checkbox-btn>
           </template>
           <template #bottom></template>
           <!-- <v-data-table-footer>Hello</v-data-table-footer> -->
@@ -157,7 +113,7 @@
           </VList>
         </VCardText>
       </VCard>
-    </VDialog>    
+    </VDialog>
   </v-container>
 </template>
 
@@ -166,6 +122,7 @@ import {
   computed,
   defineProps,
   ref,
+  Ref,
   reactive,
   onMounted,
   onBeforeUnmount,
@@ -174,6 +131,10 @@ import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
 import { useContractsStore } from "@/store/contracts";
 import { useActiveOrdersStore } from "@/store/activeOrders";
+
+import CommonToolbar from "@/components/CommonToolbar.vue";
+
+import DynamicToolbarActionsHandler from "@/components/DynamicToolbarActions.vue";
 // import {
 //   CustomActiveOrderActions,
 //   useCustomActiveOrdersStore,
@@ -188,16 +149,143 @@ import {
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
+import CloseComponentButton from "@/components/CloseComponentButton.vue";
+import { ActionButton } from "@/models/UI";
 const appStore = useAppStore();
 const mainStore = useActiveOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
+
+const actionButtons = ref<ActionButton[]>([
+  {
+    id: "1",
+    tooltip: "Edit Order",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-text-box-edit",
+    textField: null,
+    action: () => {
+      /* Edit Order Action */
+    },
+  },
+  {
+    id: "2",
+    tooltip: "Suspend Order",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-cancel",
+    textField: null,
+    action: () => {
+      /* Suspend Order Action */
+    },
+  },
+  {
+    id: "3",
+    tooltip: "Delete Order",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-delete",
+    textField: null,
+    action: () => {
+      /* Delete Order Action */
+    },
+  },
+  // Assuming menu items are also part of action buttons
+  {
+    id: "4",
+    tooltip: "Reduce Order",
+    color: "transparent",
+    variant: "flat",
+    density: "compact",
+    icon: "mdi-cash",
+    textField: {
+      density: "compact",
+      variant: "solo",
+      singleLine: true,
+      label: "QTY",
+      hideDetails: "auto",
+      placeholder: "2",
+      type: "number",
+    },
+    action: () => {
+      /* Reduce Order Action */
+    },
+  },
+  {
+    id: "5",
+    tooltip: "Delete All",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-delete-sweep-outline",
+    textField: null,
+    action: () => {
+      /* Delete Order Action */
+    },
+  },
+  {
+    id: "6",
+    tooltip: "Suspend All",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-folder-cancel",
+    textField: null,
+    action: () => {
+      /* Delete Order Action */
+    },
+  },
+  {
+    id: "7",
+    tooltip: "Edit suspended order",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-pencil-circle-outline",
+    textField: null,
+    action: () => {
+      /* Delete Order Action */
+    },
+  },
+  {
+    id: "8",
+    tooltip: "Re-submit suspended order",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-send-circle-outline",
+    textField: null,
+    action: () => {
+      /* Delete Order Action */
+    },
+  },
+  {
+    id: "9",
+    tooltip: "Table Headers",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-table-headers-eye",
+    textField: null,
+    action: () => {
+      state.openHeaderPicker = true;
+    },
+  },
+
+  // Repeat similar structure for other items in v-menu...
+]);
 
 const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
 const filters: FilterCondition[] = [];
-
+function onRowClicked(e: any, a: any) {
+  console.log("Clicked on row - a - ", a);
+  console.log("Clicked on row - e - ", e);
+}
 const { socket, filteredData, subscribeToSelected, typedArray } =
   useWebSocket<MainModel>(
     useActiveOrdersStore,
