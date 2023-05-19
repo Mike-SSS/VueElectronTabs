@@ -14,49 +14,6 @@
       title="Spreads"
       tooltip="This is more information on spreads. Example description"
     ></CommonToolbar>
-    <!-- <v-row justify="space-between" align="center">
-      <v-col cols="auto" class="d-flex align-center">
-        <v-btn @click="closeComponent" icon size="20" class="mr-2"
-          ><v-icon size="12">mdi-close</v-icon></v-btn
-        >
-        <div class="text-h5">
-          Spreads ({{ filteredData.length }})
-          <v-tooltip width="200" activator="parent" location="end">
-            <div class="d-flex align-center">
-              <v-icon
-                size="15"
-                class="mr-2"
-                :color="socket?.state == 'Connected' ? 'success' : 'error'"
-                >mdi-circle</v-icon
-              >
-              <div>WS: {{ socket?.state }}</div>
-            </div>
-            <div class="text-body-1">
-              This is more information on spreads. Example description "All
-              spreads below"
-            </div>
-          </v-tooltip>
-        </div>
-      </v-col>
-      <v-col cols="auto">
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openHeaderPicker = true"
-          ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openInstruments = true"
-          ><v-icon>mdi-plus</v-icon></v-btn
-        >
-      </v-col>
-    </v-row> -->
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table

@@ -125,6 +125,8 @@ import { ActionButton } from "@/models/UI";
 import CloseComponentButton from "@/components/CloseComponentButton.vue";
 import DynamicToolbarActionsHandler from "./DynamicToolbarActions.vue";
 
+
+
 const props = defineProps({
   class: String,
   dataLength: Number,

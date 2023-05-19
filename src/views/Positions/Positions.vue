@@ -14,50 +14,6 @@
       title="Positions"
       tooltip="This is more information on positions. Example description"
     ></CommonToolbar>
-    <!-- <v-row justify="space-between" align="center">
-      <v-col cols="auto">
-        <div class="text-h5">Positions</div>
-      </v-col>
-      <v-col cols="auto">
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openHeaderPicker = true"
-          ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >
-        <v-tooltip>
-          <template v-slot:activator="{ props }">
-            <v-btn
-              density="compact"
-              color="transparent"
-              variant="flat"
-              v-bind="props"
-              icon
-              ><v-icon>mdi-information</v-icon></v-btn
-            >
-          </template>
-          <div>Current status</div>
-          <div>
-            <v-icon
-              size="25"
-              :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</v-icon
-            >
-          </div>
-          <div>Current status</div>
-        </v-tooltip>
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openInstruments = true"
-          ><v-icon>mdi-plus</v-icon></v-btn
-        >
-      </v-col>
-    </v-row> -->
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
@@ -281,7 +237,7 @@ const mainStore = usePositionsStore();
 const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
-const actionButtons = ref<ActionButton[]>([
+const actionButtons = computed<ActionButton[]>(() => [
   {
     id: "1",
     tooltip: "Instruments",

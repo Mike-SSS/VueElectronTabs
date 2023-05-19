@@ -155,22 +155,70 @@ const appStore = useAppStore();
 const mainStore = useActiveOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
-const actionButtons = ref<ActionButton[]>([
+const headers: any[] = [
+  // { title: "Contract", key: "contract", align: "start" },
+  { title: "Enter Time", key: "enterTime", order: 1 },
+  {
+    title: "Date",
+    key: "contractDisplay.contractDate",
+  },
+  {
+    title: "Instrument",
+    key: "contractDisplay.instrument",
+  },
+  { title: "Principal", key: "userCode" },
+  { title: "Sub Acc", key: "subAccount" },
+  { title: "Member", key: "member" },
+  { title: "Dealer", key: "dealer" },
+  { title: "Buy/Sell", key: "buySell" },
+  { title: "Order State", key: "orderState" },
+  {
+    title: "QTY",
+    key: "quantity",
+    order: 2,
+  },
+
+  { title: "Rate", key: "rate" },
+  { title: "O/QTY", key: "originalQuantity" },
+  { title: "Principle Agency", key: "principleAgency" },
+];
+const getSortedHeaders = computed(() =>
+  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+);
+const state = reactive<{
+  openHeaderPicker: boolean;
+  openInstruments: boolean;
+  selectedHeaders: any[];
+  selectedRows: MainModel[];
+  currentSubscriptions: MainModel[];
+  instrumentsToAdd: MainModel[];
+}>({
+  openHeaderPicker: false,
+  selectedRows: [],
+  openInstruments: false,
+  selectedHeaders: headers.concat([]),
+  currentSubscriptions: [],
+  instrumentsToAdd: [],
+});
+
+const actionButtons = computed<ActionButton[]>(() => [
   {
     id: "1",
     tooltip: "Edit Order",
     color: "white",
+    disabled: state.selectedRows.length != 1,
     variant: "tonal",
     density: "compact",
     icon: "mdi-text-box-edit",
     textField: null,
     action: () => {
-      /* Edit Order Action */
+      //
     },
   },
   {
     id: "2",
     tooltip: "Suspend Order",
+    disabled: state.selectedRows.length != 1,
     color: "white",
     variant: "tonal",
     density: "compact",
@@ -183,6 +231,7 @@ const actionButtons = ref<ActionButton[]>([
   {
     id: "3",
     tooltip: "Delete Order",
+    disabled: state.selectedRows.length != 1,
     color: "white",
     variant: "tonal",
     density: "compact",
@@ -196,6 +245,7 @@ const actionButtons = ref<ActionButton[]>([
   {
     id: "4",
     tooltip: "Reduce Order",
+    disabled: state.selectedRows.length != 1,
     color: "transparent",
     variant: "flat",
     density: "compact",
@@ -240,6 +290,7 @@ const actionButtons = ref<ActionButton[]>([
   {
     id: "7",
     tooltip: "Edit suspended order",
+    disabled: state.selectedRows.length != 1,
     color: "white",
     variant: "tonal",
     density: "compact",
@@ -334,68 +385,4 @@ function updateHeader(e: Event, i: any) {
   }
 }
 
-onMounted(() => {
-  console.log("Mounted Deltas");
-});
-onBeforeUnmount(() => {});
-
-function getUniqueValues() {
-  // const field = "contractDisplay";
-  // const child = "flag";
-  // return filteredData.value.reduce((unique: string[], item: MainModel) => {
-  //   if (!unique.includes(<string>item[field][child])) {
-  //     unique.push(<string>item[field][child]);
-  //   }
-  //   return unique;
-  // }, []);
-}
-// const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
-// const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
-const headers: any[] = [
-  // { title: "Contract", key: "contract", align: "start" },
-  { title: "Enter Time", key: "enterTime", order: 1 },
-  {
-    title: "Contract",
-    key: "contractDisplay.contractDisplay",
-  },
-  { title: "Principal", key: "userCode" },
-  { title: "Sub Acc", key: "subAccount" },
-  { title: "Member", key: "member" },
-  { title: "Dealer", key: "dealer" },
-  { title: "Buy/Sell", key: "buySell" },
-  { title: "Order State", key: "orderState" },
-  {
-    title: "QTY",
-    key: "quantity",
-    order: 2,
-  },
-
-  { title: "Rate", key: "rate" },
-  { title: "O/QTY", key: "originalQuantity" },
-  { title: "Principle Agency", key: "principleAgency" },
-];
-const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
-);
-const state = reactive<{
-  openHeaderPicker: boolean;
-  openInstruments: boolean;
-  selectedHeaders: any[];
-  selectedRows: MainModel[];
-  currentSubscriptions: MainModel[];
-  instrumentsToAdd: MainModel[];
-}>({
-  openHeaderPicker: false,
-  selectedRows: [],
-  openInstruments: false,
-  selectedHeaders: headers.concat([]),
-  currentSubscriptions: [],
-  instrumentsToAdd: [],
-});
 </script>
-<style lang="scss">
-// .v-table > .v-table__wrapper > table > thead > tr > th {
-//   padding-left: 5px;
-//   padding-right: 5px;
-// }
-</style>

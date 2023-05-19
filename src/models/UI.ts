@@ -1,8 +1,11 @@
+import { Ref } from "vue";
+
 export interface ActionButton {
   id: string;
   tooltip: string;
   color: string;
   variant: VariantButton;
+  disabled?: boolean;
   density: string;
   icon: string;
   textField: TextField | null; // this is null if there's no text field

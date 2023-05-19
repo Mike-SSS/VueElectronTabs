@@ -5,9 +5,20 @@
     key="Deals"
     class="bg-grey d-flex flex-column"
   >
-    <v-row :class="props.class" justify="space-between" align="center">
+    <CommonToolbar
+      :socket-state="socket?.state"
+      :class="props.class"
+      :close-component="closeComponent"
+      :data-length="filteredData.length"
+      :action-buttons="actionButtons"
+      title="Deals"
+      tooltip="This is more information on Deals. Example description"
+    ></CommonToolbar>
+    <!-- <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
-        <CloseComponentButton :closeComponent="closeComponent"></CloseComponentButton>
+        <CloseComponentButton
+          :closeComponent="closeComponent"
+        ></CloseComponentButton>
         <div class="text-h4">
           Deals ({{ filteredData.length }})
           <v-tooltip width="200" activator="parent" location="end">
@@ -97,7 +108,7 @@
           ><v-icon>mdi-table-headers-eye</v-icon></v-btn
         >
       </v-col>
-    </v-row>
+    </v-row> -->
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <!--  -->
@@ -472,6 +483,9 @@ import {
 import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 
+import CommonToolbar from "@/components/CommonToolbar.vue";
+import { ActionButton } from "@/models/UI";
+
 const appStore = useAppStore();
 const mainStore = useDealsStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
@@ -481,6 +495,41 @@ const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
 const filters: FilterCondition[] = [];
+
+const headers = ref([
+  // { title: "Contract", key: "contract", align: "start" },
+  { title: "Deal Time", key: "dealTime" },
+  { title: "Member", key: "member" },
+  { title: "Principal", key: "principal" },
+  { title: "Instrument", key: "contractDisplay.instrument" },
+  { title: "Date", key: "contractDisplay.contractDate" },
+  { title: "Dealer", key: "dealer" },
+  { title: "Buy/Sell", key: "buySell" },
+  {
+    title: "QTY",
+    key: "quantity",
+  },
+  { title: "Rate", key: "dealtRate" },
+  { title: "Origin", key: "origin" },
+  { title: "Principle Agency", key: "principleAgency" },
+]);
+
+const state = reactive<{
+  openHeaderPicker: boolean;
+  openInstruments: boolean;
+  selectedHeaders: any[];
+  selectedRows: MainModel[];
+  currentSubscriptions: MainModel[];
+  instrumentsToAdd: MainModel[];
+}>({
+  openHeaderPicker: false,
+  openInstruments: false,
+  selectedRows: [],
+  selectedHeaders: headers.value.concat([]),
+  currentSubscriptions: [],
+  instrumentsToAdd: [],
+});
+
 function test(): void {
   console.log("Testing");
 }
@@ -499,6 +548,105 @@ const dialogs = reactive({
   tripartite: false,
   assignMember: false,
 });
+
+const actionButtons = computed<ActionButton[]>(() => [
+  {
+    id: "1",
+    tooltip: "Split",
+    color: "white",
+    disabled: state.selectedRows.length != 1,
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-arrow-split-vertical",
+    textField: null,
+    action: () => {
+      // get selected row and pass as param
+      openSplits();
+    },
+  },
+  {
+    id: "2",
+    tooltip: "Cumulate",
+    color: "white",
+    disabled: state.selectedRows.length != 2,
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-link-plus",
+    textField: null,
+    action: () => {
+      // get selected row and pass as param
+      cumulate();
+    },
+  },
+  {
+    id: "3",
+    tooltip: "Tripartite",
+    disabled: state.selectedRows.length != 1,
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-layers-triple-outline",
+    textField: null,
+    action: () => {
+      // get selected row and pass as param
+      openTripartite();
+    },
+  },
+  {
+    id: "4",
+    tooltip: "Assign to Memeber",
+    disabled: state.selectedRows.length != 1,
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-account-tag-outline",
+    textField: null,
+    action: () => {
+      // get selected row and pass as param
+      openAssignMember();
+    },
+  },
+  {
+    id: "5",
+    tooltip: "Correct Principle",
+    disabled: state.selectedRows.length != 1,
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-auto-fix",
+    textField: null,
+    action: () => {
+      // get selected row and pass as param
+      openCorrectPrinciple();
+    },
+  },
+  {
+    id: "6",
+    tooltip: "Sub Account",
+    disabled: state.selectedRows.length != 1,
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-account-child-outline",
+    textField: null,
+    action: () => {
+      // get selected row and pass as param
+      openSubAccount();
+    },
+  },
+  {
+    id: "7",
+    tooltip: "Table Headers",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-table-headers-eye",
+    textField: null,
+    action: () => {
+      state.openHeaderPicker = true;
+    },
+  },
+]);
 
 const { socket, filteredData, subscribeToSelected, typedArray } =
   useWebSocket<MainModel>(
@@ -593,41 +741,10 @@ function getUniqueValues() {
 }
 // const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
 // const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
-const headers = ref([
-  // { title: "Contract", key: "contract", align: "start" },
-  { title: "Deal Time", key: "dealTime" },
-  { title: "Member", key: "member" },
-  { title: "Principal", key: "principal" },
-  { title: "Instrument", key: "contractDisplay.instrument" },
-  { title: "Date", key: "contractDisplay.contractDate" },
-  { title: "Dealer", key: "dealer" },
-  { title: "Buy/Sell", key: "buySell" },
-  {
-    title: "QTY",
-    key: "quantity",
-  },
-  { title: "Rate", key: "dealtRate" },
-  { title: "Origin", key: "origin" },
-  { title: "Principle Agency", key: "principleAgency" },
-]);
+
 const getSortedHeaders = computed(() =>
   state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
 );
-const state = reactive<{
-  openHeaderPicker: boolean;
-  openInstruments: boolean;
-  selectedHeaders: any[];
-  selectedRows: MainModel[];
-  currentSubscriptions: MainModel[];
-  instrumentsToAdd: MainModel[];
-}>({
-  openHeaderPicker: false,
-  openInstruments: false,
-  selectedRows: [],
-  selectedHeaders: headers.value.concat([]),
-  currentSubscriptions: [],
-  instrumentsToAdd: [],
-});
 </script>
 <style lang="scss">
 // .v-table > .v-table__wrapper > table > thead > tr > th {

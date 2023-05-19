@@ -24,7 +24,7 @@ onMounted(() => {
   // intervalId.value = setInterval(() => {
   //   const randomToast = `Random toast ${Math.floor(Math.random() * 1000)}`;
   //   toastStore.addToast(randomToast);
-  // }, 10000);
+  // }, 2000);
 });
 onUnmounted(() => {
   if (intervalId.value) clearInterval(intervalId.value);
