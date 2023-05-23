@@ -67,7 +67,7 @@
             prepend-icon="mdi-wrench"
             key="layout_manager"
             active-class="bg-amber"
-            active-color="primary"
+            color="primary"
             select-strategy="classic"
             @click="openLayoutManager"
             >Layout Manager</v-list-item
@@ -76,7 +76,7 @@
             prepend-icon="mdi-cog"
             key="configure_current"
             active-class="bg-amber"
-            active-color="primary"
+            color="primary"
             select-strategy="classic"
             @click="configureSelectedLayout"
             >Configure Current</v-list-item
@@ -88,7 +88,7 @@
             :value="layout.name"
             :active="currentLayout == layout"
             active-class="bg-amber"
-            active-color="primary"
+            color="primary"
             select-strategy="classic"
             @click="setSelectedLayout(layout)"
           >

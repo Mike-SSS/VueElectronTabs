@@ -48,6 +48,30 @@
             </tr>
           </template>
           <template #bottom></template>
+          <!-- <template v-slot:item="props">
+            {{ Object.keys(props) }}
+            <tr>
+              <td class="v-data-table__td" v-for="i in props.item.columns">
+                {{ i }}
+              </td>
+            </tr>
+          </template> -->
+          <template #item.bid="{ item }">
+            <v-tooltip text="Insert Bid">
+              <template #activator="{ props }">
+                <v-btn
+                  @click.prevent.stop="openInsertBidScreen(item.raw)"
+                  density="compact"
+                  color="transparent"
+                  variant="flat"
+                  v-bind="props"
+                  :text="
+                    item.columns.bid ? item.columns.bid.toString() : 'undef'
+                  "
+                ></v-btn>
+              </template>
+            </v-tooltip>
+          </template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -92,6 +116,43 @@
             </v-list-item>
           </v-list>
         </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog max-width="500" v-model="bidScreen.open">
+      <v-card>
+        <v-card-title class="bg-primary">
+          Insert Bid for
+          {{
+            bidScreen.item
+              ? bidScreen.item.contractDisplay.contractDisplay
+              : "Empty"
+          }}
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-col cols="6"
+                ><v-text-field type="number" label="QTY"></v-text-field>
+                <v-text-field type="number" label="Price"></v-text-field
+                ><v-radio-group>
+                  <v-radio label="Principal" value="1"></v-radio>
+                  <v-radio label="Agency" value="2"></v-radio> </v-radio-group
+              ></v-col>
+              <v-col cols="6"
+                ><v-select label="Dealer"></v-select
+                ><v-select label="Principal"></v-select>
+                <v-text-field label="Ref"></v-text-field
+                ><v-select label="Type"></v-select>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions class="justify-end">
+          <v-btn @click="closeBidScreen" color="primary" variant="outlined"
+            >Cancel</v-btn
+          >
+          <v-btn color="primary" variant="tonal">Submit</v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -248,7 +309,7 @@ const actionButtons = ref<ActionButton[]>([
     icon: "mdi-plus",
     textField: null,
     action: () => {
-      state.openInstruments = true
+      state.openInstruments = true;
     },
   },
   {
@@ -356,6 +417,23 @@ const state = reactive<{
   currentSubscriptions: [],
   instrumentsToAdd: [],
 });
+
+const bidScreen = reactive<{
+  open: boolean;
+  item: null | MainModel;
+}>({
+  open: false,
+  item: null,
+});
+
+function openInsertBidScreen(item: MainModel) {
+  bidScreen.item = item;
+  bidScreen.open = true;
+}
+function closeBidScreen() {
+  bidScreen.open = false;
+  bidScreen.item = null;
+}
 
 const subscribeToSelected = () => {
   console.log("Subscribing to : ", state.instrumentsToAdd);

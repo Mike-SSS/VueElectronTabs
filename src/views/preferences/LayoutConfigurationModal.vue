@@ -98,7 +98,7 @@
                         <v-list-item
                           title="None"
                           active-class="bg-amber"
-                          active-color="primary"
+                          color="primary"
                           :value="null"
                           @click="col.component = null"
                         >
@@ -110,7 +110,7 @@
                           :title="item.raw.id"
                           :value="item"
                           active-class="bg-amber"
-                          active-color="primary"
+                          color="primary"
                           @click="onSwapComponents(item.raw, col)"
                         >
                           <template v-slot:prepend>
@@ -146,7 +146,7 @@
                   <template #item="{ item }">
                     <v-list-item
                       active-class="bg-amber"
-                      active-color="primary"
+                      color="primary"
                       density="compact"
                       :title="item.title"
                       :value="item"
@@ -194,7 +194,7 @@
                       }"
                       variant="filled"
                       active-class="bg-amber"
-                      active-color="primary"
+                      color="primary"
                       density="compact"
                       placeholder="-- Current component --"
                       :items="
@@ -211,7 +211,7 @@
                       <template #prepend-item>
                         <v-list-item
                           active-class="bg-amber"
-                          active-color="primary"
+                          color="primary"
                         >
                           <Placeholder
                             class="bg-transparent"
@@ -222,7 +222,7 @@
                         <v-list-item
                           title="None"
                           active-class="bg-amber"
-                          active-color="primary"
+                          color="primary"
                           :value="null"
                           @click="col.component = null"
                         >

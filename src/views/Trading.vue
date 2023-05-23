@@ -162,7 +162,6 @@
 <script lang="ts" setup>
 import { computed } from "vue";
 import { useLayoutStore } from "@/store/layout";
-import LayoutTest from "@/components/LayoutTest.vue";
 import componentRegistry, {
   ComponentRegistry,
 } from "@/models/componentRegistry";

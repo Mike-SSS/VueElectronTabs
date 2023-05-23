@@ -72,7 +72,7 @@
               ><v-icon>mdi-menu</v-icon></v-btn
             >
           </template>
-          <v-list density="compact" active-color="primary" color="pink">
+          <v-list density="compact" color="primary" color="pink">
             <v-list-item
               value="deleteAll"
               active-class="purple"

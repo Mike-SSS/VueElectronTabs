@@ -40,7 +40,7 @@
               ><v-icon>mdi-function-variant</v-icon></v-btn
             >
           </template>
-          <v-list density="compact" active-color="primary" color="pink">
+          <v-list density="compact" color="primary">
             <v-list-item
               :disabled="state.selectedRows.length != 1"
               @click="openSplits"

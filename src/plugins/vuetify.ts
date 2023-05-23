@@ -19,11 +19,16 @@ export default createVuetify({
     ...labs,
   },
   defaults:{
-    headings: {
-      h5: {
-        "size": "60px",
-      }
-    }
+   VTextField: {
+      density: "compact",
+      variant: "outlined",
+      color: "primary"
+    },
+    VSelect: {
+      density: "compact",
+      variant: "outlined",
+      color: "primary"
+    },
   },
   theme: {    
     themes: {
