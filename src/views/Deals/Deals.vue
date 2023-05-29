@@ -141,7 +141,7 @@
               @click.stop.prevent="() => toggleSelect(item)"
             ></v-checkbox-btn>
           </template>
-          <template
+          <!-- <template
             v-slot:group-header="{
               item,
               columns,
@@ -162,7 +162,7 @@
                 {{ item.value }}
               </td>
             </tr>
-          </template>
+          </template> -->
           <template #bottom></template>
         </v-data-table>
       </v-col>
@@ -454,18 +454,9 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  defineProps,
-  ref,
-  Ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
+import { computed, ref, Ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
-import { useContractsStore } from "@/store/contracts";
 import { useDealsStore } from "@/store/deals";
 import CloseComponentButton from "@/components/CloseComponentButton.vue";
 // import {
@@ -485,6 +476,7 @@ import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 
 import CommonToolbar from "@/components/CommonToolbar.vue";
 import { ActionButton } from "@/models/UI";
+import { MarketDisplayStoreActions } from "@/store/marketDisplay";
 
 const appStore = useAppStore();
 const mainStore = useDealsStore();
@@ -649,7 +641,7 @@ const actionButtons = computed<ActionButton[]>(() => [
 ]);
 
 const { socket, filteredData, subscribeToSelected, typedArray } =
-  useWebSocket<MainModel>(
+  useWebSocket<MainModel, {}>(
     useDealsStore,
     endpoint,
     filters,
@@ -742,8 +734,10 @@ function getUniqueValues() {
 // const instrumentsToAdd = ref(<MarketDisplayItem[]>[]);
 // const currentSubscriptions = ref(<MarketDisplayItem[]>[]);
 
-const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+const getSortedHeaders = computed(
+  () =>
+    // state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+    state.selectedHeaders
 );
 </script>
 <style lang="scss">

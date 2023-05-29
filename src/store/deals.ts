@@ -12,8 +12,7 @@
 //     },
 //   },
 // };
-
-import { createBaseStore } from "@/store/baseStore";
 import { Deal as MainModel } from "@/models/marketData";
+import { createBaseStore } from "./baseStore";
 
-export const useDealsStore = createBaseStore<MainModel>("deals");
+export const useDealsStore = createBaseStore<MainModel, {}>("deals");

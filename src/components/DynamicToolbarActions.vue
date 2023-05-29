@@ -1,6 +1,10 @@
 <template>
   <v-col ref="actionCol" class="text-end" v-resize="onResize">
-    <v-tooltip :text="button.tooltip" v-for="(button, index) in visibleButtons">
+    <v-tooltip
+      :text="button.tooltip"
+      v-for="(button, index) in visibleButtons"
+      :key="`${index}-${button.id}`"
+    >
       <template v-slot:activator="{ props }">
         <v-btn
           color="white"
@@ -28,7 +32,7 @@
       </template>
       <v-list density="compact">
         <v-list-item
-          v-for="(button, index) in overflowButtons"
+          v-for="button in overflowButtons"
           :key="button.id"
           @click="button.action"
           :disabled="button.disabled"
@@ -105,8 +109,16 @@ const recalculateVisibleButtons = () => {
   const maxVisibleButtons = Math.floor(availableWidth / buttonSize);
   console.log("RecalculateVisible: ", maxVisibleButtons, availableWidth);
 
-  visibleButtons.splice(0, visibleButtons.length, ...actionButtons.value.slice(0, maxVisibleButtons));
-  overflowButtons.splice(0, overflowButtons.length, ...actionButtons.value.slice(maxVisibleButtons));
+  visibleButtons.splice(
+    0,
+    visibleButtons.length,
+    ...actionButtons.value.slice(0, maxVisibleButtons)
+  );
+  overflowButtons.splice(
+    0,
+    overflowButtons.length,
+    ...actionButtons.value.slice(maxVisibleButtons)
+  );
 };
 
 const onResize = () => {

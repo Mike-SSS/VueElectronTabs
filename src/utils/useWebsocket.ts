@@ -18,15 +18,28 @@ import {
   Deal,
 } from "@/models/marketData";
 
-import { createBaseStore } from "@/store/baseStore";
+// import { CustomActiveOrderActions } from "@/store/customActiveOrders";
+import { Store } from "pinia";
+
+import { useActiveOrdersStore } from "@/store/activeOrders";
+import { useCompletedOrdersStore } from "@/store/completedOrders";
+import { useMarketDisplayStore } from "@/store/marketDisplay";
+import { BasicStore, CustomAction, createBaseStore } from "@/store/baseStore";
 import { CustomActiveOrderActions } from "@/store/customActiveOrders";
-export type CommonStore<T extends WebSocketDataType, U = {}> = ReturnType<
-  typeof createBaseStore<T>
-> &
-  U;
-export type CustomStore<T extends WebSocketDataType, U> = CommonStore<T> & {
-  [K in keyof U]: U[K];
-};
+
+// export type CommonStore<T extends WebSocketDataType, U = {}> = ReturnType<
+//   typeof createBaseStore<T>
+// > &
+//   U;
+// export type CustomStore<T extends WebSocketDataType, U> = CommonStore<T> & {
+//   [K in keyof U]: U[K];
+// };
+// export type CustomStore<T extends WebSocketDataType, U> = BasicStore<T> & U;
+
+type StoreTypes =
+  | typeof useMarketDisplayStore
+  | typeof useCompletedOrdersStore
+  | typeof useActiveOrdersStore;
 
 type WebSocketDataType =
   | MarketDisplayItemContract
@@ -34,9 +47,23 @@ type WebSocketDataType =
   | Deal
   | ActiveOrder
   | CompletedOrder;
-
-export function useWebSocket<T extends WebSocketDataType, U = {}>(
-  store: ReturnType<typeof createBaseStore<T, U>>,
+type WebSocketHookReturn<T extends WebSocketDataType> = {
+  socket: Ref<HubConnection | null>;
+  typedArray: <U extends WebSocketDataType>(data: string | object[]) => U[];
+  filteredData: ComputedRef<T[]>;
+  subscribeToSelected: () => boolean;
+  subscribe: (list: string[]) => Promise<boolean>;
+};
+export type CustomActions<T> = {
+  [key: string]: (entity: T) => void;
+};
+export function useWebSocket<
+  T extends WebSocketDataType,
+   CustomAction
+>(
+  // store: ReturnType<typeof createBaseStore<T>>,
+  createStore: ReturnType<typeof createBaseStore<T, CustomAction>>,
+  // store: BaseStoreType<T, U>,
   url: string,
   filters: FilterCondition[],
   updateEvent: {
@@ -44,13 +71,9 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
     func: (message: string) => void;
   },
   onConnect?: () => Promise<void> | void
-): {
-  socket: Ref<HubConnection | null>;
-  typedArray: <U extends WebSocketDataType>(data: string | object[]) => U[];
-  filteredData: ComputedRef<T[]>;
-  subscribeToSelected: () => boolean;
-  subscribe: (list: string[]) => Promise<boolean>;
-} {
+) {
+  const store = createStore;
+  console.log("Store : ", url, " - ", store);
   const subsToAdd = ref<T[]>([]);
   const socket = ref<HubConnection | null>(null) as Ref<HubConnection | null>;
   const subscriptions = ref<T[]>([]);
@@ -168,7 +191,7 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
   }
 
   const filteredData: ComputedRef<T[]> = computed(() => {
-    return store().getData.filter((e) => {
+    return store().getData.value.filter((e) => {
       if (!applyConditions(e, filters)) {
         return false;
       }
@@ -205,7 +228,7 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
       try {
         const temp = createTypedArray<T>(message);
         console.log("Parsed update : ", temp);
-        store().initData(temp);
+        store().setData(temp);
         // store().updateItem(temp);
       } catch (err) {
         console.error("error parsing OPTION MARKET UPDATE for ", message, err);
@@ -325,16 +348,12 @@ export function useWebSocket<T extends WebSocketDataType, U = {}>(
     //return state of subscribe
     return res != null ? true : false;
   }
-
   return {
     socket,
     subscribeToSelected,
     filteredData,
     typedArray: createTypedArray,
-    // openInstruments,
     subscribe,
-    // currentSubscriptions,
-    // instrumentsToAdd,
   };
 }
 

@@ -24,7 +24,7 @@ export function createGenericStore<T>(
       }
       const getData = computed(() => data.value);
 
-      return { getData, updateItem, setData, customActions }
+      return { getData, updateItem, setData }
     }
 );
   return store;

@@ -1,23 +1,20 @@
-import { createApp } from 'vue'
-import "./style.css"
-import App from './App.vue'
-import './samples/node-api'
+/**
+ * main.ts
+ *
+ * Bootstraps Vuetify and other plugins then mounts the App`
+ */
 
-// // Vuetify
-// import 'vuetify/styles'
-// import { createVuetify } from 'vuetify'
-// import * as components from 'vuetify/components'
-// import * as directives from 'vuetify/directives'
+// Components
+import App from './App.vue'
+
+// Composables
+import { createApp } from 'vue'
 
 // Plugins
 import { registerPlugins } from '@/plugins'
-import CloseComponentButtonVue from './components/CloseComponentButton.vue'
 
+const app = createApp(App)
 
-const app = createApp(App);
-app.component("close-comp-button", CloseComponentButtonVue);
-registerPlugins(app);
+registerPlugins(app)
+
 app.mount('#app')
-  .$nextTick(() => {
-    postMessage({ payload: 'removeLoading' }, '*')
-  })

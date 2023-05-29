@@ -5,7 +5,7 @@
     id="Splits"
     class="bg-grey d-flex flex-column"
   >
-  <CommonToolbar
+    <CommonToolbar
       :socket-state="socket?.state"
       :class="props.class"
       :close-component="closeComponent"
@@ -25,7 +25,7 @@
           fixed-header
           :items-per-page="-1"
         >
-          <template
+          <!-- <template
             v-slot:group-header="{
               item,
               columns,
@@ -46,7 +46,7 @@
                 {{ item.value }}
               </td>
             </tr>
-          </template>
+          </template> -->
           <template #bottom></template>
         </v-data-table>
       </v-col>
@@ -169,7 +169,7 @@
             <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
             <!-- { item, columns, toggleGroup, isGroupOpen } -->
             <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <template
+            <!-- <template
               v-slot:group-header="{
                 item,
                 columns,
@@ -190,7 +190,7 @@
                   {{ item.value }}
                 </td>
               </tr>
-            </template>
+            </template> -->
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -204,19 +204,15 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  defineProps,
-  ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
+import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
+import InsertOrder from "@/components/OrderModals/InsertOrderSpreads.vue";
 import { useLayoutStore } from "@/store/layout";
 import { useWebSocket } from "@/utils/useWebsocket";
 import { useAppStore } from "@/store/app";
-import { useContractsStore } from "@/store/contracts";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
+import {
+  MarketDisplayStoreActions,
+  useMarketDisplayStore,
+} from "@/store/marketDisplay";
 import {
   FilterCondition,
   MarketDisplayItemContract as MainModel,
@@ -228,12 +224,23 @@ import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 import { ActionButton } from "@/models/UI";
 import CommonToolbar from "@/components/CommonToolbar.vue";
+import { BuySell } from "@/models/trading";
 
 const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
+
+const tradeModal = reactive<{
+  open: boolean;
+  type: BuySell | "None";
+  item: null | MainModel;
+}>({
+  type: BuySell.Buy,
+  open: false,
+  item: null,
+});
 
 const actionButtons = ref<ActionButton[]>([
   {
@@ -266,8 +273,11 @@ const endpoint = "/market";
 const filters: FilterCondition[] = [
   { field: "contractDisplay.contracT_TYPE", value: 3, operator: "==" },
 ];
-const { socket, filteredData, subscribe, typedArray } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
+const { socket, filteredData, subscribe, typedArray } = useWebSocket<
+  MainModel,
+  MarketDisplayStoreActions
+>(
+  useMarketDisplayStore(),
   endpoint,
   filters,
   {
@@ -295,7 +305,7 @@ function processUpdate(message: string) {
   try {
     const temp = typedArray<MainModel>(message);
     temp.forEach((e) => {
-      mainStore.updateItem(e);
+      mainStore().updateItem(e);
     });
     console.log("Parsed update : ", temp);
     //
@@ -348,13 +358,18 @@ const headers: any[] = [
   { title: "Offer", key: "offer", order: 4 },
   { title: "O/QTY", key: "qtyOffer", order: 5 },
   { title: "Change", key: "change", order: 6 },
-  { title: "Time", key: "time", order: 7 },
+  { title: "Last", key: "last" },
+  { title: "Time", key: "time" },
+  { title: "High", key: "hi" },
+  { title: "Low", key: "lo" },
 
   // { title: "Last", key: "last" },
-  { title: "Volume", key: "volume", order: 8 },
+  { title: "Volume", key: "volume" },
 ];
-const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+const getSortedHeaders = computed(
+  () =>
+    // state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+    state.selectedHeaders
 );
 const state = reactive<{
   openHeaderPicker: boolean;

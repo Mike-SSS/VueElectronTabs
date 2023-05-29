@@ -11,13 +11,7 @@ interface State {
 export const useToastStore = defineStore("toasts", {
   // define the state using the State interface
   state: (): State => ({
-    toasts: [
-      {
-        id: "abc",
-        message: "Test",
-        showing: true,
-      },
-    ],
+    toasts: [],
     currentToast: undefined,
   }),
   // define getters, actions, and mutations

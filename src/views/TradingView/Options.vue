@@ -1,5 +1,10 @@
 <template>
-  <v-container fluid :style="props.style" key="Options" class="bg-grey d-flex flex-column">
+  <v-container
+    fluid
+    :style="props.style"
+    key="Options"
+    class="bg-grey d-flex flex-column"
+  >
     <CommonToolbar
       :socket-state="socket?.state"
       :class="props.class"
@@ -9,7 +14,7 @@
       title="Options"
       tooltip="This is more information on options. Example description"
     ></CommonToolbar>
-   <v-row class="fill-height">
+    <v-row class="fill-height">
       <v-col cols="12" class="pa-0" ref="Reference">
         <v-data-table
           density="compact"
@@ -19,7 +24,7 @@
           :height="calculateTableHeight"
           fixed-header
         >
-          <template
+          <!-- <template
             v-slot:group-header="{
               item,
               columns,
@@ -40,7 +45,7 @@
                 {{ item.value }}
               </td>
             </tr>
-          </template>
+          </template> -->
           <template #bottom></template>
         </v-data-table>
       </v-col>
@@ -159,7 +164,7 @@
             item-value="contract"
             :items-per-page="-1"
           >
-            <template
+            <!-- <template
               v-slot:group-header="{
                 item,
                 columns,
@@ -180,7 +185,7 @@
                   {{ item.value }}
                 </td>
               </tr>
-            </template>
+            </template> -->
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -190,20 +195,29 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <InsertOrder
+      v-model="tradeModal.open"
+      :type="tradeModal.type"
+      :item="tradeModal.item ? tradeModal.item : undefined"
+      :socket="socket ? socket : undefined"
+    ></InsertOrder>
   </v-container>
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  defineProps,
-  ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
+//
+/* Sorting */
+/* Expiry (newest) */
+/* Strike (smallest to biggest) */
+/* Flag (C -> P) */
+//
+import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useAppStore } from "@/store/app";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
+import {
+  MarketDisplayStoreActions,
+  useMarketDisplayStore,
+} from "@/store/marketDisplay";
+import InsertOrder from "@/components/OrderModals/InsertOrderOptions.vue";
 
 import { useWebSocket } from "@/utils/useWebsocket";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
@@ -213,18 +227,28 @@ import {
   PublishAll,
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
-import { useContractsStore } from "@/store/contracts";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 import CommonToolbar from "@/components/CommonToolbar.vue";
 import { ActionButton } from "@/models/UI";
+import { BuySell } from "@/models/trading";
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
 
-const emits = defineEmits(['newComp', 'closeComp']);;
+const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
+
+const tradeModal = reactive<{
+  open: boolean;
+  type: BuySell | "None";
+  item: null | MainModel;
+}>({
+  type: BuySell.Buy,
+  open: false,
+  item: null,
+});
 
 const actionButtons = ref<ActionButton[]>([
   {
@@ -236,7 +260,7 @@ const actionButtons = ref<ActionButton[]>([
     icon: "mdi-plus",
     textField: null,
     action: () => {
-      state.openInstruments = true
+      state.openInstruments = true;
     },
   },
   {
@@ -258,8 +282,11 @@ const filters: FilterCondition[] = [
   { field: "contractDisplay.contracT_TYPE", value: 2, operator: "==" },
   // { field: "contractDisplay.strike", value: 0, operator: "!==" },
 ];
-const { socket, filteredData, subscribe, typedArray } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
+const { socket, filteredData, subscribe, typedArray } = useWebSocket<
+  MainModel,
+  MarketDisplayStoreActions
+>(
+  useMarketDisplayStore(),
   endpoint,
   filters,
   {
@@ -278,7 +305,7 @@ function processUpdate(message: string) {
   try {
     const temp = typedArray<MainModel>(message);
     temp.forEach((e) => {
-      mainStore.updateItem(e);
+      mainStore().updateItem(e);
     });
     console.log("Parsed update : ", temp);
     //
@@ -311,18 +338,6 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {});
 
-function getUniqueValues() {
-  const field = "contractDisplay";
-  const child = "flag";
-  return filteredData.value.reduce((unique: string[], item: MainModel) => {
-    item;
-    if (!unique.includes(<string>item[field][child])) {
-      unique.push(<string>item[field][child]);
-    }
-    return unique;
-  }, []);
-}
-
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
   { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
@@ -343,13 +358,18 @@ const headers: any[] = [
   { title: "O/QTY", key: "qtyOffer", order: 5 },
   { title: "Change", key: "change", order: 6 },
 
-  { title: "Time", key: "time", order: 7 },
+  { title: "Last", key: "last" },
+  { title: "Time", key: "time" },
+  { title: "High", key: "hi" },
+  { title: "Low", key: "lo" },
 
   // { title: "Last", key: "last" },
-  { title: "Volume", key: "volume", order: 8 },
+  { title: "Volume", key: "volume" },
 ];
-const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+const getSortedHeaders = computed(
+  () =>
+    // state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+    state.selectedHeaders
 );
 const state = reactive<{
   openHeaderPicker: boolean;

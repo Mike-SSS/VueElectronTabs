@@ -25,7 +25,7 @@
           height="100%"
           fixed-header
         >
-          <template
+          <!-- <template
             v-slot:group-header="{
               item,
               columns,
@@ -46,8 +46,9 @@
                 {{ item.value }}
               </td>
             </tr>
-          </template>
+          </template> -->
           <template #bottom></template>
+          <template #item.constractDisplay.strike="{ item }"> {{ item.columns.strike }} D</template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -168,7 +169,7 @@
             <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
             <!-- { item, columns, toggleGroup, isGroupOpen } -->
             <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <template
+            <!-- <template
               v-slot:group-header="{
                 item,
                 columns,
@@ -189,7 +190,7 @@
                   {{ item.value }}
                 </td>
               </tr>
-            </template>
+            </template> -->
             <template #item.contractDisplay.strike="{ item }">
               {{ item.value.contractDisplay.strike }}D
             </template>
@@ -202,21 +203,33 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <InsertOrder
+      v-model="tradeModal.open"
+      :type="tradeModal.type"
+      :item="tradeModal.item ? tradeModal.item : undefined"
+      :socket="socket ? socket : undefined"
+    ></InsertOrder>
   </v-container>
 </template>
 
 <script lang="ts" setup>
+//
+/* Sorting */ 
+/* Expiry (newest) */ 
+/* Strike (smallest to biggest) */ 
+/* Flag (C -> P) */ 
+//
 import {
   computed,
-  defineProps,
   ref,
   reactive,
   onMounted,
   onBeforeUnmount,
 } from "vue";
 import { useLayoutStore } from "@/store/layout";
+import InsertOrder from "@/components/OrderModals/InsertOrderDeltas.vue";
 import { useAppStore } from "@/store/app";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
+import { MarketDisplayStoreActions, useMarketDisplayStore } from "@/store/marketDisplay";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
 import { useWebSocket } from "@/utils/useWebsocket";
@@ -230,6 +243,7 @@ import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 import { ActionButton } from "@/models/UI";
 
 import CommonToolbar from "@/components/CommonToolbar.vue";
+import { BuySell } from "@/models/trading";
 
 const appStore = useAppStore();
 const mainStore = useMarketDisplayStore();
@@ -238,6 +252,16 @@ const { calculateTableHeight, Reference } = useTableHeightCalculator();
 const endpoint = "/market";
 const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
+
+const tradeModal = reactive<{
+  open: boolean;
+  type: BuySell | "None";
+  item: null | MainModel;
+}>({
+  type: BuySell.Buy,
+  open: false,
+  item: null,
+});
 
 const actionButtons = ref<ActionButton[]>([
   {
@@ -271,8 +295,8 @@ const filters: FilterCondition[] = [
   { field: "contractDisplay.strike", value: "0", operator: "!==" },
   { field: "contractDisplay.contracT_TYPE", value: 5, operator: "==" },
 ];
-const { socket, filteredData, subscribe, typedArray } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
+const { socket, filteredData, subscribe, typedArray } = useWebSocket<MainModel, MarketDisplayStoreActions>(
+  useMarketDisplayStore(),
   endpoint,
   filters,
   {
@@ -291,7 +315,7 @@ function processUpdate(message: string) {
   try {
     const temp = typedArray<MainModel>(message);
     temp.forEach((e) => {
-      mainStore.updateItem(e);
+      mainStore().updateItem(e);
     });
     console.log("Parsed update : ", temp);
     //
@@ -357,13 +381,17 @@ const headers: any[] = [
   { title: "O/QTY", key: "qtyOffer", order: 5 },
   { title: "Change", key: "change", order: 6 },
 
-  { title: "Time", key: "time", order: 7 },
+  { title: "Last", key: "last" },
+  { title: "Time", key: "time" },
+  { title: "High", key: "hi" },
+  { title: "Low", key: "lo" },
 
   // { title: "Last", key: "last" },
-  { title: "Volume", key: "volume", order: 8 },
+  { title: "Volume", key: "volume" },
 ];
 const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+  // state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+  state.selectedHeaders
 );
 const state = reactive<{
   openHeaderPicker: boolean;

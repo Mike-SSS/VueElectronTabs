@@ -1,9 +1,12 @@
 <template>
   <v-container>
-    <v-row>
+    <v-row justify="space-between" align="center">
       <v-col>
         <div class="text-h2">UI confirmation dialogs</div>
-      </v-col> </v-row
+      </v-col>
+      <v-col cols="auto">
+        <v-btn color="primary" title="Accept">Accept</v-btn>
+      </v-col></v-row
     ><v-divider class="my-3"></v-divider
     ><v-row dense>
       <v-col cols="6">
@@ -184,8 +187,6 @@ import { useAuthStore } from "@/store/authStore";
 import { reactive } from "vue";
 
 const storeLayout = useAuthStore();
-
-
 </script>
 
 <style></style>

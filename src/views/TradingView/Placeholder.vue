@@ -60,7 +60,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, onMounted, Ref, defineEmits } from "vue";
+import { computed, ref, onMounted, Ref } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import componentRegistry, {
   ComponentRegistry,
@@ -90,8 +90,7 @@ const props = defineProps({
     required: true,
   },
 });
-onMounted(() => {
-});
+onMounted(() => {});
 const openSubMenu = (category: MenuItem) => {
   categories.value.forEach((cat) => {
     if (cat.id === category.id) {
@@ -125,7 +124,11 @@ const categories: Ref<MenuItem[]> = ref([
     name: "Orders",
     items: [
       { id: 3, name: "Active Orders", component: "ActiveOrders" as const },
-      { id: 4, name: "Completed Orders", component: "CompletedOrders" as const },
+      {
+        id: 4,
+        name: "Completed Orders",
+        component: "CompletedOrders" as const,
+      },
     ],
     subMenu: false,
   },
@@ -133,7 +136,11 @@ const categories: Ref<MenuItem[]> = ref([
     id: 5,
     name: "Positions",
     items: [
-      { id: 6, name: "Consolidated positions", component: "ConsolidatedPositions" as const },
+      {
+        id: 6,
+        name: "Consolidated positions",
+        component: "ConsolidatedPositions" as const,
+      },
       { id: 7, name: "Positions", component: "Positions" as const },
     ],
     subMenu: false,

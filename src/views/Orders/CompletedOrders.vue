@@ -24,7 +24,7 @@
           fixed-header
           :items-per-page="-1"
         >
-          <template
+          <!-- <template
             v-slot:group-header="{
               item,
               columns,
@@ -45,7 +45,7 @@
                 {{ item.value }}
               </td>
             </tr>
-          </template>
+          </template> -->
           <template #bottom></template>
         </v-data-table>
       </v-col>
@@ -97,14 +97,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  defineProps,
-  ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
+import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
 import { useCompletedOrdersStore } from "@/store/completedOrders";
@@ -120,6 +113,7 @@ import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 import { ActionButton } from "@/models/UI";
 import CommonToolbar from "@/components/CommonToolbar.vue";
+import { MarketDisplayStoreActions } from "@/store/marketDisplay";
 const appStore = useAppStore();
 const mainStore = useCompletedOrdersStore();
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
@@ -145,7 +139,7 @@ const actionButtons = ref<ActionButton[]>([
 
 const filters: FilterCondition[] = [];
 const { socket, filteredData, subscribeToSelected, typedArray } =
-  useWebSocket<MainModel>(
+  useWebSocket<MainModel, {}>(
     useCompletedOrdersStore,
     endpoint,
     filters,
@@ -241,8 +235,9 @@ const headers: any[] = [
   },
   { title: "Principle Agency", key: "principleAgency", order: 5 },
 ];
-const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+const getSortedHeaders = computed(
+  () => state.selectedHeaders
+  // .sort((a, b) => (a.order < b.order ? -1 : 1))
 );
 const state = reactive<{
   openHeaderPicker: boolean;

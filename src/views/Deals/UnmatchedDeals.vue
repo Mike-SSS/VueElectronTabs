@@ -1,5 +1,10 @@
 <template>
-  <v-container fluid :style="props.style" key="Deals" class="bg-grey  d-flex flex-column">
+  <v-container
+    fluid
+    :style="props.style"
+    key="Deals"
+    class="bg-grey d-flex flex-column"
+  >
     <v-row :class="props.class" justify="space-between" align="center">
       <v-col cols="auto" class="d-flex align-center">
         <v-btn
@@ -11,21 +16,24 @@
           class="mr-2"
           ><v-icon size="14">mdi-close</v-icon></v-btn
         >
-        <div class="text-h5">Unmatched Deals ({{ filteredData.length }}) <v-tooltip width="200" activator="parent" location="end">
-              <div class="d-flex align-center">
-                <v-icon
-                  size="15"
-                  class="mr-2"
-                  :color="socket?.state == 'Connected' ? 'success' : 'error'"
-                  >mdi-circle</v-icon
-                >
-                <div>WS: {{ socket?.state }}</div>
-              </div>
-              <div class="text-body-1">
-                This is more information on Unmatched deals. Example description
-                "All Unmatched deals below"
-              </div>
-          </v-tooltip></div>
+        <div class="text-h5">
+          Unmatched Deals ({{ filteredData.length }})
+          <v-tooltip width="200" activator="parent" location="end">
+            <div class="d-flex align-center">
+              <v-icon
+                size="15"
+                class="mr-2"
+                :color="socket?.state == 'Connected' ? 'success' : 'error'"
+                >mdi-circle</v-icon
+              >
+              <div>WS: {{ socket?.state }}</div>
+            </div>
+            <div class="text-body-1">
+              This is more information on Unmatched deals. Example description
+              "All Unmatched deals below"
+            </div>
+          </v-tooltip>
+        </div>
       </v-col>
       <v-col>{{ getUniqueValues() }}</v-col>
       <v-col cols="auto">
@@ -95,7 +103,7 @@
           icon
           @click="state.openHeaderPicker = true"
           ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >        
+        >
       </v-col>
     </v-row>
     <v-row class="fill-height">
@@ -130,7 +138,7 @@
               @click.stop.prevent="() => toggleSelect(item)"
             ></v-checkbox-btn>
           </template>
-          <template
+          <!-- <template
             v-slot:group-header="{
               item,
               columns,
@@ -151,7 +159,7 @@
                 {{ item.value }}
               </td>
             </tr>
-          </template>
+          </template> -->
           <template #bottom></template>
         </v-data-table>
       </v-col>
@@ -205,11 +213,24 @@
         <v-card-text>
           <v-container>
             <v-row>
-              
               <v-col cols="12">
-                <v-select density="compact" variant="outlined" label="Member"></v-select>
-                <v-text-field density="compact" variant="outlined" label="Price" type="number"></v-text-field>
-                <v-text-field density="compact" variant="outlined" label="Ref" type="string"></v-text-field>
+                <v-select
+                  density="compact"
+                  variant="outlined"
+                  label="Member"
+                ></v-select>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Price"
+                  type="number"
+                ></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Ref"
+                  type="string"
+                ></v-text-field>
               </v-col>
             </v-row>
           </v-container>
@@ -226,10 +247,18 @@
         <v-card-text>
           <v-container>
             <v-row>
-              
               <v-col cols="12">
-                <v-select density="compact" variant="outlined" label="Principle"></v-select>
-                <v-text-field density="compact" variant="outlined" label="Ref" type="string"></v-text-field>
+                <v-select
+                  density="compact"
+                  variant="outlined"
+                  label="Principle"
+                ></v-select>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Ref"
+                  type="string"
+                ></v-text-field>
               </v-col>
             </v-row>
           </v-container>
@@ -252,15 +281,47 @@
           <v-container>
             <v-row>
               <v-col cols="6">
-                <v-text-field density="compact" variant="outlined" label="Qty" type="number"></v-text-field>
-                <v-text-field density="compact" variant="outlined" label="Price" type="number"></v-text-field>
-                <v-text-field density="compact" variant="outlined" label="Ref No" type="string"></v-text-field>
-                <v-text-field density="compact" variant="outlined" label="Ref No 2" type="string"></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Qty"
+                  type="number"
+                ></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Price"
+                  type="number"
+                ></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Ref No"
+                  type="string"
+                ></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Ref No 2"
+                  type="string"
+                ></v-text-field>
               </v-col>
               <v-col cols="6">
-                <v-select density="compact" variant="outlined" label="Principle"></v-select>
-                <v-select density="compact" variant="outlined" label="Dealer"></v-select>
-                <v-select density="compact" variant="outlined" label="Client Sub Acc"></v-select>
+                <v-select
+                  density="compact"
+                  variant="outlined"
+                  label="Principle"
+                ></v-select>
+                <v-select
+                  density="compact"
+                  variant="outlined"
+                  label="Dealer"
+                ></v-select>
+                <v-select
+                  density="compact"
+                  variant="outlined"
+                  label="Client Sub Acc"
+                ></v-select>
               </v-col>
             </v-row>
             <v-row>
@@ -291,11 +352,24 @@
         <v-card-text>
           <v-container>
             <v-row>
-              
               <v-col cols="12">
-                <v-select density="compact" variant="outlined" label="Tripartite"></v-select>
-                <v-text-field density="compact" variant="outlined" label="Price" type="number"></v-text-field>
-                <v-text-field density="compact" variant="outlined" label="Ref" type="string"></v-text-field>
+                <v-select
+                  density="compact"
+                  variant="outlined"
+                  label="Tripartite"
+                ></v-select>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Price"
+                  type="number"
+                ></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Ref"
+                  type="string"
+                ></v-text-field>
               </v-col>
             </v-row>
           </v-container>
@@ -313,15 +387,47 @@
           <v-container>
             <v-row>
               <v-col cols="6">
-                <v-text-field density="compact" variant="outlined" label="Qty" type="number"></v-text-field>
-                <v-text-field density="compact" variant="outlined" label="Price" type="number"></v-text-field>
-                <v-text-field density="compact" variant="outlined" label="Ref No" type="string"></v-text-field>
-                <v-text-field density="compact" variant="outlined" label="Ref No 2" type="string"></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Qty"
+                  type="number"
+                ></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Price"
+                  type="number"
+                ></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Ref No"
+                  type="string"
+                ></v-text-field>
+                <v-text-field
+                  density="compact"
+                  variant="outlined"
+                  label="Ref No 2"
+                  type="string"
+                ></v-text-field>
               </v-col>
               <v-col cols="6">
-                <v-select density="compact" variant="outlined" label="Principle"></v-select>
-                <v-select density="compact" variant="outlined" label="Dealer"></v-select>
-                <v-select density="compact" variant="outlined" label="Client Sub Acc"></v-select>
+                <v-select
+                  density="compact"
+                  variant="outlined"
+                  label="Principle"
+                ></v-select>
+                <v-select
+                  density="compact"
+                  variant="outlined"
+                  label="Dealer"
+                ></v-select>
+                <v-select
+                  density="compact"
+                  variant="outlined"
+                  label="Client Sub Acc"
+                ></v-select>
               </v-col>
             </v-row>
             <v-row>
@@ -340,23 +446,14 @@
           <v-btn density="compact" variant="tonal">Delete</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>    
+    </v-dialog>
   </v-container>
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  defineProps,
-  ref,
-  Ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
+import { computed, ref, Ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
-import { useContractsStore } from "@/store/contracts";
 import { useDealsStore } from "@/store/deals";
 // import {
 //   CustomActiveOrderActions,
@@ -372,6 +469,7 @@ import {
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
+import { MarketDisplayStoreActions } from "@/store/marketDisplay";
 
 const appStore = useAppStore();
 const mainStore = useDealsStore();
@@ -396,26 +494,28 @@ const dialogs = reactive({
   splits: false,
   correctPrinciple: false,
   tripartite: false,
-  assignMember: false
+  assignMember: false,
 });
 
-const { socket, filteredData, subscribeToSelected, typedArray } =
-  useWebSocket<MainModel>(
-    useDealsStore,
-    endpoint,
-    filters,
-    {
-      name: "DealsInsert",
-      func: processUpdate,
-    },
-    async () => {
-      console.log("Deals init function IE publish all deals??");
-      if (socket.value) {
-        console.log("Has socket");
-        socket.value?.invoke("PublishAllData", PublishAll.Deals);
-      }
+const { socket, filteredData, subscribeToSelected, typedArray } = useWebSocket<
+  MainModel,
+  {}
+>(
+  useDealsStore,
+  endpoint,
+  filters,
+  {
+    name: "DealsInsert",
+    func: processUpdate,
+  },
+  async () => {
+    console.log("Deals init function IE publish all deals??");
+    if (socket.value) {
+      console.log("Has socket");
+      socket.value?.invoke("PublishAllData", PublishAll.Deals);
     }
-  );
+  }
+);
 
 function openSplits() {
   console.log("Open splits");
@@ -509,8 +609,10 @@ const headers = ref([
   { title: "Origin", key: "origin" },
   { title: "Principle Agency", key: "principleAgency" },
 ]);
-const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+const getSortedHeaders = computed(
+  () =>
+    // state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+    state.selectedHeaders
 );
 const state = reactive<{
   openHeaderPicker: boolean;

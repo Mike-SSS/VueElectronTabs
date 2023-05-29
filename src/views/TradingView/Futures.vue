@@ -25,7 +25,7 @@
           fixed-header
           :items-per-page="-1"
         >
-          <template
+          <!-- <template
             v-slot:group-header="{
               item,
               columns,
@@ -46,7 +46,7 @@
                 {{ item.value }}
               </td>
             </tr>
-          </template>
+          </template> -->
           <template #bottom></template>
           <!-- <template v-slot:item="props">
             {{ Object.keys(props) }}
@@ -57,10 +57,10 @@
             </tr>
           </template> -->
           <template #item.bid="{ item }">
-            <v-tooltip text="Insert Bid">
+            <v-tooltip text="Insert Bid" content-class="bg-success">
               <template #activator="{ props }">
                 <v-btn
-                  @click.prevent.stop="openInsertBidScreen(item.raw)"
+                  @click.prevent.stop="openTradeModal(item.raw, BuySell.Buy)"
                   density="compact"
                   color="transparent"
                   variant="flat"
@@ -72,6 +72,44 @@
               </template>
             </v-tooltip>
           </template>
+          <template #item.offer="{ item }">
+            <v-tooltip text="Insert Offer" content-class="bg-error">
+              <template #activator="{ props }">
+                <v-btn
+                  @click.prevent.stop="openTradeModal(item.raw, BuySell.Sell)"
+                  density="compact"
+                  color="transparent"
+                  variant="flat"
+                  v-bind="props"
+                  :text="
+                    item.columns.offer ? item.columns.offer.toString() : 'undef'
+                  "
+                ></v-btn>
+              </template>
+            </v-tooltip>
+          </template>
+          <template #item.change="{ item }">
+            <span
+              :class="
+                item.columns.change < 0
+                  ? 'text-red'
+                  : item.columns.change == 0
+                  ? ''
+                  : 'text-blue'
+              "
+              >{{ item.columns.change }}</span
+            ></template
+          >
+          <template #item.last="{ item }">
+            <span
+              :class="
+                item.columns.last < item.columns.offer
+                  ? 'text-red'
+                  : 'text-blue'
+              "
+              >{{ item.columns.last }}</span
+            ></template
+          >
         </v-data-table>
       </v-col>
     </v-row>
@@ -118,43 +156,114 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-    <v-dialog max-width="500" v-model="bidScreen.open">
+    <InsertOrder
+      v-model="tradeModal.open"
+      :type="tradeModal.type"
+      :item="tradeModal.item ? tradeModal.item : undefined"
+      :socket="socket ? socket : undefined"
+    ></InsertOrder>
+    <!-- <v-dialog max-width="500">
       <v-card>
-        <v-card-title class="bg-primary">
-          Insert Bid for
-          {{
-            bidScreen.item
-              ? bidScreen.item.contractDisplay.contractDisplay
-              : "Empty"
-          }}
-        </v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="6"
-                ><v-text-field type="number" label="QTY"></v-text-field>
-                <v-text-field type="number" label="Price"></v-text-field
-                ><v-radio-group>
-                  <v-radio label="Principal" value="1"></v-radio>
-                  <v-radio label="Agency" value="2"></v-radio> </v-radio-group
-              ></v-col>
-              <v-col cols="6"
-                ><v-select label="Dealer"></v-select
-                ><v-select label="Principal"></v-select>
-                <v-text-field label="Ref"></v-text-field
-                ><v-select label="Type"></v-select>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions class="justify-end">
-          <v-btn @click="closeBidScreen" color="primary" variant="outlined"
-            >Cancel</v-btn
+        <v-form
+          validate-on="input"
+          v-model="tradeModal.valid"
+          @submit.prevent="enterTrade"
+          ref="tradeForm"
+        >
+          <v-card-title
+            :class="{
+              'bg-primary': tradeModal.type == 'Bid',
+              'bg-error': tradeModal.type == 'Offer',
+              'bg-warning': tradeModal.type == 'None',
+            }"
           >
-          <v-btn color="primary" variant="tonal">Submit</v-btn>
-        </v-card-actions>
+            <template v-if="tradeModal.type == 'None'"
+              >Something went wrong with loading
+              {{ tradeModal.item?.contractDisplay.contractDisplay }}</template
+            >
+            <template v-else>
+              {{ tradeModal.type }} for
+              {{
+                tradeModal.item
+                  ? tradeModal.item.contractDisplay.contractDisplay
+                  : "Empty"
+              }}
+            </template>
+          </v-card-title>
+          <v-card-text>
+            <v-container>
+              <v-row v-if="tradeModal.form">
+                <v-col cols="6"
+                  ><v-text-field
+                    type="number"
+                    class="my-2"
+                    label="QTY"
+                    :rules="[
+                      (msg: number) => !!msg || 'Qty Required',
+                      (msg: number) => msg >= 0 || 'Qty cannot be less or equal to 0',
+                    ]"
+                    v-model="tradeModal.form.qty"
+                  ></v-text-field>
+                  <v-text-field
+                    type="number"
+                    class="my-2"
+                    label="Price"
+                    v-model="tradeModal.form.price"
+                  ></v-text-field
+                  ><v-radio-group v-model="tradeModal.form.capacity">
+                    <v-radio
+                      label="Principal"
+                      :value="Capacity.PrincipalCapacity"
+                    ></v-radio>
+                    <v-radio
+                      label="Agency"
+                      :value="Capacity.AgencyCapacity"
+                    ></v-radio> </v-radio-group
+                ></v-col>
+                <v-col cols="6"
+                  ><v-select
+                    v-model="tradeModal.form.dealer"
+                    label="Dealer"
+                  ></v-select
+                  ><v-select
+                    v-model="tradeModal.form.principal"
+                    label="Principal"
+                  ></v-select>
+                  <v-text-field
+                    v-model="tradeModal.form.ref"
+                    label="Ref"
+                  ></v-text-field
+                  ><v-select
+                    :items="
+                      Object.entries(MitsOrderType)
+                        .filter(([key]) => isNaN(Number(key)))
+                        .map(([text, value]) => ({ text, value }))
+                    "
+                    :return-object="false"
+                    item-title="text"
+                    item-value="value"
+                    v-model="tradeModal.form.type"
+                    label="Type"
+                  ></v-select>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-text>
+          <v-card-actions class="justify-end">
+            <v-btn @click="closetradeModal" color="primary" variant="outlined"
+              >Cancel</v-btn
+            >
+            <v-btn
+              type="submit"
+              :disabled="tradeModal.type == 'None' || tradeModal.valid == false"
+              color="primary"
+              variant="elevated"
+              >Submit</v-btn
+            >
+          </v-card-actions>
+        </v-form>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
 
     <v-dialog
       v-model="state.openInstruments"
@@ -230,25 +339,16 @@
             <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
             <!-- { item, columns, toggleGroup, isGroupOpen } -->
             <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
-              }"
-            >
+            <template v-slot:group-header="{ item, columns, toggleGroup }">
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
                     size="small"
                     variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                    icon="$expand"
                     @click="toggleGroup(item)"
                   ></v-btn>
-                  {{ item.value }}
+                  {{ item.value }} ({{ columns.length }})
                 </td>
               </tr>
             </template>
@@ -265,19 +365,11 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  defineProps,
-  ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
-import { useLayoutStore } from "@/store/layout";
+import { computed, ref, reactive, nextTick } from "vue";
+import InsertOrder from "@/components/OrderModals/InsertOrderFutures.vue";
 
 import { useAppStore } from "@/store/app";
-import { useContractsStore } from "@/store/contracts";
-import { useMarketDisplayStore } from "@/store/marketDisplay";
+import { useMarketDisplayStore, MarketDisplayStoreActions } from "@/store/marketDisplay";
 import { useWebSocket } from "@/utils/useWebsocket";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 import {
@@ -285,12 +377,11 @@ import {
   FilterCondition,
   PublishAll,
 } from "@/models/marketData";
-
-import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 import { ActionButton } from "@/models/UI";
 import CommonToolbar from "@/components/CommonToolbar.vue";
-const appStore = useAppStore();
+import { onMounted } from "vue";
+import { BuySell } from "@/models/trading";
 const mainStore = useMarketDisplayStore();
 
 const emits = defineEmits(["newComp", "closeComp"]);
@@ -332,8 +423,8 @@ const filters: FilterCondition[] = [
   { field: "contractDisplay.contracT_TYPE", value: 1, operator: "==" },
 ];
 
-const { socket, subscribe, filteredData, typedArray } = useWebSocket<MainModel>(
-  useMarketDisplayStore,
+const { socket, subscribe, filteredData, typedArray } = useWebSocket<MainModel, MarketDisplayStoreActions>(
+  useMarketDisplayStore(),
   endpoint,
   filters,
   {
@@ -352,7 +443,7 @@ function processUpdate(message: string) {
   try {
     const temp = typedArray<MainModel>(message);
     temp.forEach((e) => {
-      mainStore.updateItem(e);
+      mainStore().updateItem(e);
     });
     console.log("Parsed update : ", temp);
     //
@@ -396,13 +487,17 @@ const headers: any[] = [
   { title: "Offer", key: "offer", order: 4 },
   { title: "O/QTY", key: "qtyOffer", order: 5 },
   { title: "Change", key: "change", order: 6 },
-  { title: "Time", key: "time", order: 7 },
-
-  // { title: "Last", key: "last" },
-  { title: "Volume", key: "volume", order: 8 },
+  { title: "Last", key: "last" },
+  { title: "Time", key: "time" },
+  { title: "High", key: "hi" },
+  { title: "Low", key: "lo" },
+  { title: "Open", key: "openPrice" },
+  { title: "Volume", key: "volume" },
 ];
-const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+const getSortedHeaders = computed(
+  () =>
+    // state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+    state.selectedHeaders
 );
 const state = reactive<{
   openHeaderPicker: boolean;
@@ -418,23 +513,70 @@ const state = reactive<{
   instrumentsToAdd: [],
 });
 
-const bidScreen = reactive<{
+const tradeModal = reactive<{
   open: boolean;
+  type: BuySell | "None";
   item: null | MainModel;
 }>({
+  type: BuySell.Buy,
   open: false,
   item: null,
 });
 
-function openInsertBidScreen(item: MainModel) {
-  bidScreen.item = item;
-  bidScreen.open = true;
+function openTradeModal(item: MainModel, type: "None" | BuySell) {
+  tradeModal.item = item;
+  tradeModal.type = type;
+  tradeModal.open = true;
 }
-function closeBidScreen() {
-  bidScreen.open = false;
-  bidScreen.item = null;
+function closetradeModal() {
+  tradeModal.open = false;
+  tradeModal.item = null;
 }
 
+// function enterTrade() {
+//   if (!tradeModal.form || !tradeModal.item || tradeModal.type == "None") {
+//     console.error("Not ready to trade, something is not set");
+//     return;
+//   }
+//   console.log(
+//     `Trade ${tradeModal.form.qty} @ ${tradeModal.form.price} for ${tradeModal.item.contractDisplay.contractDisplay} `
+//   );
+//   const payload: IInsertOrder = {
+//     contractName: tradeModal.item.contract,
+//     buyOrSell: tradeModal.type == "Bid" ? true : false,
+//     dealerCode: tradeModal.form.dealer,
+//     memeberCode: "BVG4", // bvgm
+//     value: Number(tradeModal.form.price),
+//     qty: Number(tradeModal.form.qty),
+//     principal: tradeModal.form.principal,
+//     orderType: tradeModal.form.type,
+//     timeout_secs: 0,
+//     principalAgency:
+//       tradeModal.form.capacity == Capacity.PrincipalCapacity ? true : false,
+//     userRef: tradeModal.form.ref ? tradeModal.form.ref : "",
+//   };
+//   // const payload: IOrderMessage = {
+//   //   instructionType: InstructionType.Insert,
+//   //   time: Date.now().toString(),
+//   //   member: "",
+//   //   subAccount: "",
+//   //   msgType: MsgType.OrderMan,
+//   //   dealer: tradeModal.form.dealer,
+//   //   principal: tradeModal.form.principal,
+//   //   capacity: tradeModal.form.capacity, // agency(a) or principal(p)
+//   //   price: tradeModal.form.price,
+//   //   userRef: tradeModal.form.ref ? tradeModal.form.ref : "",
+//   //   contract: tradeModal.item.contract,
+//   //   qty: tradeModal.form.qty,
+//   //   buySell: tradeModal.type == "Bid" ? BuySell.Buy : BuySell.Sell,
+//   //   state: State.Active, // A active S suspended W waiting
+//   // };
+//   try {
+//     socket.value?.invoke("InsertTrade", payload);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// }
 const subscribeToSelected = () => {
   console.log("Subscribing to : ", state.instrumentsToAdd);
   subscribe(state.instrumentsToAdd.map((e) => e.contract));

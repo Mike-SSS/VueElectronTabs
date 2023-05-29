@@ -1,10 +1,12 @@
 import { LoginResponse } from "@/models/auth";
+import { IUser } from "@/models/trading";
+import { getHQAccessProfile, submitLogin } from "@/utils/api";
 import { Base64 } from "js-base64";
 import { defineStore } from "pinia";
 
 interface State {
   login: LoginResponse | null;
-  hq: HQ | null;
+  hq: IUser | null;
 }
 
 interface HQ {
@@ -97,8 +99,8 @@ export const useAuthStore = defineStore("auth", {
       } else {
         this.login = {
           token: token,
-          expiration: "2222-05-05"
-        }
+          expiration: "2222-05-05",
+        };
       }
       localStorage.setItem("jwt", token);
     },
@@ -108,6 +110,25 @@ export const useAuthStore = defineStore("auth", {
         this.login = null;
         localStorage.removeItem("jwt");
       }
+    },
+    async loadHQAccess(): Promise<boolean> {
+      if (this.token == null) return false;
+      const hq = await getHQAccessProfile();
+      this.setHQ(hq);
+      return true;
+    },
+    async loginUser(username: string, password: string) {
+      const login = await submitLogin(username, password);
+      if (login) {
+        this.setLoginResponse(login);
+        if (login.token) {
+          this.setToken(login.token);
+        }
+        return true;
+      } else {
+        this.clearLoginResponse();
+        return false;
+      }      
     },
   },
 });

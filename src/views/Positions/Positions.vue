@@ -24,7 +24,7 @@
           fixed-header
           :items-per-page="-1"
         >
-          <template
+          <!-- <template
             v-slot:group-header="{
               item,
               columns,
@@ -45,7 +45,7 @@
                 {{ item.value }}
               </td>
             </tr>
-          </template>
+          </template> -->
           <template #bottom></template>
         </v-data-table>
       </v-col>
@@ -168,7 +168,7 @@
             <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
             <!-- { item, columns, toggleGroup, isGroupOpen } -->
             <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <template
+            <!-- <template
               v-slot:group-header="{
                 item,
                 columns,
@@ -189,7 +189,7 @@
                   {{ item.value }}
                 </td>
               </tr>
-            </template>
+            </template> -->
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -203,18 +203,10 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  defineProps,
-  ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
+import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
 
 import { useAppStore } from "@/store/app";
-import { useContractsStore } from "@/store/contracts";
 import { usePositionsStore } from "@/store/positions";
 import { useWebSocket } from "@/utils/useWebsocket";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
@@ -230,6 +222,7 @@ import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 
 import CommonToolbar from "@/components/CommonToolbar.vue";
 import { ActionButton } from "@/models/UI";
+// import { MarketDisplayStoreActions } from "@/store/marketDisplay";
 
 const appStore = useAppStore();
 const mainStore = usePositionsStore();
@@ -269,7 +262,10 @@ const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
 const filters: FilterCondition[] = [];
 
-const { socket, subscribe, filteredData, typedArray } = useWebSocket<MainModel>(
+const { socket, subscribe, filteredData, typedArray } = useWebSocket<
+  MainModel,
+  {}
+>(
   usePositionsStore,
   endpoint,
   filters,
@@ -341,8 +337,9 @@ const headers: any[] = [
   // // { title: "Last", key: "last" },
   // { title: "Volume", key: "volume", order: 8 },
 ];
-const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+const getSortedHeaders = computed(
+  () => state.selectedHeaders
+  // .sort((a, b) => (a.order < b.order ? -1 : 1))
 );
 const state = reactive<{
   openHeaderPicker: boolean;

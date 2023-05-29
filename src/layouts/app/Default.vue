@@ -32,7 +32,13 @@
         <v-list nav>
           <v-list-item @click="goToTrading">Trading</v-list-item>
           <!-- <v-list-item @click="goToProfile">Profile</v-list-item> -->
-          <v-list-item @click="state.isUserConfigurationOpen = true; drawer = false">Prefences</v-list-item>
+          <v-list-item
+            @click="
+              state.isUserConfigurationOpen = true;
+              drawer = false;
+            "
+            >Prefences</v-list-item
+          >
           <!-- <v-list-group value="Config">
             <template v-slot:activator="{ props }">
               <v-list-item v-bind="props" title="Config"></v-list-item>
@@ -105,7 +111,7 @@
                   >
                   <v-col cols="4" class="grid-container-mini" v-if="layout">
                     <div
-                      v-for="(col, index) in layout.columns"
+                      v-for="col in layout.columns"
                       :key="col.id"
                       :class="`bg-` + col.color"
                       class="text-center align-center"
@@ -191,7 +197,9 @@
     </template>
   </v-app-bar>
   <PreferencesModal v-model="state.isUserConfigurationOpen"></PreferencesModal>
-  <LayoutConfigurationModal v-model="state.isLayoutManagerOpen"></LayoutConfigurationModal>  
+  <LayoutConfigurationModal
+    v-model="state.isLayoutManagerOpen"
+  ></LayoutConfigurationModal>
   <v-main>
     <router-view />
   </v-main>
@@ -214,6 +222,7 @@ import { COLUMN, LAYOUT } from "@/models/layout";
 import AnalogClock from "@/components/AnalogClock.vue";
 import { axiosInstance } from "@/plugins/axios";
 import router from "@/router";
+import { getMarketDisplay } from "@/utils/api";
 import Placeholder from "@/views/TradingView/Placeholder.vue";
 
 // Inject the Axios instance with the defined symbol
@@ -243,9 +252,9 @@ const state = reactive<{
 const logout = () => {
   authStore.logout();
   router.push({
-    name: "Login"
-  })
-}
+    name: "Login",
+  });
+};
 const goToProfile = async () => {
   await router.push({
     name: "UserProfile",
@@ -280,33 +289,17 @@ const setSelectedLayout = (layout: LAYOUT) => {
 
 onMounted(async () => {
   // Do something after the component is mounted
-  console.log("Mounted Default Layout");
+  console.log("Mounted Default Layout", marketDisplayStore);
   if (!axiosInstance) {
     throw new Error("Axios instance not found");
   }
-  const temp = await GetMarketDisplay();
-  if (temp) marketDisplayStore.setData(temp);
-  console.log("App store market data: ", marketDisplayStore.getData);
-
-  // Get instruments
-  // const pub = await PublishAll();
+  // await authStore.loadHQAccess();
+  // const res = await marketDisplayStore().customActions?.loadMarketDisplay();
+  
+  console.log("Load market display :", marketDisplayStore().customActions.customActions?.loadMarketDisplay);
+  const res = await marketDisplayStore().customActions.customActions?.loadMarketDisplay();
+  console.log("Load market display :", marketDisplayStore().getData.value.length);
 });
-
-const GetMarketDisplay = async () => {
-  try {
-    const res = await axiosInstance.get(
-      "/api/MarketSubscription/GetMarketDisplay",
-      {
-        params: {
-          publish: true,
-        },
-      }
-    );
-    if (res) return Promise.resolve(res.data);
-  } catch (err) {
-    console.error(err);
-  }
-};
 </script>
 <style>
 .grid-container-mini {

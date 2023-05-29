@@ -13,23 +13,32 @@
 //   },
 // };
 
-import { createBaseStore } from "@/store/baseStore";
+// import { createBaseStore } from "@/store/baseStore";
 import { ActiveOrder as MainModel } from "@/models/marketData";
+import { createBaseStore } from "./baseStore";
 
-export const useActiveOrdersStore = createBaseStore<MainModel>("activeOrder", {
-    updateEvent: updateStore
-});
+export const useActiveOrdersStore = createBaseStore<MainModel, {}>(
+  "activeOrder",
+  {
+    updateEvent: updateStore,
+  }
+);
 
-
-function updateStore (updatedItem: MainModel) {
-    console.log("Update active order " , updatedItem.activeOrderSeq, useActiveOrdersStore().getData);
-    const found = useActiveOrdersStore().getData.findIndex(e => updatedItem.activeOrderSeq == e.activeOrderSeq)
-    if (found == -1) {
-        console.log("AO: Add");
-        useActiveOrdersStore().getData.push(updatedItem);
-    } else {
-        console.log("AO: Update");
-        useActiveOrdersStore().getData[found] = updatedItem;
-    }
-
+function updateStore(updatedItem: MainModel) {
+  const store = useActiveOrdersStore();
+  console.log(
+    "Update active order ",
+    updatedItem.activeOrderSeq,
+    store.getData
+  );
+  const found = store.getData.findIndex(
+    (e) => updatedItem.activeOrderSeq == e.activeOrderSeq
+  );
+  if (found == -1) {
+    console.log("AO: Add");
+    store.getData.push(updatedItem);
+  } else {
+    console.log("AO: Update");
+    store.getData[found] = updatedItem;
+  }
 }

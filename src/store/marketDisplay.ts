@@ -1,70 +1,169 @@
 // Utilities
 import { defineStore } from "pinia";
 import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
-import { createBaseStore } from "./baseStore";
+// import { createBaseStore, MyActions } from "./baseStore";
+import { getMarketDisplay } from "@/utils/api";
+import { computed, ComputedRef, ref, Ref } from "vue";
+import { createBaseStore, MyStoreActions } from "./baseStore";
+// import { CustomStore } from "@/utils/useWebsocket";
 
 type LANGUAGE = "en" | "afr";
 type THEME = "light" | "dark";
 
-interface State {
-  marketDisplayData: MainModel[];
+export interface MarketDisplayStoreActions extends MyStoreActions {
+  loadMarketDisplay: typeof loadMarket;
 }
-export const useMarketDisplayStore = createBaseStore<MainModel>(
-  "marketDisplay",
-  {
-    updateEvent: updateStore,
-  }
-);
+
+// export const useMarketDisplayStore = createBaseStore<MainModel>(
+//   "marketDisplay",
+//   {
+//     updateEvent: updateStore,
+//   },
+//   {
+//     loadMarketDisplay: loadMarket,
+//   }
+// );
+
+// export const useMarketDisplayStore = () => {
+//   return createBaseStore<MainModel, MarketDisplayStoreActions>(
+//     "marketDisplay",
+//     {
+//       loadMarketDisplay: loadMarket,
+//     },
+//     {
+//       updateEvent: updateStore,
+//     }
+//   );
+//   // console.log("Market details ", baseStore());
+//   // console.log("Signature ", baseStore.prototype)
+//   // return baseStore();
+// };
+export const useMarketDisplayStore = () => {
+  const store = createBaseStore<MainModel, MarketDisplayStoreActions>(
+    "marketDisplay",
+    {
+      updateEvent: updateStore,
+    },
+    {
+      loadMarketDisplay: loadMarket,
+    }
+  );
+  return store;
+  // const customActions: MarketDisplayStoreActions = {
+  //   loadMarketDisplay: loadMarket,
+  // };
+  // return {
+  //   ...customActions,
+  //   ...store(),
+  // };
+};
+async function loadMarket() {
+  const store = useMarketDisplayStore();
+  console.log("Load Market Details");
+  const res = await getMarketDisplay();
+  store().setData(res);
+  console.log("Market after setting: ", res, store().getData.value.length);
+}
 
 function updateStore(updatedItem: MainModel) {
-  console.log(
-    "Update market: ",
-    updatedItem.contract,
-    useMarketDisplayStore().getData
-  );
-  const found = useMarketDisplayStore().getData.findIndex(
+  const store = useMarketDisplayStore();
+  console.log("Update market: ", updatedItem.contract, store().getData);
+  const found = store().getData.value.findIndex(
     (e) => updatedItem.contract == e.contract
   );
   if (found == -1) {
     console.log("AO: Add");
-    useMarketDisplayStore().getData.push(updatedItem);
+    store().getData.value.push(updatedItem);
   } else {
     console.log("AO: Update");
-    useMarketDisplayStore().getData[found] = updatedItem;
+    store().getData.value[found] = updatedItem;
   }
 }
-// export const useMarketDisplayStore = defineStore("marketDisplay", {
-//   state: (): State => ({
-//     marketDisplayData: [],
-//   }),
-//   actions: {
-//     setData(items: Model[]) {
-//       this.marketDisplayData = items;
-//     },
-//     updateItem(updatedItem: Model) {
-//       const currentItem = this.marketDisplayData.find(
-//         (e) => e.contract == updatedItem.contract
-//       );
-//       if (currentItem) {
-//         // found
-//         for (const key in currentItem) {
-//           if (
-//             currentItem.hasOwnProperty(key) &&
-//             currentItem[key as keyof Model] !==
-//               updatedItem[key as keyof Model]
-//           ) {
-//             const temp = updatedItem[key as keyof Model];
-//             currentItem[key as keyof Model] = temp;
-//           }
-//         }
-//       } else {
-//         // not found -> add
-//         this.marketDisplayData.push(updatedItem);
-//       }
-//     },
-//   },
 
-//   getters: {
-//     getData: (state) => state.marketDisplayData,
-//   },
+// export const useMarketDisplayStore = defineStore("marketDisplay", () => {
+//   const data: Ref<MainModel[]> = ref([]);
+//   const getData = computed(() => data);
+
+//   function setData(items: MainModel[]) {
+//     data.value = items;
+//   }
+//   function updateItem(updatedItem: MainModel) {
+//     const temp = data.value.findIndex(
+//       (e) => e.contract == updatedItem.contract
+//     );
+
+//     if (temp == -1) {
+//       data.value.push(updatedItem);
+//     } else {
+//       data.value[temp] = updatedItem;
+//     }
+//   }
+//   async function loadApiData() {
+//     const res = await getMarketDisplay();
+//     setData(res);
+//     console.log("Loaded market display: ", res);
+//   }
+//   return {
+//     loadApiData,
+//     getData,
+//     setData,
+//     updateItem,
+//   };
 // });
+
+// export function createBaseStore<T, U extends MyActions = {}>(
+//   name: string,
+//   baseFunc?: {
+//     updateEvent: ((updatedItem: T) => void) | undefined;
+//   },
+//   customActions?: U
+// ) {
+//   const { updateEvent } = baseFunc || {};
+
+//   const store = defineStore(name, () => {
+//     const data = ref([]) as Ref<T[]>;
+
+//     function setData(items: T[]) {
+//       data.value = items;
+//     }
+
+//     function updateItem(updatedItem: T) {
+//       if (updateEvent) {
+//         console.log("Custom item update: ", updatedItem);
+//         updateEvent(updatedItem);
+//         return;
+//       }
+
+//       console.log("Update item: ", updatedItem);
+//       const temp = data.value.findIndex((e) => e == updatedItem);
+
+//       if (temp == -1) {
+//         data.value.push(updatedItem);
+//       } else {
+//         data.value[temp] = updatedItem;
+//       }
+//     }
+
+//     function initData(arr: T[]) {
+//       console.log("Init data: ", arr.length, data.value.length);
+//       data.value = arr;
+//     }
+
+//     const getData = computed(() => data.value);
+
+//     const baseStore: BaseStore<T> = {
+//       data,
+//       setData,
+//       updateItem,
+//       initData,
+//       getData,
+//     };
+
+//     return {
+//       ...baseStore,
+//       ...(customActions as U),
+//     };
+//   });
+
+//   return store;
+// }

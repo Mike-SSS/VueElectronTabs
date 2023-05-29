@@ -20,7 +20,8 @@
           item-key="_groupKey"
           :headers="getSortedHeaders"
           :items="tableData.items"
-          ><template
+        >
+          <!-- <template
             v-slot:group-header="{
               item,
               columns,
@@ -49,8 +50,8 @@
                 v-if="subItem._isGroup && isGroupOpen(item)"
                 :slot="'group-header'"
                 :key="subItem._isGroup"
-              >Main flow
-                <!-- <template v-slot="subSlotData">
+              >Main flow -->
+          <!-- <template v-slot="subSlotData">
                   <template v-slot:group-header="groupHeaderData">
                     <group-header
                       v-bind="groupHeaderData"
@@ -58,13 +59,13 @@
                     ></group-header>
                   </template>
                 </template> -->
-              </tr>
+          <!-- </tr>
               <tr
                 
               >else</tr>
             </template>
-          </template>
-          <template
+          </template> -->
+          <!-- <template
             v-slot:item.data-table-select="{ item, toggleSelect, isSelected }"
           >
             <v-checkbox-btn
@@ -78,7 +79,8 @@
             ></v-checkbox-btn>
           </template>
           <template #bottom></template
-        ></v-data-table>
+        > -->
+        </v-data-table>
         <!-- <v-data-table
           v-model="state.selectedRows"
           density="compact"
@@ -180,19 +182,15 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  defineProps,
-  ref,
-  Ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
+import { computed, ref, Ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import { useAppStore } from "@/store/app";
-import { useContractsStore } from "@/store/contracts";
+// import { useContractsStore } from "@/store/contracts";
 import { useActiveOrdersStore } from "@/store/activeOrders";
+import {
+  CustomActiveOrderActions,
+  useCustomActiveOrderStore,
+} from "@/store/customActiveOrders";
 
 import CommonToolbar from "@/components/CommonToolbar.vue";
 
@@ -213,6 +211,7 @@ import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 import CloseComponentButton from "@/components/CloseComponentButton.vue";
 import { ActionButton } from "@/models/UI";
+// import { MarketDisplayStoreActions } from "@/store/marketDisplay";
 
 interface TableItem {
   _open: boolean;
@@ -220,7 +219,10 @@ interface TableItem {
   items: TableItem[] | MainModel[];
 }
 const appStore = useAppStore();
-const mainStore = useActiveOrdersStore();
+const mainStore = useCustomActiveOrderStore();
+// const mainStore = useActiveOrdersStore();
+// const tStore = useActiveOrdersStore();
+
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
 const headers: any[] = [
@@ -250,8 +252,9 @@ const headers: any[] = [
   { title: "O/QTY", key: "originalQuantity" },
   { title: "Principle Agency", key: "principleAgency" },
 ];
-const getSortedHeaders = computed(() =>
-  state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+const getSortedHeaders = computed(
+  () => state.selectedHeaders
+  // .sort((a, b) => (a.order < b.order ? -1 : 1))
 );
 
 const groupingHeaders = ref([]);
@@ -448,28 +451,57 @@ function onRowClicked(e: any, a: any) {
   console.log("Clicked on row - a - ", a);
   console.log("Clicked on row - e - ", e);
 }
-const { socket, filteredData, subscribeToSelected, typedArray } =
-  useWebSocket<MainModel>(
+
+onMounted(() => {
+  console.log(
+    "Custom store customActions: ",
+    useCustomActiveOrderStore,
     useActiveOrdersStore,
-    endpoint,
-    filters,
-    {
-      name: "ActiveOrderUpdate",
-      func: processUpdate,
-    },
-    async () => {
-      console.log("Active Order init function IE publish all active orders");
-      if (socket.value) {
-        console.log("Has socket");
-        socket.value?.invoke("PublishAllData", PublishAll.ActiveOrders);
-      }
-    }
+    mainStore
   );
+});
+const { socket, subscribe, filteredData, typedArray } = useWebSocket<
+  MainModel,
+  CustomActiveOrderActions
+>(
+  useCustomActiveOrderStore(),
+  endpoint,
+  filters,
+  {
+    name: "marketUpdate",
+    func: processUpdate,
+  },
+  async () => {
+    console.log("Futures/Market init function");
+    if (socket.value) {
+      console.log("Has socket");
+      // socket.value?.invoke("PublishAllData", PublishAll.ContractDate);
+    }
+  }
+);
+mainStore().customActions?.customActions?.customAction();
+// const { socket, filteredData, subscribeToSelected, typedArray } =
+//   useWebSocket<MainModel, CustomActiveOrderActions>(
+//     useCustomActiveOrderStore(),
+//     endpoint,
+//     filters,
+//     {
+//       name: "ActiveOrderUpdate",
+//       func: processUpdate,
+//     },
+//     async () => {
+//       console.log("Active Order init function IE publish all active orders");
+//       if (socket.value) {
+//         console.log("Has socket");
+//         socket.value?.invoke("PublishAllData", PublishAll.ActiveOrders);
+//       }
+//     }
+//   );
 function processUpdate(message: string) {
   try {
     const temp = typedArray<MainModel>(message);
     temp.forEach((e) => {
-      mainStore.updateItem(e);
+      mainStore().updateItem(e);
     });
     console.log("Parsed update : ", temp);
     //

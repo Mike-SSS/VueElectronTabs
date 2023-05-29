@@ -129,7 +129,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
 import { useAuthStore } from "@/store/authStore";
-import { noAuthInstance, axiosInstance } from "@/plugins/axios";
+
 import { Ref } from "vue";
 import router from "@/router";
 
@@ -176,28 +176,6 @@ const credentials: Ref<{
   password: null,
   reveal: false,
 });
-/**
- * Gets the user profile object from HQ
- *
- * @function
- * @returns {Promise<boolean>} A promise that resolves to true if call is successful, false otherwise.
- */
-async function getHQAccessProfile(): Promise<unknown> {
-  try {
-    // Make call to backend to login - all call need /api/{controller}
-    const res = await axiosInstance.get("/api/authenticate/getHQAccess");
-    if (res && res.data) {
-      // Assign data to the store
-      console.log("Data for hq: ", res.data);
-
-      authStore.setHQ(res.data);
-      return res.data;
-    }
-  } catch (err) {
-    return Promise.reject(err);
-  }
-  return false;
-}
 
 /**
  * Performs user authentication using the provided credentials.
@@ -222,38 +200,27 @@ async function submitLogin(): Promise<boolean> {
   try {
     loading.value = true;
     // Make call to backend to login - all call need /api/{controller}
-    const res = await noAuthInstance.post("/api/authenticate/login", {
-      email: credentials.value.username,
-      password: credentials.value.password,
-    });
-    if (res && res.data) {
-      // Assign data to the store
-      authStore.setLoginResponse(res.data);
-      if (res.data.token) {
-        authStore.setToken(res.data.token);
-      }
-      if (authStore.token != null) {
-        // Get HQ access data model
-        const hq = await getHQAccessProfile();
-        if (hq) {
-          return (
-            (await router.push({
-              name: "Trading",
-            })) == undefined
-          );
-        }
-        console.log("HQ ", hq);
-      } else {
-        return false;
-      }
+    const res = await authStore.loginUser(
+      credentials.value.username,
+      credentials.value.password
+    );
+    if (!res) {
+      throw "Not logged in";
     }
+    const hq = await authStore.loadHQAccess();
+    if (hq == false) {
+      throw "No token";
+    }
+    return (
+      (await router.push({
+        name: "Trading",
+      })) == undefined
+    );
   } catch (err) {
     return Promise.reject(err);
   } finally {
     loading.value = false;
   }
-
-  return false;
 }
 </script>
 

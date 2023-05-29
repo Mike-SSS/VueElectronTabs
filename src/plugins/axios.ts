@@ -2,12 +2,12 @@ import axios, { isCancel, AxiosError } from "axios";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from '@/store/toastStore';
 
-const toastStore = useToastStore();
 
-const authStore = useAuthStore();
 
-const token = "Bearer " + authStore.token;
-console.log(process.env, authStore.token);
+// const authStore = useAuthStore();
+
+// const token = "Bearer " + authStore.token;
+// console.log(process.env, authStore.token);
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_APP_API_URL,
@@ -15,6 +15,7 @@ const instance = axios.create({
 });
 // Add an interceptor to update the Authorization header before each request
 instance.interceptors.request.use((config) => {
+  const authStore = useAuthStore();
   const token = authStore.token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -29,6 +30,7 @@ instance.interceptors.response.use(
     return response;
   },
   (error) => {
+    const toastStore = useToastStore();
     console.log("Error axios: ", error);
     // If there was an error, show a toast with the error message
     if (error.response && error.response.data) {
