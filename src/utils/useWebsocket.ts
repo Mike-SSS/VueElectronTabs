@@ -57,10 +57,7 @@ type WebSocketHookReturn<T extends WebSocketDataType> = {
 export type CustomActions<T> = {
   [key: string]: (entity: T) => void;
 };
-export function useWebSocket<
-  T extends WebSocketDataType,
-   CustomAction
->(
+export function useWebSocket<T extends WebSocketDataType, CustomAction>(
   // store: ReturnType<typeof createBaseStore<T>>,
   createStore: ReturnType<typeof createBaseStore<T, CustomAction>>,
   // store: BaseStoreType<T, U>,

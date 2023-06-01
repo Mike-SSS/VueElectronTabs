@@ -4,7 +4,7 @@ import { defineStore } from "pinia";
 import { Ref, computed, ref } from "vue";
 import { createBaseStore } from "./baseStore";
 
-export const useCompletedOrdersStore = createBaseStore<MainModel, {}>("completedOrders", {
+export const useCompletedOrdersStore = createBaseStore<MainModel, {}>("completedOrders", "clearingMember", {
     updateEvent: updateStore,
 });
 

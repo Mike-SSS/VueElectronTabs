@@ -26,11 +26,11 @@
           :items-per-page="-1"
         >
           <template v-slot:group-header="{ item, columns, toggleGroup }">
-            <tr :id="'group_' + item.value">
+            <tr :id="'group_' + item.value" style="height: 20px">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
-                  size="small"
-                  variant="text"
+                  :size="25"
+                  variant="plain"
                   :icon="'$expand'"
                   @click="toggleGroup(item)"
                 ></v-btn>
@@ -55,9 +55,27 @@
                   density="compact"
                   color="transparent"
                   variant="flat"
+                  :height="20"
                   v-bind="props"
-                  :text="item.columns.bid ? item.columns.bid.toString() : '0'"
-                ></v-btn>
+                  class="positive"
+                  v-mutate="{
+                    handler: onTextChange,
+                    options: {
+                      characterData: true,
+                      childList: true,
+                      subtree: true,
+                    },
+                  }"
+                >
+                  <span class="v-data-table__td"
+                    >{{ item.columns.bid ? item.columns.bid.toString() : "0" }}
+                  </span>
+                  <!-- <span v-mutate="onMutate">
+                    <span>{{
+                      item.columns.bid ? item.columns.bid.toString() : "0"
+                    }}</span>
+                  </span> -->
+                </v-btn>
               </template>
             </v-tooltip>
           </template>
@@ -68,12 +86,23 @@
                   @click.prevent.stop="openTradeModal(item.raw, BuySell.Sell)"
                   density="compact"
                   color="transparent"
+                  :height="20"
                   variant="flat"
                   v-bind="props"
-                  :text="
-                    item.columns.offer ? item.columns.offer.toString() : '0'
-                  "
-                ></v-btn>
+                  class="negative"
+                  v-mutate="{
+                    handler: onTextChange,
+                    options: {
+                      characterData: true,
+                      childList: true,
+                      subtree: true,
+                    },
+                  }"
+                >
+                  <span class="v-data-table__td">{{
+                    item.columns.offer ? item.columns.offer.toString() : "0"
+                  }}</span>
+                </v-btn>
               </template>
             </v-tooltip>
           </template>
@@ -133,7 +162,7 @@
               :id="header.title"
             >
               <template v-slot:prepend>
-                <v-list-item-action start>
+                <v-list-item-action>
                   <v-checkbox-btn
                     @change="updateHeader($event, header)"
                     :model-value="state.selectedHeaders.find((e: any) => e.key == header.key) != null"
@@ -312,8 +341,7 @@
         <v-card-text>
           <v-data-table
             density="compact"
-            class="tableData"
-            :items="filteredData"
+            :items="notSelectedData"
             v-model="state.instrumentsToAdd"
             :headers="state.selectedHeaders"
             multi-sort
@@ -332,15 +360,26 @@
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
-                    size="small"
+                    :size="25"
                     variant="text"
                     icon="$expand"
                     @click="toggleGroup(item)"
                   ></v-btn>
-                  {{ item.value }} ({{ columns.length }})
+                  {{ item.value }} ({{ item.items.length }})
                 </td>
               </tr>
             </template>
+            <template
+              v-slot:item.data-table-select="{ item, toggleSelect, isSelected }"
+            >
+              <v-checkbox-btn
+                style="font-size: 0.7rem"
+                color="primary"
+                :model-value="isSelected([item])"
+                @click.stop.prevent="() => toggleSelect(item)"
+              ></v-checkbox-btn>
+            </template>
+            <template #bottom></template>
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -387,14 +426,95 @@ export type DataTableHeaderCustom = {
   maxWidth?: string;
   sortable?: boolean;
 };
-
 const mainStore = useMarketDisplayStore();
 
 const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
+const notSelectedData = computed(() =>
+  filteredData.value.filter(
+    (x) =>
+      state.currentSubscriptions.findIndex((e) => e.contract == x.contract) ==
+      -1
+  )
+);
+
 const endpoint = "/market";
 const { calculateTableHeight, Reference } = useTableHeightCalculator();
+function getOppositeDirection(
+  dir: "positive" | "negative" | "none"
+): "positive" | "negative" | "none" {
+  switch (dir) {
+    case "positive":
+      return "negative";
+    case "negative":
+      return "positive";
+    default:
+      return "none";
+  }
+}
+function onTextChange(
+  mutationList: MutationRecord[],
+  observer: MutationObserver
+) {
+  // console.log("On text change ", mutationList, observer);
+  mutationList.forEach((mutation: MutationRecord) => {
+    if (
+      mutation.type === "childList" &&
+      mutation.addedNodes.length &&
+      mutation.removedNodes.length
+    ) {
+      const addedNode = mutation.addedNodes[0] as Text;
+      const removedNode = mutation.removedNodes[0] as Text;
+
+      if (addedNode.data !== removedNode.data) {
+        const oldValue = removedNode.data;
+        const newValue = addedNode.data;
+
+        const temp = (mutation.target as any).offsetParent as Element;
+        let dir: "positive" | "negative" | "none" = "none";
+        if (temp && temp.classList) {
+          if (temp.classList.contains("positive")) {
+            console.log("Positive");
+            dir = "positive";
+          } else if (temp.classList.contains("negative")) {
+            console.log("Negative");
+            dir = "negative";
+          }
+        }
+
+        // console.log(
+        //   `Old value: ${oldValue}, New value: ${newValue}, Dir: ${dir} vs ${getOppositeDirection(
+        //     dir
+        //   )}`
+        // );
+        if (dir == "none") return;
+        // Perform additional actions here, such as adding a class for a color change
+        if (newValue < oldValue) {
+          // Added value is larger, indicating an upward movement
+          (mutation.target as Element).classList.remove(`text-${dir}`);
+          (mutation.target as Element).classList.add(
+            `text-${getOppositeDirection(dir)}`
+          );
+          setTimeout(() => {
+            (mutation.target as Element).classList.remove(
+              `text-${getOppositeDirection(dir)}`
+            );
+          }, 2000); // remove after 2 seconds
+        } else if (newValue > oldValue) {
+          // Added value is smaller, indicating a downward movement
+          (mutation.target as Element).classList.remove(
+            `text-${getOppositeDirection(dir)}`
+          );
+          (mutation.target as Element).classList.add(`text-${dir}`);
+          setTimeout(() => {
+            (mutation.target as Element).classList.remove(`text-${dir}`);
+          }, 2000); // remove after 2 seconds
+        }
+      }
+    }
+  });
+}
 
 const actionButtons = ref<ActionButton[]>([
   {
@@ -465,7 +585,7 @@ function processUpdate(message: string) {
   try {
     const temp = typedArray<MainModel>(message);
     temp.forEach((e) => {
-      console.log("Process update - Update item in store")
+      console.log("Process update - Update item in store");
       mainStore().updateItem(e);
     });
     console.log("Parsed update : ", temp);
@@ -557,14 +677,82 @@ const subscribeToSelected = () => {
   console.log("Subscribing to : ", state.instrumentsToAdd);
   subscribe(state.instrumentsToAdd.map((e) => e.contract));
   state.instrumentsToAdd.forEach((e) => {
-    state.currentSubscriptions.push(e);
+    const found = filteredData.value.findIndex(
+      (match) => e.contract == match.contract
+    );
+    if (found == -1) return;
+    console.log("Subscribe to index: ", found);
+    state.currentSubscriptions.push(filteredData.value[found]);
   });
   state.instrumentsToAdd.splice(0);
 };
 </script>
 <style lang="scss">
-// .v-table > .v-table__wrapper > table > thead > tr > th {
-//   padding-left: 5px;
-//   padding-right: 5px;
+@keyframes fadePositiveTextToBlack {
+  0% {
+    color: lightgreen;
+  }
+  50% {
+    color: mediumseagreen;
+  }
+  100% {
+    color: black;
+  }
+}
+
+@keyframes fadeNegativeTextToBlack {
+  0% {
+    color: red;
+  }
+  50% {
+    color: darkred;
+  }
+  100% {
+    color: black;
+  }
+}
+
+@keyframes fadeNegativeBackgroundToTransparent {
+  0% {
+    background-color: red;
+  }
+  50% {
+    background-color: darkred;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes fadePositiveBackgroundToTransparent {
+  0% {
+    background-color: lightgreen;
+  }
+  50% {
+    background-color: mediumseagreen;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.text-positive {
+  animation: fadePositiveTextToBlack 4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s 1
+    normal forwards running;
+}
+
+.text-negative {
+  animation: fadeNegativeTextToBlack 4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s 1
+    normal forwards running;
+}
+
+// .text-up {
+//   animation: fadePositiveTextToBlack 2s ease-out forwards,
+//     fadePositiveBackgroundToTransparent 2s ease-out forwards;
+// }
+
+// .text-down {
+//   animation: fadeNegativeTextToBlack 2s ease-out forwards,
+//   fadeNegativeBackgroundToTransparent 2s ease-out forwards;
 // }
 </style>

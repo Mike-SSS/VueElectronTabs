@@ -29,7 +29,7 @@
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
-                  size="small"
+                  :size="25"
                   variant="text"
                   :icon="'$expand'"
                   @click="toggleGroup(item)"
@@ -164,7 +164,7 @@
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
-                    size="small"
+                    :size="25"
                     variant="text"
                     :icon="'$expand'"
                     @click="toggleGroup(item)"

@@ -51,7 +51,7 @@
                 :slot="'group-header'"
                 :key="subItem._isGroup"
               >Main flow -->
-          <!-- <template v-slot="subSlotData">
+        <!-- <template v-slot="subSlotData">
                   <template v-slot:group-header="groupHeaderData">
                     <group-header
                       v-bind="groupHeaderData"
@@ -59,13 +59,13 @@
                     ></group-header>
                   </template>
                 </template> -->
-          <!-- </tr>
+        <!-- </tr>
               <tr
                 
               >else</tr>
             </template>
           </template> -->
-          <!-- <template
+        <!-- <template
             v-slot:item.data-table-select="{ item, toggleSelect, isSelected }"
           >
             <v-checkbox-btn
@@ -94,13 +94,7 @@
           @click:row="onRowClicked"
           :items-per-page="-1"
         >
-          <template
-            v-slot:group-header="{
-              item,
-              columns,
-              toggleGroup,
-            }"
-          >
+          <template v-slot:group-header="{ item, columns, toggleGroup }">
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
@@ -116,6 +110,7 @@
             v-slot:item.data-table-select="{ item, toggleSelect, isSelected }"
           >
             <v-checkbox-btn
+              style="font-size: 0.5rem"
               color="primary"
               :disabled="
                 state.selectedRows.length >= 2 &&

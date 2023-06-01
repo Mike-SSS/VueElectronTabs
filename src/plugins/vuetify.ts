@@ -18,30 +18,38 @@ export default createVuetify({
   components: {
     ...labs,
   },
-  defaults:{
-   VTextField: {
+  defaults: {
+    VTextField: {
       density: "compact",
       variant: "outlined",
-      color: "primary"
+      color: "primary",
     },
     VSelect: {
       density: "compact",
       variant: "outlined",
-      color: "primary"
+      color: "primary",
     },
     VAutocomplete: {
       density: "compact",
       variant: "outlined",
-      color: "primary"
+      color: "primary",
+    },
+    VSelectionControl: {
+      density: "compact",
+      size: 20,
+    },
+    VCheckboxBtn: {
+      density: "compact",
+      size: 20,
     },
   },
-  theme: {    
+  theme: {
     themes: {
       light: {
         colors: {
           primary: "#316A36",
           secondary: "#5CBBF6",
-          background: "#E5E5E5"
+          background: "#E5E5E5",
         },
       },
     },

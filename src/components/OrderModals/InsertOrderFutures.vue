@@ -261,7 +261,7 @@ function enterTrade() {
     if (props.socket) {
       props.socket.invoke("InsertTrade", payload);
     }
-    open.value = false;;
+    open.value = false;
   } catch (err) {
     console.error(err);
   }

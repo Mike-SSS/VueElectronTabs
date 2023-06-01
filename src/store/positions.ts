@@ -16,7 +16,7 @@
 import { createBaseStore } from "@/store/baseStore";
 import { MarketDisplayItemPosition as MainModel } from "@/models/marketData";
 
-export const usePositionsStore = createBaseStore<MainModel, {}>("positions", {
+export const usePositionsStore = createBaseStore<MainModel, {}>("positions", "positionSeq" ,{
   updateEvent: updateStore,
 });
 

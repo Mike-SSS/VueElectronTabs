@@ -77,6 +77,7 @@ export type MyStoreGetters = {
 };
 export function createBaseStore<T, CustomAction>(
   name: string,
+  identifier: keyof T,
   baseFunc?: {
     updateEvent: ((updatedItem: T) => void) | undefined;
   },
@@ -84,6 +85,8 @@ export function createBaseStore<T, CustomAction>(
 ) {
   const { updateEvent } = baseFunc || {};
   console.log("Custom Actinos :", customActions);
+  const modelKeyIdentifier = identifier;
+
   const store = defineStore(name, () => {
     const data = ref([]) as Ref<T[]>;
     const getData = computed(() => data);
@@ -91,6 +94,38 @@ export function createBaseStore<T, CustomAction>(
     function setData(items: T[]) {
       console.log("Set data ", items.length);
       data.value = items;
+    }
+    // function updateObjectFields<T>(target: T, source: T): T {
+    //   for (const key in source) {
+    //     if (
+    //       Object.prototype.hasOwnProperty.call(source, key) &&
+    //       target[key] !== source[key as keyof T]
+    //     ) {
+    //       target[key as keyof T] = source[key as keyof T];
+    //     }
+    //   }
+    //   return target;
+    // }
+    function deepMerge<T>(target: T, source: T): T {
+      for (const key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          const keyString = key as keyof T;
+          if (isObject(source[keyString])) {
+            if (target[keyString] === undefined) {
+              target[keyString] = source[keyString];
+            } else {
+              deepMerge(target[keyString], source[keyString]);
+            }
+          } else {
+            target[keyString] = source[keyString];
+          }
+        }
+      }
+      return target;
+    }
+
+    function isObject(item: any): boolean {
+      return item && typeof item === "object" && !Array.isArray(item);
     }
     function updateItem(updatedItem: T) {
       if (updateEvent) {
@@ -100,12 +135,15 @@ export function createBaseStore<T, CustomAction>(
       }
 
       console.log("Update item: ", updatedItem);
-      const temp = data.value.findIndex((e) => e == updatedItem);
+      const temp = data.value.findIndex(
+        (e) => e[modelKeyIdentifier] === updatedItem[modelKeyIdentifier]
+      );
 
       if (temp == -1) {
         data.value.push(updatedItem);
       } else {
-        data.value[temp] = updatedItem;
+        deepMerge(data.value[temp], updatedItem);
+        // data.value[temp] = updatedItem;
       }
     }
     if (typeof customActions == "object" && customActions != null) {
@@ -114,6 +152,7 @@ export function createBaseStore<T, CustomAction>(
         data,
         getData,
         setData,
+        deepMerge,
         updateItem,
         customActions: {
           customActions,
@@ -127,6 +166,7 @@ export function createBaseStore<T, CustomAction>(
         data,
         getData,
         setData,
+        deepMerge,
         updateItem,
         customActions: {
           test: () => {

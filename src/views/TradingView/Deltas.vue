@@ -29,7 +29,7 @@
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
-                  size="small"
+                  :size="25"
                   variant="text"
                   :icon="'$expand'"
                   @click="toggleGroup(item)"
@@ -51,9 +51,7 @@
                   color="transparent"
                   variant="flat"
                   v-bind="props"
-                  :text="
-                    item.columns.bid ? item.columns.bid.toString() : '0'
-                  "
+                  :text="item.columns.bid ? item.columns.bid.toString() : '0'"
                 ></v-btn>
               </template>
             </v-tooltip>
@@ -216,17 +214,11 @@
             <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
             <!-- { item, columns, toggleGroup, isGroupOpen } -->
             <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-              }"
-            >
+            <template v-slot:group-header="{ item, columns, toggleGroup }">
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
-                    size="small"
+                    :size="25"
                     variant="text"
                     :icon="'$expand'"
                     @click="toggleGroup(item)"

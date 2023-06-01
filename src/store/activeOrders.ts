@@ -19,6 +19,7 @@ import { createBaseStore } from "./baseStore";
 
 export const useActiveOrdersStore = createBaseStore<MainModel, {}>(
   "activeOrder",
+  "activeOrderSeq",
   {
     updateEvent: updateStore,
   }

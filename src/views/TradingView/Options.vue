@@ -28,7 +28,7 @@
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
-                  size="small"
+                  :size="25"
                   variant="text"
                   :icon="'$expand'"
                   @click="toggleGroup(item)"
@@ -48,9 +48,7 @@
                   color="transparent"
                   variant="flat"
                   v-bind="props"
-                  :text="
-                    item.columns.bid ? item.columns.bid.toString() : '0'
-                  "
+                  :text="item.columns.bid ? item.columns.bid.toString() : '0'"
                 ></v-btn>
               </template>
             </v-tooltip>
@@ -214,7 +212,7 @@
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
-                    size="small"
+                    :size="25"
                     variant="text"
                     icon="$expand"
                     @click="toggleGroup(item)"

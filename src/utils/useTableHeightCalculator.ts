@@ -19,7 +19,7 @@ export function useTableHeightCalculator() {
   // Uses 'Reference' ref in component to identify. expose in return
   const calculateTableHeight = computed(() => {
     console.log("Reference: ", Reference.value);
-    if (Reference && Reference.value) {
+    if (Reference.value) {
       const col = Reference.value.$el as HTMLElement;
       const height = col.clientHeight;
       console.log("Height :", height, col.clientHeight, col);

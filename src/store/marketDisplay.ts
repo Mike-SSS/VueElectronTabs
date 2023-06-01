@@ -38,12 +38,15 @@ export interface MarketDisplayStoreActions extends MyStoreActions {
 //   // console.log("Signature ", baseStore.prototype)
 //   // return baseStore();
 // };
+// {
+//   updateEvent: updateStore,
+// }
+
 export const useMarketDisplayStore = () => {
   const store = createBaseStore<MainModel, MarketDisplayStoreActions>(
     "marketDisplay",
-    {
-      updateEvent: updateStore,
-    },
+    "contract",
+    undefined,
     {
       loadMarketDisplay: loadMarket,
     }
@@ -67,7 +70,11 @@ async function loadMarket() {
 
 function updateStore(updatedItem: MainModel) {
   const store = useMarketDisplayStore();
-  console.log("Update market: ", updatedItem.contract, store().getData.value.length);
+  console.log(
+    "Update market: ",
+    updatedItem.contract,
+    store().getData.value.length
+  );
   const found = store().getData.value.findIndex(
     (e) => updatedItem.contract == e.contract
   );
@@ -76,7 +83,12 @@ function updateStore(updatedItem: MainModel) {
     store().data.push(updatedItem);
   } else {
     console.log("AO: Update - ", found);
-    store().data[found] = updatedItem;
+    // store().data[found] = updatedItem;
+    for (const key in updatedItem) {
+      if (store().data[found][key] !== updatedItem[key]) {
+        store().data[found][key] = updatedItem[key];
+      }
+    }
   }
 }
 

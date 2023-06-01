@@ -3,7 +3,6 @@ import { ComponentRegistry } from "@/models/componentRegistry";
 import { LAYOUT } from "@/models/layout";
 import { defineStore } from "pinia";
 
-
 interface State {
   layout: LAYOUT | null;
   layoutOptions: LAYOUT[];
@@ -13,7 +12,67 @@ export const useLayoutStore = defineStore("layout", {
   state: (): State => ({
     //
     layout: null,
-    layoutOptions: [      
+    layoutOptions: [
+      {
+        name: "Layout 1",
+        columns: [
+          {
+            grid: {
+              "grid-column": "1 / span 12",
+              "grid-row": "1 / span 6",
+            },
+            color: "primary",
+            content: "Column 1",
+            component: null,
+            id: "first",
+          },
+          {
+            grid: {
+              "grid-column": "1 / span 12",
+              "grid-row": "7 / span 6",
+            },
+            color: "blue",
+            content: "Column 1",
+            component: null,
+            id: "second",
+          },
+        ],
+      },
+      {
+        name: "Layout 2",
+        columns: [
+          {
+            grid: {
+              "grid-column": "1 / span 12",
+              "grid-row": "1 / span 6",
+            },
+            color: "primary",
+            content: "Column 1",
+            component: null,
+            id: "first",
+          },
+          {
+            grid: {
+              "grid-column": "1 / span 6",
+              "grid-row": "7 / span 6",
+            },
+            color: "blue",
+            content: "Column 1",
+            component: null,
+            id: "second",
+          },
+          {
+            grid: {
+              "grid-column": "7 / span 6",
+              "grid-row": "7 / span 6",
+            },
+            color: "orange",
+            content: "Column 1",
+            component: null,
+            id: "third",
+          }
+        ],
+      },
       {
         name: "Layout 3",
         columns: [

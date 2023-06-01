@@ -35,4 +35,12 @@ onUnmounted(() => {
 #app {
   background: var(--v-background-base);
 }
+#app .v-table--density-compact > .v-table__wrapper > table > tbody > tr > td,
+.v-table--density-compact > .v-table__wrapper > table > thead > tr > td,
+.v-table--density-compact > .v-table__wrapper > table > tfoot > tr > td {
+  height: calc(var(--v-table-row-height, 20px) - 25px) !important;
+}
+.v-selection-control--density-compact {
+  --v-selection-control-size: 22px !important;
+}
 </style>

@@ -130,6 +130,7 @@
             v-slot:item.data-table-select="{ item, toggleSelect, isSelected }"
           >
             <v-checkbox-btn
+              style="font-size: 0.5rem"
               color="primary"
               :disabled="
                 state.selectedRows.length >= 2 &&
@@ -640,23 +641,25 @@ const actionButtons = computed<ActionButton[]>(() => [
   },
 ]);
 
-const { socket, filteredData, subscribeToSelected, typedArray } =
-  useWebSocket<MainModel, {}>(
-    useDealsStore,
-    endpoint,
-    filters,
-    {
-      name: "DealsInsert",
-      func: processUpdate,
-    },
-    async () => {
-      console.log("Deals init function IE publish all deals??");
-      if (socket.value) {
-        console.log("Has socket");
-        socket.value?.invoke("PublishAllData", PublishAll.Deals);
-      }
+const { socket, filteredData, subscribeToSelected, typedArray } = useWebSocket<
+  MainModel,
+  {}
+>(
+  useDealsStore,
+  endpoint,
+  filters,
+  {
+    name: "DealsInsert",
+    func: processUpdate,
+  },
+  async () => {
+    console.log("Deals init function IE publish all deals??");
+    if (socket.value) {
+      console.log("Has socket");
+      socket.value?.invoke("PublishAllData", PublishAll.Deals);
     }
-  );
+  }
+);
 
 function openSplits() {
   console.log("Open splits");

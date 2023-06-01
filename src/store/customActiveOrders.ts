@@ -38,6 +38,7 @@ export const useCustomActiveOrderStore = () => {
   };
   const store = createBaseStore<MainModel, CustomActiveOrderActions>(
     "customActiveOrder",
+    "activeOrderSeq",
     {
       updateEvent: updateStore,
     },
@@ -86,6 +87,26 @@ export const useCustomActiveOrderStore = () => {
 //     );
 //   }
 // );
+
+// function updateItem(updatedItem: T) {
+//   if (updateEvent) {
+//     console.log("Custom item update: ", updatedItem);
+//     updateEvent(updatedItem);
+//     return;
+//   }
+
+//   console.log("Update item: ", updatedItem);
+//   const temp = data.value.findIndex(
+//     (e) => e[modelKeyIdentifier] === updatedItem[modelKeyIdentifier]
+//   );
+
+//   if (temp == -1) {
+//     data.value.push(updatedItem);
+//   } else {
+//     deepMerge(data.value[temp], updatedItem);
+//     // data.value[temp] = updatedItem;
+//   }
+// }
 function updateStore(updatedItem: MainModel) {
   const store = useCustomActiveOrderStore()();
   const store2 = useActiveOrdersStore();
@@ -107,7 +128,7 @@ function updateStore(updatedItem: MainModel) {
       store.data.splice(found, 1);
     } else {
       console.log("AO: Update");
-      store.data[found] = updatedItem;
+      store.deepMerge(store.data[found], updatedItem);
     }
   }
 }
