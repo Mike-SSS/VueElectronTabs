@@ -26,14 +26,14 @@ function updateStore(updatedItem: MainModel) {
     updatedItem.positionSeq,
     usePositionsStore().getData
   );
-  const found = usePositionsStore().getData.findIndex(
+  const found = usePositionsStore().getData.value.findIndex(
     (e) => updatedItem.positionSeq == e.positionSeq
   );
   if (found == -1) {
     console.log("POS: Add");
-    usePositionsStore().getData.push(updatedItem);
+    usePositionsStore().getData.value.push(updatedItem);
   } else {
     console.log("POS: Update");
-    usePositionsStore().getData[found] = updatedItem;
+    usePositionsStore().getData.value[found] = updatedItem;
   }
 }

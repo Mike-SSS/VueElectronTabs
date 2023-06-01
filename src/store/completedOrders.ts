@@ -10,13 +10,13 @@ export const useCompletedOrdersStore = createBaseStore<MainModel, {}>("completed
 
 function updateStore (updatedItem: MainModel) {
     console.log("Update Completed order " , updatedItem.completedOrderSeq, useCompletedOrdersStore().getData);
-    const found = useCompletedOrdersStore().getData.findIndex(e => updatedItem.completedOrderSeq == e.completedOrderSeq)
+    const found = useCompletedOrdersStore().getData.value.findIndex(e => updatedItem.completedOrderSeq == e.completedOrderSeq)
     if (found == -1) {
         console.log("CO: Add");
-        useCompletedOrdersStore().getData.push(updatedItem);
+        useCompletedOrdersStore().getData.value.push(updatedItem);
     } else {
         console.log("CO: Update");
-        useCompletedOrdersStore().getData[found] = updatedItem;
+        useCompletedOrdersStore().getData.value[found] = updatedItem;
     }
 }
 

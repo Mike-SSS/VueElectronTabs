@@ -25,30 +25,77 @@
           height="100%"
           fixed-header
         >
-          <!-- <template
-            v-slot:group-header="{
-              item,
-              columns,
-              toggleGroup,
-              isGroupOpen,
-              isSelected,
-              toggleSelect,
-            }"
-          >
+          <template v-slot:group-header="{ item, columns, toggleGroup }">
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
                   size="small"
                   variant="text"
-                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                  :icon="'$expand'"
                   @click="toggleGroup(item)"
                 ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
-          </template> -->
+          </template>
           <template #bottom></template>
-          <template #item.constractDisplay.strike="{ item }"> {{ item.columns.strike }} D</template>
+          <template #item.constractDisplay.strike="{ item }">
+            {{ item.columns.strike }} D</template
+          >
+          <template #item.bid="{ item }">
+            <v-tooltip text="Insert Bid" content-class="bg-success">
+              <template #activator="{ props }">
+                <v-btn
+                  @click.prevent.stop="openTradeModal(item.raw, BuySell.Buy)"
+                  density="compact"
+                  color="transparent"
+                  variant="flat"
+                  v-bind="props"
+                  :text="
+                    item.columns.bid ? item.columns.bid.toString() : '0'
+                  "
+                ></v-btn>
+              </template>
+            </v-tooltip>
+          </template>
+          <template #item.offer="{ item }">
+            <v-tooltip text="Insert Offer" content-class="bg-error">
+              <template #activator="{ props }">
+                <v-btn
+                  @click.prevent.stop="openTradeModal(item.raw, BuySell.Sell)"
+                  density="compact"
+                  color="transparent"
+                  variant="flat"
+                  v-bind="props"
+                  :text="
+                    item.columns.offer ? item.columns.offer.toString() : '0'
+                  "
+                ></v-btn>
+              </template>
+            </v-tooltip>
+          </template>
+          <template #item.change="{ item }">
+            <span
+              :class="
+                item.columns.change < 0
+                  ? 'text-red'
+                  : item.columns.change == 0
+                  ? ''
+                  : 'text-blue'
+              "
+              >{{ item.columns.change }}</span
+            ></template
+          >
+          <template #item.last="{ item }">
+            <span
+              :class="
+                item.columns.last < item.columns.offer
+                  ? 'text-red'
+                  : 'text-blue'
+              "
+              >{{ item.columns.last }}</span
+            ></template
+          >
         </v-data-table>
       </v-col>
     </v-row>
@@ -169,14 +216,11 @@
             <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
             <!-- { item, columns, toggleGroup, isGroupOpen } -->
             <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <!-- <template
+            <template
               v-slot:group-header="{
                 item,
                 columns,
                 toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
               }"
             >
               <tr :id="'group_' + item.value">
@@ -184,13 +228,13 @@
                   <v-btn
                     size="small"
                     variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                    :icon="'$expand'"
                     @click="toggleGroup(item)"
                   ></v-btn>
                   {{ item.value }}
                 </td>
               </tr>
-            </template> -->
+            </template>
             <template #item.contractDisplay.strike="{ item }">
               {{ item.value.contractDisplay.strike }}D
             </template>
@@ -214,22 +258,19 @@
 
 <script lang="ts" setup>
 //
-/* Sorting */ 
-/* Expiry (newest) */ 
-/* Strike (smallest to biggest) */ 
-/* Flag (C -> P) */ 
+/* Sorting */
+/* Expiry (newest) */
+/* Strike (smallest to biggest) */
+/* Flag (C -> P) */
 //
-import {
-  computed,
-  ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-} from "vue";
+import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
 import InsertOrder from "@/components/OrderModals/InsertOrderDeltas.vue";
 import { useAppStore } from "@/store/app";
-import { MarketDisplayStoreActions, useMarketDisplayStore } from "@/store/marketDisplay";
+import {
+  MarketDisplayStoreActions,
+  useMarketDisplayStore,
+} from "@/store/marketDisplay";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
 import { useWebSocket } from "@/utils/useWebsocket";
@@ -262,7 +303,11 @@ const tradeModal = reactive<{
   open: false,
   item: null,
 });
-
+function openTradeModal(item: MainModel, type: "None" | BuySell) {
+  tradeModal.item = item;
+  tradeModal.type = type;
+  tradeModal.open = true;
+}
 const actionButtons = ref<ActionButton[]>([
   {
     id: "1",
@@ -295,7 +340,10 @@ const filters: FilterCondition[] = [
   { field: "contractDisplay.strike", value: "0", operator: "!==" },
   { field: "contractDisplay.contracT_TYPE", value: 5, operator: "==" },
 ];
-const { socket, filteredData, subscribe, typedArray } = useWebSocket<MainModel, MarketDisplayStoreActions>(
+const { socket, filteredData, subscribe, typedArray } = useWebSocket<
+  MainModel,
+  MarketDisplayStoreActions
+>(
   useMarketDisplayStore(),
   endpoint,
   filters,
@@ -389,9 +437,10 @@ const headers: any[] = [
   // { title: "Last", key: "last" },
   { title: "Volume", key: "volume" },
 ];
-const getSortedHeaders = computed(() =>
-  // state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
-  state.selectedHeaders
+const getSortedHeaders = computed(
+  () =>
+    // state.selectedHeaders.sort((a, b) => (a.order < b.order ? -1 : 1))
+    state.selectedHeaders
 );
 const state = reactive<{
   openHeaderPicker: boolean;

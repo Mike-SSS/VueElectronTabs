@@ -19,33 +19,25 @@
         <v-data-table
           density="compact"
           :items="filteredData"
+          :group-by="[{ key: 'contractDisplay.instrument' }]"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
           :items-per-page="-1"
         >
-          <!-- <template
-            v-slot:group-header="{
-              item,
-              columns,
-              toggleGroup,
-              isGroupOpen,
-              isSelected,
-              toggleSelect,
-            }"
-          >
+          <template v-slot:group-header="{ item, columns, toggleGroup }">
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
                   size="small"
                   variant="text"
-                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                  :icon="'$expand'"
                   @click="toggleGroup(item)"
                 ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
-          </template> -->
+          </template>
           <template #bottom></template>
         </v-data-table>
       </v-col>
@@ -168,28 +160,19 @@
             <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
             <!-- { item, columns, toggleGroup, isGroupOpen } -->
             <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <!-- <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
-              }"
-            >
+            <template v-slot:group-header="{ item, columns, toggleGroup }">
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
                     size="small"
                     variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                    :icon="'$expand'"
                     @click="toggleGroup(item)"
                   ></v-btn>
                   {{ item.value }}
                 </td>
               </tr>
-            </template> -->
+            </template>
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -315,7 +298,8 @@ function updateHeader(e: Event, i: any) {
 const headers: any[] = [
   { title: "Member", key: "member" },
   { title: "Principal", key: "principal" },
-  { title: "Contract", key: "contractDisplay.contractDisplay", align: "start" },
+  // { title: "Instrument", key: "contractDisplay.instrument", align: "start" },
+  { title: "Expiry", key: "contractDisplay.contractDate", align: "start" },
   {
     title: "Open",
     key: "open",

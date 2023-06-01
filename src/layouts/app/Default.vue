@@ -74,11 +74,12 @@
             key="layout_manager"
             active-class="bg-amber"
             color="primary"
+            :disabled="!currentLayout"
             select-strategy="classic"
             @click="openLayoutManager"
             >Layout Manager</v-list-item
           >
-          <v-list-item
+          <!-- <v-list-item
             prepend-icon="mdi-cog"
             key="configure_current"
             active-class="bg-amber"
@@ -86,7 +87,7 @@
             select-strategy="classic"
             @click="configureSelectedLayout"
             >Configure Current</v-list-item
-          >
+          > -->
           <v-divider></v-divider>
           <v-list-item
             v-for="(layout, index) in layoutOptions"
@@ -293,7 +294,7 @@ onMounted(async () => {
   if (!axiosInstance) {
     throw new Error("Axios instance not found");
   }
-  // await authStore.loadHQAccess();
+  await authStore.loadHQAccess();
   // const res = await marketDisplayStore().customActions?.loadMarketDisplay();
   
   console.log("Load market display :", marketDisplayStore().customActions.customActions?.loadMarketDisplay);

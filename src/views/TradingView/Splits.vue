@@ -24,29 +24,75 @@
           height="100%"
           fixed-header
         >
-          <!-- <template
-            v-slot:group-header="{
-              item,
-              columns,
-              toggleGroup,
-              isGroupOpen,
-              isSelected,
-              toggleSelect,
-            }"
-          >
+          <template v-slot:group-header="{ item, columns, toggleGroup }">
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
                   size="small"
                   variant="text"
-                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                  :icon="'$expand'"
                   @click="toggleGroup(item)"
                 ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
-          </template> -->
+          </template>
           <template #bottom></template>
+
+          <template #item.bid="{ item }">
+            <v-tooltip text="Insert Bid" content-class="bg-success">
+              <template #activator="{ props }">
+                <v-btn
+                  @click.prevent.stop="openTradeModal(item.raw, BuySell.Buy)"
+                  density="compact"
+                  color="transparent"
+                  variant="flat"
+                  v-bind="props"
+                  :text="
+                    item.columns.bid ? item.columns.bid.toString() : '0'
+                  "
+                ></v-btn>
+              </template>
+            </v-tooltip>
+          </template>
+          <template #item.offer="{ item }">
+            <v-tooltip text="Insert Offer" content-class="bg-error">
+              <template #activator="{ props }">
+                <v-btn
+                  @click.prevent.stop="openTradeModal(item.raw, BuySell.Sell)"
+                  density="compact"
+                  color="transparent"
+                  variant="flat"
+                  v-bind="props"
+                  :text="
+                    item.columns.offer ? item.columns.offer.toString() : '0'
+                  "
+                ></v-btn>
+              </template>
+            </v-tooltip>
+          </template>
+          <template #item.change="{ item }">
+            <span
+              :class="
+                item.columns.change < 0
+                  ? 'text-red'
+                  : item.columns.change == 0
+                  ? ''
+                  : 'text-blue'
+              "
+              >{{ item.columns.change }}</span
+            ></template
+          >
+          <template #item.last="{ item }">
+            <span
+              :class="
+                item.columns.last < item.columns.offer
+                  ? 'text-red'
+                  : 'text-blue'
+              "
+              >{{ item.columns.last }}</span
+            ></template
+          >
         </v-data-table>
       </v-col>
     </v-row>
@@ -168,28 +214,19 @@
             <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
             <!-- { item, columns, toggleGroup, isGroupOpen } -->
             <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <!-- <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
-              }"
-            >
+            <template v-slot:group-header="{ item, columns, toggleGroup }">
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
                     size="small"
                     variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                    :icon="'$expand'"
                     @click="toggleGroup(item)"
                   ></v-btn>
                   {{ item.value }}
                 </td>
               </tr>
-            </template> -->
+            </template>
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -240,6 +277,12 @@ const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
 
 const endpoint = "/market";
+
+function openTradeModal(item: MainModel, type: "None" | BuySell) {
+  tradeModal.item = item;
+  tradeModal.type = type;
+  tradeModal.open = true;
+}
 
 const tradeModal = reactive<{
   open: boolean;

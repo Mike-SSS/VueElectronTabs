@@ -67,16 +67,16 @@ async function loadMarket() {
 
 function updateStore(updatedItem: MainModel) {
   const store = useMarketDisplayStore();
-  console.log("Update market: ", updatedItem.contract, store().getData);
+  console.log("Update market: ", updatedItem.contract, store().getData.value.length);
   const found = store().getData.value.findIndex(
     (e) => updatedItem.contract == e.contract
   );
   if (found == -1) {
     console.log("AO: Add");
-    store().getData.value.push(updatedItem);
+    store().data.push(updatedItem);
   } else {
-    console.log("AO: Update");
-    store().getData.value[found] = updatedItem;
+    console.log("AO: Update - ", found);
+    store().data[found] = updatedItem;
   }
 }
 

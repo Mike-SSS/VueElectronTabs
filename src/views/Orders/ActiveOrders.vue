@@ -16,12 +16,12 @@
     ></CommonToolbar>
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
-        <v-data-table
+        <!-- <v-data-table
           item-key="_groupKey"
           :headers="getSortedHeaders"
           :items="tableData.items"
         >
-          <!-- <template
+          <template
             v-slot:group-header="{
               item,
               columns,
@@ -77,11 +77,11 @@
               :model-value="isSelected(item)"
               @click.stop.prevent="() => toggleSelect(item)"
             ></v-checkbox-btn>
-          </template>
+          </template> 
           <template #bottom></template
-        > -->
-        </v-data-table>
-        <!-- <v-data-table
+        >
+        </v-data-table>-->
+        <v-data-table
           v-model="state.selectedRows"
           density="compact"
           :items="filteredData"
@@ -99,9 +99,6 @@
               item,
               columns,
               toggleGroup,
-              isGroupOpen,
-              isSelected,
-              toggleSelect,
             }"
           >
             <tr :id="'group_' + item.value">
@@ -109,7 +106,6 @@
                 <v-btn
                   size="small"
                   variant="text"
-                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
                   @click="toggleGroup(item)"
                 ></v-btn>
                 {{ item.value }}
@@ -132,7 +128,7 @@
             ></v-checkbox-btn>
           </template>
           <template #bottom></template>
-        </v-data-table> -->
+        </v-data-table>
       </v-col>
     </v-row>
     <VDialog
@@ -239,6 +235,8 @@ const headers: any[] = [
   { title: "Principal", key: "userCode" },
   { title: "Sub Acc", key: "subAccount" },
   { title: "Member", key: "member" },
+  { title: "Ref", key: "userRef" },
+  { title: "Exchange Ref", key: "exchangeRef" },
   { title: "Dealer", key: "dealer" },
   { title: "Buy/Sell", key: "buySell" },
   { title: "Order State", key: "orderState" },
@@ -468,14 +466,14 @@ const { socket, subscribe, filteredData, typedArray } = useWebSocket<
   endpoint,
   filters,
   {
-    name: "marketUpdate",
+    name: "ActiveOrderUpdate",
     func: processUpdate,
   },
   async () => {
-    console.log("Futures/Market init function");
+    console.log("Active Orders init function");
     if (socket.value) {
       console.log("Has socket");
-      // socket.value?.invoke("PublishAllData", PublishAll.ContractDate);
+      socket.value?.invoke("PublishAllData", PublishAll.ActiveOrders);
     }
   }
 );
@@ -501,6 +499,7 @@ function processUpdate(message: string) {
   try {
     const temp = typedArray<MainModel>(message);
     temp.forEach((e) => {
+      // mainStore().getData.value.find(inner => e.activeOrderSeq == inner.activeOrderSeq);
       mainStore().updateItem(e);
     });
     console.log("Parsed update : ", temp);

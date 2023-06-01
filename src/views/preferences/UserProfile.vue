@@ -15,18 +15,21 @@
       <v-col class="text-left" cols="6">
         <v-select
           v-model="selected.branch"
+          no-data-text="No Branches loaded"
           label="Branch"
-          :items="branches"
-        ></v-select>
-        <v-select
-          v-model="selected.client"
-          label="Client"
-          :items="clients"
+          :items="branches"          
         ></v-select>
         <v-select
           v-model="selected.dealer"
           label="Dealer"
           :items="dealers"
+          no-data-text="Be sure to select a branch"
+        ></v-select>
+        <v-select
+          v-model="selected.client"
+          label="Client"
+          :items="clients"
+          no-data-text="Be sure to select a dealer"
         ></v-select>
       </v-col>
     </v-row>
@@ -57,21 +60,58 @@ const selected = reactive<{
   branch: null,
   dealer: null,
 });
-const branches = computed(() => hq.value?.clientCodes.map((e) => e.branch));
-const clients = computed(() => {
-  if (
-    selected.branch &&
-    hq.value &&
-    hq.value.clientCodes.find((e) => e.branch == selected.branch)
-  ) {
-    return hq.value.clientCodes
-      .find((e) => e.branch == selected.branch)
-      ?.clientCodes.splice(0, 50);
+const branches = computed(() => {
+  if (!hq.value) return [];
+  if (hq.value.setup == "Dealer") {
+    if (!hq.value.masterDealerCodes) return [];
+    return hq.value.masterDealerCodes.map((e) => e.branch);
   } else {
-    return [];
+    if (!hq.value.clientCodes) return [];
+    return hq.value.clientCodes.map((e) => e.branch);
   }
 });
-const dealers = computed(() => hq.value?.dealer);
+const clients = computed(() => {
+  if (!selected.branch) return [];
+
+  if (!hq.value) return [];
+  if (hq.value.setup == "Dealer") {
+    if (!hq.value.masterDealerCodes) return [];
+    const branch = hq.value.masterDealerCodes.find(
+      (e) => e.branch == selected.branch
+    );
+    if (!branch) return [];
+    return branch.clientCodes;
+  } else {
+    if (!hq.value.clientCodes) return [];
+    const branch = hq.value.clientCodes.find(
+      (e) => e.branch == selected.branch
+    );
+    if (!branch) return [];
+    const _dealer = branch.codesPerDealer.find(
+      (e) => e.dealerCode == selected.dealer
+    );
+    if (!_dealer) return [];
+    return _dealer.clientCodes;
+  }
+});
+const dealers = computed(() => {
+  if (!selected.branch) return [];
+  if (!hq.value) return [];
+  if (hq.value.setup == "Dealer") {
+    if (!hq.value.masterDealerCodes) return [];
+    const branch = hq.value.masterDealerCodes.find((e) => e.dealers);
+    if (!branch) return [];
+    return branch.dealers;
+  } else {
+    if (!hq.value.clientCodes) return [];
+    const branch = hq.value.clientCodes.find(
+      (e) => e.branch == selected.branch
+    );
+    if (!branch) return [];
+    const _dealers = branch.codesPerDealer.map((e) => e.dealerCode);
+    return _dealers;
+  }
+});
 const hq = computed(() => authStore.getHQ);
 </script>
 

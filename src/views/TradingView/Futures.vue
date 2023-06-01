@@ -25,28 +25,19 @@
           fixed-header
           :items-per-page="-1"
         >
-          <!-- <template
-            v-slot:group-header="{
-              item,
-              columns,
-              toggleGroup,
-              isGroupOpen,
-              isSelected,
-              toggleSelect,
-            }"
-          >
+          <template v-slot:group-header="{ item, columns, toggleGroup }">
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
                   size="small"
                   variant="text"
-                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                  :icon="'$expand'"
                   @click="toggleGroup(item)"
                 ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
-          </template> -->
+          </template>
           <template #bottom></template>
           <!-- <template v-slot:item="props">
             {{ Object.keys(props) }}
@@ -65,9 +56,7 @@
                   color="transparent"
                   variant="flat"
                   v-bind="props"
-                  :text="
-                    item.columns.bid ? item.columns.bid.toString() : 'undef'
-                  "
+                  :text="item.columns.bid ? item.columns.bid.toString() : '0'"
                 ></v-btn>
               </template>
             </v-tooltip>
@@ -82,7 +71,7 @@
                   variant="flat"
                   v-bind="props"
                   :text="
-                    item.columns.offer ? item.columns.offer.toString() : 'undef'
+                    item.columns.offer ? item.columns.offer.toString() : '0'
                   "
                 ></v-btn>
               </template>
@@ -369,7 +358,10 @@ import { computed, ref, reactive, nextTick } from "vue";
 import InsertOrder from "@/components/OrderModals/InsertOrderFutures.vue";
 
 import { useAppStore } from "@/store/app";
-import { useMarketDisplayStore, MarketDisplayStoreActions } from "@/store/marketDisplay";
+import {
+  useMarketDisplayStore,
+  MarketDisplayStoreActions,
+} from "@/store/marketDisplay";
 import { useWebSocket } from "@/utils/useWebsocket";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 import {
@@ -382,6 +374,20 @@ import { ActionButton } from "@/models/UI";
 import CommonToolbar from "@/components/CommonToolbar.vue";
 import { onMounted } from "vue";
 import { BuySell } from "@/models/trading";
+
+export type DataTableHeaderCustom = {
+  key: string;
+  title: string;
+  colspan?: number;
+  rowspan?: number;
+  fixed?: boolean;
+  align?: "start" | "end" | "center";
+  width?: number | string;
+  minWidth?: string;
+  maxWidth?: string;
+  sortable?: boolean;
+};
+
 const mainStore = useMarketDisplayStore();
 
 const emits = defineEmits(["newComp", "closeComp"]);
@@ -393,6 +399,19 @@ const { calculateTableHeight, Reference } = useTableHeightCalculator();
 const actionButtons = ref<ActionButton[]>([
   {
     id: "1",
+    tooltip: "Sync",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-sync",
+    textField: null,
+    action: async () => {
+      const store = useMarketDisplayStore();
+      await store().customActions.customActions?.loadMarketDisplay();
+    },
+  },
+  {
+    id: "2",
     tooltip: "Instruments",
     color: "white",
     variant: "tonal",
@@ -404,7 +423,7 @@ const actionButtons = ref<ActionButton[]>([
     },
   },
   {
-    id: "2",
+    id: "3",
     tooltip: "Table Headers",
     color: "white",
     variant: "tonal",
@@ -423,7 +442,10 @@ const filters: FilterCondition[] = [
   { field: "contractDisplay.contracT_TYPE", value: 1, operator: "==" },
 ];
 
-const { socket, subscribe, filteredData, typedArray } = useWebSocket<MainModel, MarketDisplayStoreActions>(
+const { socket, subscribe, filteredData, typedArray } = useWebSocket<
+  MainModel,
+  MarketDisplayStoreActions
+>(
   useMarketDisplayStore(),
   endpoint,
   filters,
@@ -443,6 +465,7 @@ function processUpdate(message: string) {
   try {
     const temp = typedArray<MainModel>(message);
     temp.forEach((e) => {
+      console.log("Process update - Update item in store")
       mainStore().updateItem(e);
     });
     console.log("Parsed update : ", temp);
@@ -470,23 +493,21 @@ function updateHeader(e: Event, i: any) {
     state.selectedHeaders.push(i);
   }
 }
-const headers: any[] = [
+const headers: DataTableHeaderCustom[] = [
   // { title: "Contract", key: "contract", align: "start" },
-  { title: "Expiry", key: "contractDisplay.contractDate", order: 1 },
+  { title: "Expiry", key: "contractDisplay.contractDate" },
   // { title: "Instrument", key: "contractDisplay.instrument" },
   {
     title: "B/QTY",
     key: "qtyBid",
-    order: 2,
   },
   {
     title: "Bid",
     key: "bid",
-    order: 3,
   },
-  { title: "Offer", key: "offer", order: 4 },
-  { title: "O/QTY", key: "qtyOffer", order: 5 },
-  { title: "Change", key: "change", order: 6 },
+  { title: "Offer", key: "offer" },
+  { title: "O/QTY", key: "qtyOffer" },
+  { title: "Change", key: "change" },
   { title: "Last", key: "last" },
   { title: "Time", key: "time" },
   { title: "High", key: "hi" },
@@ -532,51 +553,6 @@ function closetradeModal() {
   tradeModal.open = false;
   tradeModal.item = null;
 }
-
-// function enterTrade() {
-//   if (!tradeModal.form || !tradeModal.item || tradeModal.type == "None") {
-//     console.error("Not ready to trade, something is not set");
-//     return;
-//   }
-//   console.log(
-//     `Trade ${tradeModal.form.qty} @ ${tradeModal.form.price} for ${tradeModal.item.contractDisplay.contractDisplay} `
-//   );
-//   const payload: IInsertOrder = {
-//     contractName: tradeModal.item.contract,
-//     buyOrSell: tradeModal.type == "Bid" ? true : false,
-//     dealerCode: tradeModal.form.dealer,
-//     memeberCode: "BVG4", // bvgm
-//     value: Number(tradeModal.form.price),
-//     qty: Number(tradeModal.form.qty),
-//     principal: tradeModal.form.principal,
-//     orderType: tradeModal.form.type,
-//     timeout_secs: 0,
-//     principalAgency:
-//       tradeModal.form.capacity == Capacity.PrincipalCapacity ? true : false,
-//     userRef: tradeModal.form.ref ? tradeModal.form.ref : "",
-//   };
-//   // const payload: IOrderMessage = {
-//   //   instructionType: InstructionType.Insert,
-//   //   time: Date.now().toString(),
-//   //   member: "",
-//   //   subAccount: "",
-//   //   msgType: MsgType.OrderMan,
-//   //   dealer: tradeModal.form.dealer,
-//   //   principal: tradeModal.form.principal,
-//   //   capacity: tradeModal.form.capacity, // agency(a) or principal(p)
-//   //   price: tradeModal.form.price,
-//   //   userRef: tradeModal.form.ref ? tradeModal.form.ref : "",
-//   //   contract: tradeModal.item.contract,
-//   //   qty: tradeModal.form.qty,
-//   //   buySell: tradeModal.type == "Bid" ? BuySell.Buy : BuySell.Sell,
-//   //   state: State.Active, // A active S suspended W waiting
-//   // };
-//   try {
-//     socket.value?.invoke("InsertTrade", payload);
-//   } catch (err) {
-//     console.error(err);
-//   }
-// }
 const subscribeToSelected = () => {
   console.log("Subscribing to : ", state.instrumentsToAdd);
   subscribe(state.instrumentsToAdd.map((e) => e.contract));

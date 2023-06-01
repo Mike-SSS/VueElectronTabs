@@ -14,7 +14,9 @@ interface HQ {
   userId: string;
   uniqueCode: string;
   setup: string;
+   // default for member in trading modals
   branch: string[];
+  // default for dealer in trading modals
   dealer: string[];
   safexCodes: string[];
   client: string[];
@@ -23,6 +25,7 @@ interface HQ {
   username: string;
   masterdealer: boolean;
   admin: boolean;
+  // when enabled. Cant see trade on contract table ( Bid / offer )
   viewOnly: boolean;
   onScreenLimit: number;
   optionLimit: number;

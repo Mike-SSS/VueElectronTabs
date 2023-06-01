@@ -45,7 +45,7 @@ export const useCustomActiveOrderStore = () => {
       customAction: customActions.customAction,
     }
   );
-    return store;
+  return store;
   // return {
   //   ...store(),
   //   ...customActions,
@@ -96,13 +96,18 @@ function updateStore(updatedItem: MainModel) {
     store2.getData
   );
   const found = store.getData.value.findIndex(
-    (e) => updatedItem.contract == e.contract
+    (e) => updatedItem.activeOrderSeq == e.activeOrderSeq
   );
   if (found == -1) {
     console.log("AO: Add");
     store.getData.value.push(updatedItem);
   } else {
-    console.log("AO: Update");
-    store.getData.value[found] = updatedItem;
+    if (updatedItem.quantity == 0) {
+      // remove item
+      store.data.splice(found, 1);
+    } else {
+      console.log("AO: Update");
+      store.data[found] = updatedItem;
+    }
   }
 }

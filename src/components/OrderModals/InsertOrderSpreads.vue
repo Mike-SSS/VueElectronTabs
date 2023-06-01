@@ -39,8 +39,12 @@
                   class="my-2"
                   label="Strike"
                   v-model.number="form.differential"
+                  :rules="[
+                    (msg: number) => !!msg || 'Differential Required',
+                    (msg: number) => msg >= 0 || 'Differential cannot be less or equal to 0',
+                  ]"
                 ></v-text-field
-                ></v-col>
+              ></v-col>
               <v-col cols="6"
                 ><v-select v-model="form.dealer" label="Dealer"></v-select>
                 <!-- <v-select
@@ -193,7 +197,7 @@ function enterTrade() {
   );
   const payload: IInsertOrderFutures = {
     contractName: props.item.contract,
-    buyOrSell: props.type,
+    buyOrSell: props.type == BuySell.Buy ? true : false,
     dealerCode: form.value.dealer,
     memeberCode: "BVG4", // bvgm
     value: Number(form.value.differential),
@@ -201,13 +205,15 @@ function enterTrade() {
     principal: form.value.principal,
     orderType: form.value.type,
     timeout_secs: 0,
-    principalAgency: form.value.capacity,
+    principalAgency:
+      form.value.capacity == Capacity.PrincipalCapacity ? true : false,
     userRef: form.value.ref ? form.value.ref : "Default",
   };
   try {
     if (props.socket) {
       props.socket.invoke("InsertTrade", payload);
     }
+    open.value = false;;
   } catch (err) {
     console.error(err);
   }

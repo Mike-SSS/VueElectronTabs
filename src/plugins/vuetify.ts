@@ -29,6 +29,11 @@ export default createVuetify({
       variant: "outlined",
       color: "primary"
     },
+    VAutocomplete: {
+      density: "compact",
+      variant: "outlined",
+      color: "primary"
+    },
   },
   theme: {    
     themes: {

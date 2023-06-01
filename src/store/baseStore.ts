@@ -111,6 +111,7 @@ export function createBaseStore<T, CustomAction>(
     if (typeof customActions == "object" && customActions != null) {
       console.log("Whoop base with custom!!!", customActions);
       return {
+        data,
         getData,
         setData,
         updateItem,
@@ -123,6 +124,7 @@ export function createBaseStore<T, CustomAction>(
       };
     } else {
       return {
+        data,
         getData,
         setData,
         updateItem,

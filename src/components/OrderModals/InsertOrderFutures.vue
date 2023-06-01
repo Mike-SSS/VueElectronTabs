@@ -20,13 +20,24 @@
           {{ type }} for
           {{ item ? item.contractDisplay.contractDisplay : "Empty" }}
         </v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row v-if="form">
+        <v-card-text class="pb-2">
+          <v-container v-if="form">
+            <v-row dense
+              ><v-col
+                ><v-radio-group hide-details inline v-model="form.capacity">
+                  <v-radio
+                    label="Principal"
+                    :value="Capacity.PrincipalCapacity"
+                  ></v-radio>
+                  <v-radio
+                    label="Agency"
+                    :value="Capacity.AgencyCapacity"
+                  ></v-radio> </v-radio-group></v-col
+            ></v-row>
+            <v-row>
               <v-col cols="6"
                 ><v-text-field
                   type="number"
-                  class="my-2"
                   label="QTY"
                   :rules="[
                     (msg: number) => !!msg || 'Qty Required',
@@ -36,30 +47,41 @@
                 ></v-text-field>
                 <v-text-field
                   type="number"
-                  class="my-2"
                   label="Price"
+                  :rules="[
+                    (msg: number) => !!msg || 'Price Required',
+                    (msg: number) => msg >= 0 || 'Qty cannot be less or equal to 0',
+                  ]"
                   v-model.number="form.price"
                 ></v-text-field
-                ><v-radio-group v-model="form.capacity">
-                  <v-radio
-                    label="Principal"
-                    :value="Capacity.PrincipalCapacity"
-                  ></v-radio>
-                  <v-radio
-                    label="Agency"
-                    :value="Capacity.AgencyCapacity"
-                  ></v-radio> </v-radio-group
+                ><v-select
+                  :items="branches"
+                  v-model="form.branch"
+                  clearable
+                  label="Member"
+                ></v-select
               ></v-col>
-              <v-col cols="6"
-                ><v-select v-model="form.dealer" label="Dealer"></v-select
-                >
+              <v-col cols="6">
+                <v-select
+                  :items="dealers"
+                  v-model="form.dealer"
+                  :disabled="!form.branch"
+                  clearable
+                  label="Dealer"
+                ></v-select>
+                <v-autocomplete
+                  v-model="form.principal"
+                  :disabled="!form.dealer"
+                  clearable
+                  :items="clients"
+                  label="Principal"
+                ></v-autocomplete>
                 <!-- <v-select
                   v-model="form.principal"
-                  :items="authStore.getHQ?.client"
+                  :items="clients"
                   label="Principal"
                 ></v-select> -->
-                <v-text-field v-model="form.ref" label="Ref"></v-text-field
-                >
+                <v-text-field v-model="form.ref" label="Ref"></v-text-field>
                 <v-select
                   :items="
                     Object.entries(MitsOrderType)
@@ -69,6 +91,7 @@
                   :return-object="false"
                   item-title="text"
                   item-value="value"
+                  hide-details
                   v-model="form.type"
                   label="Type"
                 ></v-select>
@@ -105,11 +128,13 @@ import {
   BuySell,
   IInsertOrderFutures,
 } from "@/models/trading";
+import { computed } from "vue";
 
 interface FormModel {
+  branch: string | null;
   qty: number;
   price: number;
-  dealer: string;
+  dealer: string | null;
   capacity: Capacity;
   principal: string;
   ref: string | null;
@@ -140,12 +165,20 @@ const valid = ref(false);
 const convertItemToForm = (item: MainModel): FormModel => {
   // Conversion logic goes here. Example:
   return {
+    branch: null,
     qty:
       props.type == BuySell.Sell ? Number(item.qtyBid) : Number(item.qtyOffer),
-    price: props.type == BuySell.Sell ? Number(item.bid) : Number(item.offer),
-    dealer: "BDA",
+    price:
+      props.type == BuySell.Sell
+        ? Number(item.bid) != 0
+          ? Number(item.bid)
+          : Number(item.last)
+        : Number(item.offer) != 0
+        ? Number(item.offer)
+        : Number(item.last),
+    dealer: null,
     capacity: Capacity.PrincipalCapacity,
-    principal: "BVGM",
+    principal: "BVGM", // user pref
     ref: null,
     type: MitsOrderType.Normal,
   };
@@ -181,32 +214,110 @@ function closeModal(): void {
   open.value = false;
 }
 function enterTrade() {
-  if (!valid.value || !props.item || !form.value || props.type == "None") {
+  if (
+    !valid.value ||
+    !props.item ||
+    !form.value ||
+    props.type == "None" ||
+    !form.value.branch ||
+    !form.value.dealer
+  ) {
     console.error("Not ready to trade, something is not set");
     return;
   }
   console.log(
     `Trade ${form.value.qty} @ ${form.value.price} for ${props.item.contractDisplay.contractDisplay} `
   );
+  //// Trade that worked
+  // const payload: IInsertOrderFutures = {
+  //   contractName: props.item.contract,
+  //   buyOrSell: true,
+  //   dealerCode: "CHR",
+  //   memeberCode: "BVG4", // bvgm
+  //   value: Number(form.value.price),
+  //   qty: Number(form.value.qty),
+  //   principal: "RUC332",
+  //   orderType: form.value.type,
+  //   timeout_secs: 0,
+  //   principalAgency: true,
+  //   userRef: form.value.ref ? form.value.ref : "Default",
+  // };
+
   const payload: IInsertOrderFutures = {
     contractName: props.item.contract,
-    buyOrSell: props.type,
+    buyOrSell: props.type == BuySell.Buy ? true : false,
     dealerCode: form.value.dealer,
-    memeberCode: "BVG4", // bvgm
+    memeberCode: form.value.branch, // bvgm
     value: Number(form.value.price),
     qty: Number(form.value.qty),
     principal: form.value.principal,
     orderType: form.value.type,
     timeout_secs: 0,
-    principalAgency: form.value.capacity,
+    principalAgency:
+      form.value.capacity == Capacity.PrincipalCapacity ? true : false,
     userRef: form.value.ref ? form.value.ref : "Default",
   };
   try {
     if (props.socket) {
       props.socket.invoke("InsertTrade", payload);
     }
+    open.value = false;;
   } catch (err) {
     console.error(err);
   }
 }
+const hq = computed(() => authStore.getHQ);
+const branches = computed(() => {
+  if (!hq.value) return [];
+  if (hq.value.setup == "Dealer") {
+    if (!hq.value.masterDealerCodes) return [];
+    return hq.value.masterDealerCodes.map((e) => e.branch);
+  } else {
+    if (!hq.value.clientCodes) return [];
+    return hq.value.clientCodes.map((e) => e.branch);
+  }
+});
+const clients = computed(() => {
+  if (!form.value || !form.value.branch) return [];
+
+  if (!hq.value) return [];
+  if (hq.value.setup == "Dealer") {
+    if (!hq.value.masterDealerCodes) return [];
+    const branch = hq.value.masterDealerCodes.find(
+      (e) => form.value && form.value.branch && e.branch == form.value.branch
+    );
+    if (!branch) return [];
+    return branch.clientCodes;
+  } else {
+    if (!hq.value.clientCodes) return [];
+    const branch = hq.value.clientCodes.find(
+      (e) => form.value && form.value.branch && e.branch == form.value.branch
+    );
+    if (!branch) return [];
+    const _dealer = branch.codesPerDealer.find(
+      (e) =>
+        form.value && form.value.branch && e.dealerCode == form.value.dealer
+    );
+    if (!_dealer) return [];
+    return _dealer.clientCodes;
+  }
+});
+const dealers = computed(() => {
+  // if (!form.value.branch) return [];
+  if (!hq.value) return [];
+  if (hq.value.setup == "Dealer") {
+    if (!hq.value.masterDealerCodes) return [];
+    const branch = hq.value.masterDealerCodes.find((e) => e.dealers);
+    if (!branch) return [];
+    return branch.dealers;
+  } else {
+    if (!hq.value.clientCodes) return [];
+    const branch = hq.value.clientCodes.find(
+      (e) => form.value && form.value.branch && e.branch == form.value.branch
+    );
+    if (!branch) return [];
+    const _dealers = branch.codesPerDealer.map((e) => e.dealerCode);
+    return _dealers;
+  }
+});
 </script>

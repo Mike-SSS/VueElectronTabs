@@ -31,14 +31,14 @@ function updateStore(updatedItem: MainModel) {
     updatedItem.activeOrderSeq,
     store.getData
   );
-  const found = store.getData.findIndex(
+  const found = store.getData.value.findIndex(
     (e) => updatedItem.activeOrderSeq == e.activeOrderSeq
   );
   if (found == -1) {
     console.log("AO: Add");
-    store.getData.push(updatedItem);
+    store.getData.value.push(updatedItem);
   } else {
     console.log("AO: Update");
-    store.getData[found] = updatedItem;
+    store.getData.value[found] = updatedItem;
   }
 }

@@ -1,6 +1,7 @@
 <template>
   <v-navigation-drawer
     color="primary"
+    class="text-center"
     permanent
     rail-width="60"
     :rail="true"
@@ -52,7 +53,7 @@
             v-bind="props"
             icon
           >
-            <v-icon color="error">mdi-circle</v-icon>
+            <v-icon color="success">mdi-circle</v-icon>
           </v-btn>
         </template>
         <div class="text-h5">WS Heartbeat X:</div>
@@ -110,7 +111,7 @@
           }" -->
       <keep-alive>
         <component
-          v-for="(col, index) in currentLayout.columns"
+          v-for="(col) in currentLayout.columns"
           :class="`bg-` + col.color"
           :style="col.grid"
           :key="

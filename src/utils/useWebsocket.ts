@@ -114,73 +114,73 @@ export function useWebSocket<
       switch (operator) {
         case "==":
           if (fieldValue == value) {
-            console.log(
-              "== full : ",
-              fieldValue,
-              operator,
-              value,
-              fieldValue == value
-            );
+            // console.log(
+            //   "== full : ",
+            //   fieldValue,
+            //   operator,
+            //   value,
+            //   fieldValue == value
+            // );
           }
           return fieldValue == value;
 
         case "!==":
           if (fieldValue !== value) {
-            console.log(
-              "!== full : ",
-              fieldValue,
-              operator,
-              value,
-              fieldValue !== value,
-              fieldValue != value
-            );
+            // console.log(
+            //   "!== full : ",
+            //   fieldValue,
+            //   operator,
+            //   value,
+            //   fieldValue !== value,
+            //   fieldValue != value
+            // );
           }
           return fieldValue !== value;
         case ">":
           if (fieldValue <= value) {
-            console.log(
-              "> full : ",
-              fieldValue,
-              operator,
-              value,
-              fieldValue > value
-            );
+            // console.log(
+            //   "> full : ",
+            //   fieldValue,
+            //   operator,
+            //   value,
+            //   fieldValue > value
+            // );
           }
           return fieldValue > value;
 
         case "<":
           if (fieldValue >= value) {
-            console.log(
-              "< full : ",
-              fieldValue,
-              operator,
-              value,
-              fieldValue < value
-            );
+            // console.log(
+            //   "< full : ",
+            //   fieldValue,
+            //   operator,
+            //   value,
+            //   fieldValue < value
+            // );
           }
           return fieldValue < value;
 
         case ">=":
           if (fieldValue < value) {
-            console.log(
-              "Op full : ",
-              fieldValue,
-              operator,
-              value,
-              fieldValue >= value
-            );
+            // console.log(
+            //   "Op full : ",
+            //   fieldValue,
+            //   operator,
+            //   value,
+            //   fieldValue >= value
+            // );
           }
           return fieldValue >= value;
 
         case "<=":
           if (fieldValue > value) {
-            console.log(
-              "Op full : ",
-              fieldValue,
-              operator,
-              value,
-              fieldValue <= value
-            );
+            // console.log(
+            //   "Op full : ",
+            //   fieldValue,
+            //   operator,
+            //   value,
+            //   fieldValue <= value
+            // );
           }
           return fieldValue <= value;
         default:

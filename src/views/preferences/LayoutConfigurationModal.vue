@@ -14,6 +14,26 @@
       </v-card-subtitle>
       <v-card-text>
         <v-container>
+          <v-row>
+            <v-col cols="12">
+              <div class="text-h4">Available Functions</div>
+              <v-expansion-panels dne variant="popout" class="my-4">
+                <v-expansion-panel
+                  title="Re-order"
+                  text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+                ></v-expansion-panel>
+                <v-expansion-panel
+                  title="Switch to new layout"
+                  text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+                ></v-expansion-panel>
+                <v-expansion-panel
+                  title="Adding new components"
+                  text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+                ></v-expansion-panel> </v-expansion-panels
+            ></v-col>
+          </v-row>
+        </v-container>
+        <v-container>
           <v-row v-if="currentLayout">
             <v-col class="d-flex"
               ><div class="text-h4">Current Layout:</div>
@@ -46,7 +66,7 @@
                               v-if="item.raw"
                             >
                               <div
-                                v-for="(col, index) in item.raw.columns"
+                                v-for="col in item.raw.columns"
                                 :key="col.id"
                                 :class="`bg-` + col.color"
                                 class="text-center align-center"
@@ -65,7 +85,7 @@
               <div>
                 <div class="grid-container-mini" v-if="currentLayout">
                   <div
-                    v-for="(col, index) in currentLayout.columns"
+                    v-for="col in currentLayout.columns"
                     :key="col.id"
                     :class="`bg-` + col.color"
                     class="text-center align-center"
@@ -75,6 +95,7 @@
                       v-if="currentLayout != null"
                       hide-details="auto"
                       :value="col.component"
+                      :active="true"
                       :menu-props="{
                         closeOnContentClick: true,
                       }"
@@ -95,6 +116,14 @@
                       </template>
                       <template #no-data></template>
                       <template #prepend-item>
+                        <v-list-item active-class="bg-amber" color="primary">
+                          <Placeholder
+                            @newComp="addToChangeTo($event, col, 'current')"
+                            class="bg-transparent"
+                            :style="{}"
+                          ></Placeholder>
+                        </v-list-item>
+                        <v-divider></v-divider>
                         <v-list-item
                           title="None"
                           active-class="bg-amber"
@@ -104,7 +133,7 @@
                         >
                         </v-list-item>
                       </template>
-                      <template #item="{ item, index }">
+                      <template #item="{ item }">
                         <v-list-item
                           :subtitle="item.raw.component?.toString()"
                           :title="item.raw.id"
@@ -161,7 +190,7 @@
                               v-if="item.raw"
                             >
                               <div
-                                v-for="(col, index) in item.raw.columns"
+                                v-for="col in item.raw.columns"
                                 :key="col.id"
                                 :class="`bg-` + col.color"
                                 class="text-center align-center"
@@ -180,7 +209,7 @@
               <div>
                 <div class="grid-container-mini" v-if="state.changeToLayout">
                   <div
-                    v-for="(col, index) in state.changeToLayout.columns"
+                    v-for="col in state.changeToLayout.columns"
                     :key="col.id"
                     :class="`bg-` + col.color"
                     class="text-center align-center pa-2"
@@ -209,11 +238,9 @@
                     >
                       <template #no-data></template>
                       <template #prepend-item>
-                        <v-list-item
-                          active-class="bg-amber"
-                          color="primary"
-                        >
+                        <v-list-item active-class="bg-amber" color="primary">
                           <Placeholder
+                            @newComp="addToChangeTo($event, col, 'changeTo')"
                             class="bg-transparent"
                             :style="{}"
                           ></Placeholder>
@@ -353,7 +380,9 @@
         </v-container>
       </v-card-text>
       <v-card-actions class="justify-end">
-        <v-btn variant="tonal" color="primary">Confirm</v-btn>
+        <v-btn variant="tonal" @click="swapLayout" color="primary"
+          >Confirm</v-btn
+        >
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -368,30 +397,57 @@ import { ref } from "vue";
 import Placeholder from "@/views/TradingView/Placeholder.vue";
 import { watchEffect } from "vue";
 import { COLUMN, LAYOUT } from "@/models/layout";
+import { ComponentRegistry } from "@/models/componentRegistry";
 
-const storeLayout = useLayoutStore();
-const layoutOptions = computed(() => storeLayout.layoutOptions);
-const currentLayout = computed(() => storeLayout.currentLayout);
+const layoutStore = useLayoutStore();
+const layoutOptions = computed(() => layoutStore.layoutOptions);
+const currentLayout = computed(() => layoutStore.currentLayout);
 
+function addToChangeTo(
+  key: keyof ComponentRegistry,
+  col: COLUMN,
+  type: "current" | "changeTo"
+) {
+  console.log("Change to this -", key, col);
+  // only current layout can add more for now...
+  if (type == "current") {
+    if (!currentLayout.value) return;
+    const found = currentLayout.value.columns.find((e) => e.id == col.id);
+    if (!found) return;
+    found.component = key;
+  } else {
+    if (!state.changeToLayout) return;
+    const found = state.changeToLayout.columns.find((e) => e.id == col.id);
+    if (!found) return;
+    found.component = key;
+  }
+}
 const props = defineProps({
   modelValue: Boolean,
 });
+
 const state = reactive<{
   changeToLayout: LAYOUT | undefined;
 }>({
   changeToLayout: undefined,
 });
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(["update:modelValue"]);
 const open = ref(props.modelValue);
 
 const tab = ref(null);
 watchEffect(() => {
-  open.value = props.modelValue
-})
+  open.value = props.modelValue;
+});
 
 watchEffect(() => {
-  emit('update:modelValue', open.value)
-})
+  emit("update:modelValue", open.value);
+});
+
+function swapLayout() {
+  if (!state.changeToLayout) return;
+  layoutStore.setCurrentLayout(state.changeToLayout);
+  open.value = false;
+}
 
 function onSwapComponents(selected: COLUMN, current: COLUMN) {
   // Your custom function to handle the value change

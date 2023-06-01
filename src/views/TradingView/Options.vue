@@ -24,29 +24,75 @@
           :height="calculateTableHeight"
           fixed-header
         >
-          <!-- <template
-            v-slot:group-header="{
-              item,
-              columns,
-              toggleGroup,
-              isGroupOpen,
-              isSelected,
-              toggleSelect,
-            }"
-          >
+          <template v-slot:group-header="{ item, columns, toggleGroup }">
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
                   size="small"
                   variant="text"
-                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                  :icon="'$expand'"
                   @click="toggleGroup(item)"
                 ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
-          </template> -->
+          </template>
           <template #bottom></template>
+
+          <template #item.bid="{ item }">
+            <v-tooltip text="Insert Bid" content-class="bg-success">
+              <template #activator="{ props }">
+                <v-btn
+                  @click.prevent.stop="openTradeModal(item.raw, BuySell.Buy)"
+                  density="compact"
+                  color="transparent"
+                  variant="flat"
+                  v-bind="props"
+                  :text="
+                    item.columns.bid ? item.columns.bid.toString() : '0'
+                  "
+                ></v-btn>
+              </template>
+            </v-tooltip>
+          </template>
+          <template #item.offer="{ item }">
+            <v-tooltip text="Insert Offer" content-class="bg-error">
+              <template #activator="{ props }">
+                <v-btn
+                  @click.prevent.stop="openTradeModal(item.raw, BuySell.Sell)"
+                  density="compact"
+                  color="transparent"
+                  variant="flat"
+                  v-bind="props"
+                  :text="
+                    item.columns.offer ? item.columns.offer.toString() : '0'
+                  "
+                ></v-btn>
+              </template>
+            </v-tooltip>
+          </template>
+          <template #item.change="{ item }">
+            <span
+              :class="
+                item.columns.change < 0
+                  ? 'text-red'
+                  : item.columns.change == 0
+                  ? ''
+                  : 'text-blue'
+              "
+              >{{ item.columns.change }}</span
+            ></template
+          >
+          <template #item.last="{ item }">
+            <span
+              :class="
+                item.columns.last < item.columns.offer
+                  ? 'text-red'
+                  : 'text-blue'
+              "
+              >{{ item.columns.last }}</span
+            ></template
+          >
         </v-data-table>
       </v-col>
     </v-row>
@@ -164,28 +210,19 @@
             item-value="contract"
             :items-per-page="-1"
           >
-            <!-- <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
-              }"
-            >
+            <template v-slot:group-header="{ item, columns, toggleGroup }">
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
                     size="small"
                     variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                    icon="$expand"
                     @click="toggleGroup(item)"
                   ></v-btn>
                   {{ item.value }}
                 </td>
               </tr>
-            </template> -->
+            </template>
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -276,7 +313,11 @@ const actionButtons = ref<ActionButton[]>([
     },
   },
 ]);
-
+function openTradeModal(item: MainModel, type: "None" | BuySell) {
+  tradeModal.item = item;
+  tradeModal.type = type;
+  tradeModal.open = true;
+}
 const filters: FilterCondition[] = [
   { field: "contractDisplay.flag", value: "F", operator: "!==" },
   { field: "contractDisplay.contracT_TYPE", value: 2, operator: "==" },

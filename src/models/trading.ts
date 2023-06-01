@@ -40,7 +40,8 @@ export interface IMessage {
 }
 export interface IInsertOrderFutures {
   contractName: string;
-  buyOrSell: BuySell;
+  // buyOrSell: BuySell;
+  buyOrSell: boolean;
   dealerCode: string;
   memeberCode: string;
   value: number;
@@ -48,7 +49,7 @@ export interface IInsertOrderFutures {
   principal: string;
   orderType: MitsOrderType;
   timeout_secs: number;
-  principalAgency: Capacity;
+  principalAgency: boolean;
   userRef: string;
 }
 export enum InstructionType {
@@ -74,33 +75,43 @@ interface IOrderMessage extends IMessage {
   capacity: Capacity;
 }
 
+export interface IClientCodeDealer {
+  clientCodes: string[];
+  dealerCode: string;
+}
 
 export interface IClientCode {
-    branch: string;
-    clientCodes: string[];
+  branch: string;
+  codesPerDealer: IClientCodeDealer[];
+}
+export interface IMasterDealerCodes {
+  branch: string;
+  clientCodes: string[];
+  dealers: string[];
 }
 
 export interface IUser {
-    _id: number;
-    userId: string;
-    uniqueCode: string;
-    setup: string;
-    safexCodes: null | string[]; // or another appropriate type instead of null if applicable
-    client: string[];
-    branch: string[];
-    dealer: string[];
-    clientCodes: IClientCode[];
-    tradingSystem: string;
-    defaultCode: string;
-    username: string;
-    masterdealer: boolean;
-    admin: boolean;
-    viewOnly: boolean;
-    onScreenLimit: number;
-    optionLimit: number;
-    reportOnlyLimit: number;
-    createdBy: string;
-    createdDate: string; // or Date if you will parse the date
-    updatedBy: string;
-    updatedDate: string; // or Date if you will parse the date
+  _id: number;
+  userId: string;
+  uniqueCode: string;
+  setup: "Dealer" | "Retail Client";
+  safexCodes: null | string[]; // or another appropriate type instead of null if applicable
+  client: string[];
+  branch: string[];
+  dealer: string[];
+  clientCodes: IClientCode[] | null;
+  tradingSystem: string;
+  defaultCode: string;
+  username: string;
+  masterDealerCodes: null | IMasterDealerCodes[];
+  masterdealer: boolean;
+  admin: boolean;
+  viewOnly: boolean;
+  onScreenLimit: number;
+  optionLimit: number;
+  reportOnlyLimit: number;
+  createdBy: string;
+  createdDate: string; // or Date if you will parse the date
+  updatedBy: string;
+  updatedDate: string; // or Date if you will parse the date
 }

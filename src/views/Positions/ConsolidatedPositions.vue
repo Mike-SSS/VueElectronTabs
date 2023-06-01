@@ -5,83 +5,40 @@
     id="Futures"
     class="bg-grey overflow-y-auto d-flex flex-column"
   >
-    <v-row justify="space-between" align="center">
-      <v-col cols="auto">
-        <div class="text-h5">Consolidated Positions</div>
-      </v-col>
-      <v-col cols="auto">
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openHeaderPicker = true"
-          ><v-icon>mdi-table-headers-eye</v-icon></v-btn
-        >
-        <v-tooltip>
-          <template v-slot:activator="{ props }">
-            <v-btn
-              density="compact"
-              color="transparent"
-              variant="flat"
-              v-bind="props"
-              icon
-              ><v-icon>mdi-information</v-icon></v-btn
-            >
-          </template>
-          <div>Current status</div>
-          <div>
-            <v-icon
-              size="25"
-              :color="socket?.state == 'Connected' ? 'success' : 'error'"
-              >mdi-circle</v-icon
-            >
-          </div>
-          <div>Current status</div>
-        </v-tooltip>
-        <!-- lable and Add Instrument button here  -->
-        <v-btn
-          density="compact"
-          color="transparent"
-          variant="flat"
-          icon
-          @click="state.openInstruments = true"
-          ><v-icon>mdi-plus</v-icon></v-btn
-        >
-      </v-col>
-    </v-row>
+    <CommonToolbar
+      :socket-state="socket?.state"
+      :class="props.class"
+      :close-component="closeComponent"
+      :data-length="filteredData.length"
+      :action-buttons="actionButtons"
+      title="Consolidated Positions"
+      tooltip="This is more information on positions. Example description"
+    ></CommonToolbar>
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
           density="compact"
+          :items="filteredData"
           :group-by="[{ key: 'contractDisplay.instrument' }]"
-          :items="state.currentSubscriptions"
           :headers="getSortedHeaders"
           :height="calculateTableHeight"
           fixed-header
+          :items-per-page="-1"
         >
-          <!-- <template
-            v-slot:group-header="{
-              item,
-              columns,
-              toggleGroup,
-              isGroupOpen,
-              isSelected,
-              toggleSelect,
-            }"
-          >
+          <template v-slot:group-header="{ item, columns, toggleGroup }">
             <tr :id="'group_' + item.value">
               <td :colspan="columns.length" class="text-start">
                 <v-btn
                   size="small"
                   variant="text"
-                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                  :icon="'$expand'"
                   @click="toggleGroup(item)"
                 ></v-btn>
                 {{ item.value }}
               </td>
             </tr>
-          </template> -->
+          </template>
+          <template #bottom></template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -203,28 +160,19 @@
             <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
             <!-- { item, columns, toggleGroup, isGroupOpen } -->
             <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <!-- <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
-              }"
-            >
+            <template v-slot:group-header="{ item, columns, toggleGroup }">
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
                     size="small"
                     variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                    :icon="'$expand'"
                     @click="toggleGroup(item)"
                   ></v-btn>
                   {{ item.value }}
                 </td>
               </tr>
-            </template> -->
+            </template>
           </v-data-table>
         </v-card-text>
         <v-card-actions>
@@ -240,6 +188,7 @@
 <script lang="ts" setup>
 import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
+import CommonToolbar from "@/components/CommonToolbar.vue";
 
 import { useAppStore } from "@/store/app";
 import { usePositionsStore } from "@/store/positions";
@@ -252,6 +201,8 @@ import {
 } from "@/models/marketData";
 import { noAuthInstance } from "@/plugins/axios";
 import { MarketDisplayStoreActions } from "@/store/marketDisplay";
+import { ActionButton } from "@/models/UI";
+import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 const appStore = useAppStore();
 const mainStore = usePositionsStore();
 
@@ -263,6 +214,34 @@ const filters: FilterCondition[] = [
   { field: "contractDisplay.strike", value: 0, operator: "==" },
   { field: "contractDisplay.contracT_TYPE", value: 1, operator: "==" },
 ];
+const emits = defineEmits(["newComp", "closeComp"]);
+const { closeComponent } = useCommonComponentFunctions(emits);
+const actionButtons = computed<ActionButton[]>(() => [
+  {
+    id: "1",
+    tooltip: "Instruments",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-plus",
+    textField: null,
+    action: () => {
+      state.openInstruments = true;
+    },
+  },
+  {
+    id: "2",
+    tooltip: "Table Headers",
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-table-headers-eye",
+    textField: null,
+    action: () => {
+      state.openHeaderPicker = true;
+    },
+  },
+]);
 
 const { socket, subscribe, filteredData } = useWebSocket<MainModel, {}>(
   usePositionsStore,

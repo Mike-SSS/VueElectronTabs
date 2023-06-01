@@ -22,11 +22,24 @@
         </v-card-title>
         <v-card-text>
           <v-container v-if="form">
+            <v-row dense>
+              <v-col cols="auto">
+                <v-radio-group hide-details inline v-model="form.capacity">
+                  <v-radio
+                    label="Principal"
+                    :value="Capacity.PrincipalCapacity"
+                  ></v-radio>
+                  <v-radio
+                    label="Agency"
+                    :value="Capacity.AgencyCapacity"
+                  ></v-radio>
+                </v-radio-group>
+              </v-col>
+            </v-row>
             <v-row>
               <v-col cols="6"
                 ><v-text-field
                   type="number"
-                  class="my-2"
                   label="QTY"
                   :rules="[
                     (msg: number) => !!msg || 'Qty Required',
@@ -36,30 +49,53 @@
                 ></v-text-field>
                 <v-text-field
                   type="number"
-                  class="my-2"
                   label="Strike"
                   v-model.number="form.strike"
+                  :rules="[
+                    (msg: number) => !!msg || 'Strike Required',
+                    (msg: number) => msg >= 0 || 'Strike cannot be less or equal to 0',
+                  ]"
                 ></v-text-field
                 ><v-text-field
                   type="number"
-                  class="my-2"
                   label="Volatility"
                   v-model.number="form.volatility"
+                  :rules="[
+                    (msg: number) => !!msg || 'Volatility Required',
+                    (msg: number) => msg >= 0 || 'Volatility cannot be less or equal to 0',
+                  ]"
                 ></v-text-field
                 ><v-text-field
                   type="number"
-                  class="my-2"
                   label="Premium"
                   v-model.number="form.premium"
+                  :rules="[
+                    (msg: number) => !!msg || 'Premium Required',
+                    (msg: number) => msg >= 0 || 'Premium cannot be less or equal to 0',
+                  ]"
                 ></v-text-field
+                ><v-select
+                  :items="branches"
+                  v-model="form.branch"
+                  clearable
+                  label="Member"
+                ></v-select
               ></v-col>
-              <v-col cols="6"
-                ><v-select v-model="form.dealer" label="Dealer"></v-select>
-                <!-- <v-select
+              <v-col cols="6">
+                <v-select
+                  :items="dealers"
+                  v-model="form.dealer"
+                  :disabled="!form.branch"
+                  clearable
+                  label="Dealer"
+                ></v-select>
+                <v-autocomplete
                   v-model="form.principal"
-                  :items="authStore.getHQ?.client"
+                  :disabled="!form.dealer"
+                  clearable
+                  :items="clients"
                   label="Principal"
-                ></v-select> -->
+                ></v-autocomplete>
                 <v-text-field v-model="form.ref" label="Ref"></v-text-field>
                 <v-select
                   :items="
@@ -73,20 +109,6 @@
                   v-model="form.type"
                   label="Type"
                 ></v-select>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="auto">
-                <v-radio-group v-model="form.capacity">
-                  <v-radio
-                    label="Principal"
-                    :value="Capacity.PrincipalCapacity"
-                  ></v-radio>
-                  <v-radio
-                    label="Agency"
-                    :value="Capacity.AgencyCapacity"
-                  ></v-radio>
-                </v-radio-group>
               </v-col>
             </v-row>
           </v-container>
@@ -109,7 +131,7 @@
 </template>
 <script lang="ts" setup>
 import { HubConnection } from "@microsoft/signalr";
-import { PropType } from "vue";
+import { PropType, computed } from "vue";
 import { ref, watchEffect, watch } from "vue";
 import { MarketDisplayItemContract as MainModel } from "@/models/marketData";
 import { useAuthStore } from "@/store/authStore";
@@ -122,13 +144,14 @@ import {
 } from "@/models/trading";
 
 interface FormModel {
+  branch: string | null;
   qty: number;
   strike: number;
   volatility: number;
   premium: number;
-  dealer: string;
+  dealer: string | null;
   capacity: Capacity;
-  principal: string;
+  principal: string | null;
   ref: string | null;
   type: MitsOrderType;
 }
@@ -157,14 +180,15 @@ const valid = ref(false);
 const convertItemToForm = (item: MainModel): FormModel => {
   // Conversion logic goes here. Example:
   return {
+    branch: null,
     qty:
       props.type == BuySell.Sell ? Number(item.qtyBid) : Number(item.qtyOffer),
     strike: item.contractDisplay.strike,
     volatility: item.contractDisplay.strike,
     premium: item.contractDisplay.strike,
-    dealer: "BDA",
+    dealer: null,
     capacity: Capacity.PrincipalCapacity,
-    principal: "BVGM",
+    principal: null,
     ref: null,
     type: MitsOrderType.Normal,
   };
@@ -200,7 +224,15 @@ function closeModal(): void {
   open.value = false;
 }
 function enterTrade() {
-  if (!valid.value || !props.item || !form.value || props.type == "None") {
+  if (
+    !valid.value ||
+    !props.item ||
+    !form.value ||
+    props.type == "None" ||
+    !form.value.branch ||
+    !form.value.dealer ||
+    !form.value.principal
+  ) {
     console.error("Not ready to trade, something is not set");
     return;
   }
@@ -209,7 +241,7 @@ function enterTrade() {
   );
   const payload: IInsertOrderFutures = {
     contractName: props.item.contract,
-    buyOrSell: props.type,
+    buyOrSell: props.type == BuySell.Buy ? true : false,
     dealerCode: form.value.dealer,
     memeberCode: "BVG4", // bvgm
     value: Number(form.value.strike),
@@ -217,15 +249,71 @@ function enterTrade() {
     principal: form.value.principal,
     orderType: form.value.type,
     timeout_secs: 0,
-    principalAgency: form.value.capacity,
+    principalAgency:
+      form.value.capacity == Capacity.PrincipalCapacity ? true : false,
     userRef: form.value.ref ? form.value.ref : "Default",
   };
   try {
     if (props.socket) {
       props.socket.invoke("InsertTrade", payload);
     }
+    open.value = false;;
   } catch (err) {
     console.error(err);
   }
 }
+const hq = computed(() => authStore.getHQ);
+const branches = computed(() => {
+  if (!hq.value) return [];
+  if (hq.value.setup == "Dealer") {
+    if (!hq.value.masterDealerCodes) return [];
+    return hq.value.masterDealerCodes.map((e) => e.branch);
+  } else {
+    if (!hq.value.clientCodes) return [];
+    return hq.value.clientCodes.map((e) => e.branch);
+  }
+});
+const clients = computed(() => {
+  if (!form.value || !form.value.branch) return [];
+
+  if (!hq.value) return [];
+  if (hq.value.setup == "Dealer") {
+    if (!hq.value.masterDealerCodes) return [];
+    const branch = hq.value.masterDealerCodes.find(
+      (e) => form.value && form.value.branch && e.branch == form.value.branch
+    );
+    if (!branch) return [];
+    return branch.clientCodes;
+  } else {
+    if (!hq.value.clientCodes) return [];
+    const branch = hq.value.clientCodes.find(
+      (e) => form.value && form.value.branch && e.branch == form.value.branch
+    );
+    if (!branch) return [];
+    const _dealer = branch.codesPerDealer.find(
+      (e) =>
+        form.value && form.value.branch && e.dealerCode == form.value.dealer
+    );
+    if (!_dealer) return [];
+    return _dealer.clientCodes;
+  }
+});
+const dealers = computed(() => {
+  // if (!form.value.branch) return [];
+  if (!hq.value) return [];
+  if (hq.value.setup == "Dealer") {
+    if (!hq.value.masterDealerCodes) return [];
+    const branch = hq.value.masterDealerCodes.find((e) => e.dealers);
+    if (!branch) return [];
+    return branch.dealers;
+  } else {
+    if (!hq.value.clientCodes) return [];
+    const branch = hq.value.clientCodes.find(
+      (e) => form.value && form.value.branch && e.branch == form.value.branch
+    );
+    if (!branch) return [];
+    const _dealers = branch.codesPerDealer.map((e) => e.dealerCode);
+    return _dealers;
+  }
+});
 </script>
