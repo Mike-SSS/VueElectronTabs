@@ -88,3 +88,61 @@ code {
     background-color: #f9f9f9;
   }
 }
+
+@keyframes fadePositiveTextToBlack {
+  0% {
+    color: lightgreen;
+  }
+  50% {
+    color: mediumseagreen;
+  }
+  100% {
+    color: black;
+  }
+}
+
+@keyframes fadeNegativeTextToBlack {
+  0% {
+    color: red;
+  }
+  50% {
+    color: darkred;
+  }
+  100% {
+    color: black;
+  }
+}
+
+@keyframes fadeNegativeBackgroundToTransparent {
+  0% {
+    background-color: red;
+  }
+  50% {
+    background-color: darkred;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes fadePositiveBackgroundToTransparent {
+  0% {
+    background-color: lightgreen;
+  }
+  50% {
+    background-color: mediumseagreen;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.text-positive {
+  animation: fadePositiveTextToBlack 4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s 1
+    normal forwards running;
+}
+
+.text-negative {
+  animation: fadeNegativeTextToBlack 4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s 1
+    normal forwards running;
+}

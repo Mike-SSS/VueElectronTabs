@@ -94,49 +94,11 @@
         </v-data-table>
       </v-col>
     </v-row>
-    <v-dialog
+    <HeaderPicker
       v-model="state.openHeaderPicker"
-      scrollable
-      width="auto"
-      key="Futures_addInstruments"
-    >
-      <v-card height="80vh" min-width="300" color="white">
-        <v-card-title class="bg-primary"
-          ><v-row justify="space-between" align="center">
-            <v-col cols="10" sm="9">Instrument Headers</v-col>
-            <v-col cols="2" sm="auto"
-              ><v-btn
-                @click="state.openHeaderPicker = false"
-                size="small"
-                icon
-                color="transparent"
-                flat
-              >
-                <v-icon icon="mdi-close"></v-icon> </v-btn
-            ></v-col> </v-row
-        ></v-card-title>
-        <v-card-text>
-          <v-list>
-            <v-list-item
-              lines="one"
-              v-for="header in headers"
-              :key="header.title"
-              :title="header.title"
-              :id="header.title"
-            >
-              <template v-slot:prepend>
-                <v-list-item-action start>
-                  <v-checkbox-btn
-                    @change="updateHeader($event, header)"
-                    :model-value="state.selectedHeaders.find((e: any) => e.key == header.key) != null"
-                  ></v-checkbox-btn>
-                </v-list-item-action>
-              </template>
-            </v-list-item>
-          </v-list>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      v-model:tableHeaders.sync="headers"
+      v-model:selectedHeaders.sync="state.selectedHeaders"
+    ></HeaderPicker>
 
     <v-dialog
       v-model="state.openInstruments"
@@ -246,6 +208,7 @@
 /* Strike (smallest to biggest) */
 /* Flag (C -> P) */
 //
+import HeaderPicker from "@/components/HeaderPicker.vue";
 import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useAppStore } from "@/store/app";
 import {

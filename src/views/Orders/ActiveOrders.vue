@@ -126,55 +126,18 @@
         </v-data-table>
       </v-col>
     </v-row>
-    <VDialog
+    <HeaderPicker
       v-model="state.openHeaderPicker"
-      scrollable
-      width="auto"
-      key="Futures_addInstruments"
-    >
-      <VCard height="80vh" min-width="300" color="white">
-        <VCardTitle class="bg-primary"
-          ><v-row justify="space-between" align="center">
-            <v-col cols="10" sm="9">Instrument Headers</v-col>
-            <v-col cols="2" sm="auto"
-              ><v-btn
-                @click="state.openHeaderPicker = false"
-                size="small"
-                icon
-                color="transparent"
-                flat
-              >
-                <v-icon icon="mdi-close"></v-icon> </v-btn
-            ></v-col> </v-row
-        ></VCardTitle>
-        <VCardText>
-          <VList>
-            <VListItem
-              lines="one"
-              v-for="header in headers"
-              :key="header.title"
-              :title="header.title"
-              :id="header.title"
-            >
-              <template v-slot:prepend>
-                <VListItemAction start>
-                  <VCheckboxBtn
-                    @change="updateHeader($event, header)"
-                    :model-value="state.selectedHeaders.find((e: any) => e.key == header.key) != null"
-                  ></VCheckboxBtn>
-                </VListItemAction>
-              </template>
-            </VListItem>
-          </VList>
-        </VCardText>
-      </VCard>
-    </VDialog>
+      v-model:tableHeaders.sync="headers"
+      v-model:selectedHeaders.sync="state.selectedHeaders"
+    ></HeaderPicker>
   </v-container>
 </template>
 
 <script lang="ts" setup>
 import { computed, ref, Ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
+import HeaderPicker from "@/components/HeaderPicker.vue";
 import { useAppStore } from "@/store/app";
 // import { useContractsStore } from "@/store/contracts";
 import { useActiveOrdersStore } from "@/store/activeOrders";
@@ -308,6 +271,15 @@ const state = reactive<{
   instrumentsToAdd: [],
 });
 
+function openEditOrder() {}
+const dialogs = reactive({
+  subAccount: false,
+  splits: false,
+  correctPrinciple: false,
+  tripartite: false,
+  assignMember: false,
+});
+
 const actionButtons = computed<ActionButton[]>(() => [
   {
     id: "1",
@@ -319,7 +291,17 @@ const actionButtons = computed<ActionButton[]>(() => [
     icon: "mdi-text-box-edit",
     textField: null,
     action: () => {
-      //
+      // edit order
+      // Present modal first -> modal should submit
+
+      openEditOrder();
+      // if (state.selectedRows.length == 1) {
+      //   console.log("Suspend Order ", state.selectedRows);
+      //   socket.value?.invoke(
+      //     "EditActiveOrderBySeq",
+      //     state.selectedRows[0].activeOrderSeq
+      //   );
+      // }
     },
   },
   {
@@ -333,6 +315,13 @@ const actionButtons = computed<ActionButton[]>(() => [
     textField: null,
     action: () => {
       /* Suspend Order Action */
+      if (state.selectedRows.length == 1) {
+        console.log("Suspend Order ", state.selectedRows);
+        socket.value?.invoke(
+          "SuspendTrade",
+          state.selectedRows[0].activeOrderSeq
+        );
+      }
     },
   },
   {
@@ -346,6 +335,13 @@ const actionButtons = computed<ActionButton[]>(() => [
     textField: null,
     action: () => {
       /* Delete Order Action */
+      if (state.selectedRows.length == 1) {
+        console.log("Suspend Order ", state.selectedRows);
+        socket.value?.invoke(
+          "DeleteTrade",
+          state.selectedRows[0].activeOrderSeq
+        );
+      }
     },
   },
   // Assuming menu items are also part of action buttons

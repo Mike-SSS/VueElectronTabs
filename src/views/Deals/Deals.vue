@@ -168,289 +168,29 @@
         </v-data-table>
       </v-col>
     </v-row>
-    <VDialog
+    <HeaderPicker
       v-model="state.openHeaderPicker"
-      scrollable
-      width="auto"
-      key="Futures_addInstruments"
-    >
-      <VCard height="80vh" min-width="300" color="white">
-        <VCardTitle class="bg-primary"
-          ><v-row justify="space-between" align="center">
-            <v-col cols="10" sm="9">Instrument Headers</v-col>
-            <v-col cols="2" sm="auto"
-              ><v-btn
-                @click="state.openHeaderPicker = false"
-                size="small"
-                icon
-                color="transparent"
-                flat
-              >
-                <v-icon icon="mdi-close"></v-icon> </v-btn
-            ></v-col> </v-row
-        ></VCardTitle>
-        <VCardText>
-          <VList>
-            <VListItem
-              lines="one"
-              v-for="header in headers"
-              :key="header.title"
-              :title="header.title"
-              :id="header.title"
-            >
-              <template v-slot:prepend>
-                <VListItemAction start>
-                  <VCheckboxBtn
-                    @change="updateHeader($event, header)"
-                    :model-value="state.selectedHeaders.find((e: any) => e.key == header.key) != null"
-                  ></VCheckboxBtn>
-                </VListItemAction>
-              </template>
-            </VListItem>
-          </VList>
-        </VCardText>
-      </VCard>
-    </VDialog>
-    <v-dialog v-model="dialogs.assignMember" width="300">
-      <v-card>
-        <v-card-title class="bg-primary">Assign member</v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12">
-                <v-select
-                  density="compact"
-                  variant="outlined"
-                  label="Member"
-                ></v-select>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Price"
-                  type="number"
-                ></v-text-field>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Ref"
-                  type="string"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn density="compact" variant="tonal">Ok</v-btn>
-          <v-btn density="compact" variant="tonal">Cancel</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="dialogs.correctPrinciple" width="300">
-      <v-card>
-        <v-card-title class="bg-primary">Correct Principle</v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12">
-                <v-select
-                  density="compact"
-                  variant="outlined"
-                  label="Principle"
-                ></v-select>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Ref"
-                  type="string"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn density="compact" variant="tonal">Ok</v-btn>
-          <v-btn density="compact" variant="tonal">Cancel</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog
-      v-model="dialogs.splits"
-      min-width="300"
-      width="auto"
-      max-width="500"
-    >
-      <v-card>
-        <v-card-title class="bg-primary">Splits</v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="6">
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Qty"
-                  type="number"
-                ></v-text-field>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Price"
-                  type="number"
-                ></v-text-field>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Ref No"
-                  type="string"
-                ></v-text-field>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Ref No 2"
-                  type="string"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="6">
-                <v-select
-                  density="compact"
-                  variant="outlined"
-                  label="Principle"
-                ></v-select>
-                <v-select
-                  density="compact"
-                  variant="outlined"
-                  label="Dealer"
-                ></v-select>
-                <v-select
-                  density="compact"
-                  variant="outlined"
-                  label="Client Sub Acc"
-                ></v-select>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" style="border: 1px solid black">
-                <v-data-table :items-per-page="-1">
-                  <template #bottom></template>
-                </v-data-table>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn density="compact" variant="tonal">Ok</v-btn>
-          <v-btn density="compact" variant="tonal">Cancel</v-btn>
-          <v-btn density="compact" variant="tonal">Enter</v-btn>
-          <v-btn density="compact" variant="tonal">Delete</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog
+      v-model:tableHeaders.sync="headers"
+      v-model:selectedHeaders.sync="state.selectedHeaders"
+    ></HeaderPicker>
+    <AssignMemberModal
+      v-model="dialogs.assignMember"
+      :item="state.selectedRows[0]"
+    ></AssignMemberModal>
+    <CorrectPrincipleModal
+      v-model="dialogs.correctPrinciple"
+      :item="state.selectedRows[0]"
+    ></CorrectPrincipleModal>
+    <SplitModal v-model="dialogs.splits" :item="state.selectedRows[0]">
+    </SplitModal>
+    <TripartiteModal
       v-model="dialogs.tripartite"
-      min-width="300"
-      width="auto"
-      max-width="500"
-    >
-      <v-card>
-        <v-card-title class="bg-primary">Tripartite</v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12">
-                <v-select
-                  density="compact"
-                  variant="outlined"
-                  label="Tripartite"
-                ></v-select>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Price"
-                  type="number"
-                ></v-text-field>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Ref"
-                  type="string"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn density="compact" variant="tonal">Ok</v-btn>
-          <v-btn density="compact" variant="tonal">Cancel</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="dialogs.subAccount" width="300">
-      <v-card>
-        <v-card-title class="bg-primary">Sub Account</v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="6">
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Qty"
-                  type="number"
-                ></v-text-field>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Price"
-                  type="number"
-                ></v-text-field>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Ref No"
-                  type="string"
-                ></v-text-field>
-                <v-text-field
-                  density="compact"
-                  variant="outlined"
-                  label="Ref No 2"
-                  type="string"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="6">
-                <v-select
-                  density="compact"
-                  variant="outlined"
-                  label="Principle"
-                ></v-select>
-                <v-select
-                  density="compact"
-                  variant="outlined"
-                  label="Dealer"
-                ></v-select>
-                <v-select
-                  density="compact"
-                  variant="outlined"
-                  label="Client Sub Acc"
-                ></v-select>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" style="border: 1px solid black">
-                <v-data-table :items-per-page="-1">
-                  <template #bottom></template>
-                </v-data-table>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn density="compact" variant="tonal">Ok</v-btn>
-          <v-btn density="compact" variant="tonal">Cancel</v-btn>
-          <v-btn density="compact" variant="tonal">Enter</v-btn>
-          <v-btn density="compact" variant="tonal">Delete</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :item="state.selectedRows[0]"
+    ></TripartiteModal>
+    <SubAccountModal
+      v-model="dialogs.subAccount"
+      :item="state.selectedRows[0]"
+    ></SubAccountModal>
   </v-container>
 </template>
 
@@ -464,6 +204,12 @@ import CloseComponentButton from "@/components/CloseComponentButton.vue";
 //   CustomActiveOrderActions,
 //   useCustomActiveOrdersStore,
 // } from "@/store/activeOrders";
+import SubAccountModal from "@/components/DealModals/SubAccount.vue";
+import TripartiteModal from "@/components/DealModals/Tripartite.vue";
+import SplitModal from "@/components/DealModals/Splits.vue";
+import CorrectPrincipleModal from "@/components/DealModals/CorrectPrinciple.vue";
+import HeaderPicker from "@/components/HeaderPicker.vue";
+import AssignMemberModal from "@/components/DealModals/AssignMember.vue";
 import { useTableHeightCalculator } from "@/utils/useTableHeightCalculator";
 
 import { useWebSocket } from "@/utils/useWebsocket";

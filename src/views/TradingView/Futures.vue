@@ -131,7 +131,12 @@
         </v-data-table>
       </v-col>
     </v-row>
-    <v-dialog
+    <HeaderPicker
+      v-model="state.openHeaderPicker"
+      v-model:tableHeaders.sync="headers"
+      v-model:selectedHeaders.sync="state.selectedHeaders"
+    ></HeaderPicker>
+    <!-- <v-dialog
       v-model="state.openHeaderPicker"
       scrollable
       width="auto"
@@ -173,115 +178,13 @@
           </v-list>
         </v-card-text>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
     <InsertOrder
       v-model="tradeModal.open"
       :type="tradeModal.type"
       :item="tradeModal.item ? tradeModal.item : undefined"
       :socket="socket ? socket : undefined"
     ></InsertOrder>
-    <!-- <v-dialog max-width="500">
-      <v-card>
-        <v-form
-          validate-on="input"
-          v-model="tradeModal.valid"
-          @submit.prevent="enterTrade"
-          ref="tradeForm"
-        >
-          <v-card-title
-            :class="{
-              'bg-primary': tradeModal.type == 'Bid',
-              'bg-error': tradeModal.type == 'Offer',
-              'bg-warning': tradeModal.type == 'None',
-            }"
-          >
-            <template v-if="tradeModal.type == 'None'"
-              >Something went wrong with loading
-              {{ tradeModal.item?.contractDisplay.contractDisplay }}</template
-            >
-            <template v-else>
-              {{ tradeModal.type }} for
-              {{
-                tradeModal.item
-                  ? tradeModal.item.contractDisplay.contractDisplay
-                  : "Empty"
-              }}
-            </template>
-          </v-card-title>
-          <v-card-text>
-            <v-container>
-              <v-row v-if="tradeModal.form">
-                <v-col cols="6"
-                  ><v-text-field
-                    type="number"
-                    class="my-2"
-                    label="QTY"
-                    :rules="[
-                      (msg: number) => !!msg || 'Qty Required',
-                      (msg: number) => msg >= 0 || 'Qty cannot be less or equal to 0',
-                    ]"
-                    v-model="tradeModal.form.qty"
-                  ></v-text-field>
-                  <v-text-field
-                    type="number"
-                    class="my-2"
-                    label="Price"
-                    v-model="tradeModal.form.price"
-                  ></v-text-field
-                  ><v-radio-group v-model="tradeModal.form.capacity">
-                    <v-radio
-                      label="Principal"
-                      :value="Capacity.PrincipalCapacity"
-                    ></v-radio>
-                    <v-radio
-                      label="Agency"
-                      :value="Capacity.AgencyCapacity"
-                    ></v-radio> </v-radio-group
-                ></v-col>
-                <v-col cols="6"
-                  ><v-select
-                    v-model="tradeModal.form.dealer"
-                    label="Dealer"
-                  ></v-select
-                  ><v-select
-                    v-model="tradeModal.form.principal"
-                    label="Principal"
-                  ></v-select>
-                  <v-text-field
-                    v-model="tradeModal.form.ref"
-                    label="Ref"
-                  ></v-text-field
-                  ><v-select
-                    :items="
-                      Object.entries(MitsOrderType)
-                        .filter(([key]) => isNaN(Number(key)))
-                        .map(([text, value]) => ({ text, value }))
-                    "
-                    :return-object="false"
-                    item-title="text"
-                    item-value="value"
-                    v-model="tradeModal.form.type"
-                    label="Type"
-                  ></v-select>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-text>
-          <v-card-actions class="justify-end">
-            <v-btn @click="closetradeModal" color="primary" variant="outlined"
-              >Cancel</v-btn
-            >
-            <v-btn
-              type="submit"
-              :disabled="tradeModal.type == 'None' || tradeModal.valid == false"
-              color="primary"
-              variant="elevated"
-              >Submit</v-btn
-            >
-          </v-card-actions>
-        </v-form>
-      </v-card>
-    </v-dialog> -->
 
     <v-dialog
       v-model="state.openInstruments"
@@ -395,6 +298,7 @@
 <script lang="ts" setup>
 import { computed, ref, reactive, nextTick } from "vue";
 import InsertOrder from "@/components/OrderModals/InsertOrderFutures.vue";
+import HeaderPicker from "@/components/HeaderPicker.vue";
 
 import { useAppStore } from "@/store/app";
 import {
@@ -688,64 +592,6 @@ const subscribeToSelected = () => {
 };
 </script>
 <style lang="scss">
-@keyframes fadePositiveTextToBlack {
-  0% {
-    color: lightgreen;
-  }
-  50% {
-    color: mediumseagreen;
-  }
-  100% {
-    color: black;
-  }
-}
-
-@keyframes fadeNegativeTextToBlack {
-  0% {
-    color: red;
-  }
-  50% {
-    color: darkred;
-  }
-  100% {
-    color: black;
-  }
-}
-
-@keyframes fadeNegativeBackgroundToTransparent {
-  0% {
-    background-color: red;
-  }
-  50% {
-    background-color: darkred;
-  }
-  100% {
-    background-color: transparent;
-  }
-}
-
-@keyframes fadePositiveBackgroundToTransparent {
-  0% {
-    background-color: lightgreen;
-  }
-  50% {
-    background-color: mediumseagreen;
-  }
-  100% {
-    background-color: transparent;
-  }
-}
-
-.text-positive {
-  animation: fadePositiveTextToBlack 4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s 1
-    normal forwards running;
-}
-
-.text-negative {
-  animation: fadeNegativeTextToBlack 4s cubic-bezier(0.2, 0.8, 0.2, 1) 0s 1
-    normal forwards running;
-}
-
 // .text-up {
 //   animation: fadePositiveTextToBlack 2s ease-out forwards,
 //     fadePositiveBackgroundToTransparent 2s ease-out forwards;
