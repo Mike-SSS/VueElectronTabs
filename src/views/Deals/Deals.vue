@@ -142,6 +142,10 @@
               @click.stop.prevent="() => toggleSelect(item)"
             ></v-checkbox-btn>
           </template>
+          <template #item.contractDisplay.strike="{ item }">
+            {{ item.columns["contractDisplay.strike"] }}
+            {{ item.raw.contractDisplay.flag }}
+          </template>
           <!-- <template
             v-slot:group-header="{
               item,
@@ -242,6 +246,9 @@ const headers = ref([
   { title: "Principal", key: "principal" },
   { title: "Instrument", key: "contractDisplay.instrument" },
   { title: "Date", key: "contractDisplay.contractDate" },
+  { title: "Strike", key: "contractDisplay.strike" },
+  { title: "User Ref", key: "userRef" },
+  { title: "Exchange Ref", key: "exchangeRef" },
   { title: "Dealer", key: "dealer" },
   { title: "Buy/Sell", key: "buySell" },
   {
@@ -249,6 +256,7 @@ const headers = ref([
     key: "quantity",
   },
   { title: "Rate", key: "dealtRate" },
+  { title: "Price", key: "dealtPrice" },
   { title: "Origin", key: "origin" },
   { title: "Principle Agency", key: "principleAgency" },
 ]);

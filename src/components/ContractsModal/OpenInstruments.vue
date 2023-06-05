@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="open" scrollable width="auto" key="Futures_addInstruments">
-    <v-card height="80vh" width="80vw">
+    <v-card height="80vh" width="40vw">
       <v-card-title class="bg-primary"
         ><v-row justify="space-between">
           <v-col cols="10"
@@ -50,7 +50,7 @@
           density="compact"
           :items="notSelectedData"
           v-model="selectedInstruments"
-          :headers="headers"
+          :headers="newHeaders"
           multi-sort
           :group-by="[{ key: 'contractDisplay.instrument' }]"
           height="60vh"
@@ -124,7 +124,14 @@ const props = defineProps({
     type: Function as PropType<(list: MainModel[]) => Promise<void>>,
   },
 });
-
+const newHeaders: DataTableHeaderCustom[] = [
+  { title: "Expiry", key: "contractDisplay.contractDate" },
+  // { title: "Instrument", key: "contractDisplay.instrument" },
+  // {
+  //   title: "B/QTY",
+  //   key: "qtyBid",
+  // },
+];
 const selectedInstruments: Ref<MainModel[]> = ref([]);
 const emit = defineEmits(["update:modelValue"]);
 

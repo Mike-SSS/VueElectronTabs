@@ -13,6 +13,7 @@
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
         <v-data-table
           v-model="state.selectedRows"
+          return-object
           density="compact"
           :items="filteredData"
           item-value="activeOrderSeq"
@@ -39,6 +40,7 @@
           <template #item.quantity="{ item }">
             <v-menu
               :open-delay="10"
+              v-if="itemStates[item.raw.activeOrderSeq]"
               :close-delay="0"
               :open-on-hover="true"
               :close-on-content-click="false"
@@ -46,7 +48,12 @@
               location="end"
             >
               <template v-slot:activator="{ props }">
-                <v-btn color="primary" variant="text" v-bind="props">
+                <v-btn
+                  @click.stop.prevent
+                  color="primary"
+                  variant="text"
+                  v-bind="props"
+                >
                   {{ item.columns.quantity }}
                 </v-btn>
               </template>
@@ -104,6 +111,31 @@
         </v-data-table>
       </v-col>
     </v-row>
+    <!-- <EditOrder
+      v-model="dialogs.editOrder"
+      :socket="socket ? socket : undefined"
+      :item="state.selectedRows[0]"
+    ></EditOrder>
+    <DeleteOrder
+      v-model="dialogs.deleteOrder"
+      :socket="socket ? socket : undefined"
+      :item="state.selectedRows[0]"
+    ></DeleteOrder> -->
+    <SuspendOrder
+      v-model="dialogs.suspendOrder"
+      :socket="socket"
+      :item="state.selectedRows[0]"
+    ></SuspendOrder>
+    <!-- <SuspendAll
+      v-model="dialogs.suspendAll"
+      :socket="socket ? socket : undefined"
+      :items="filteredData"
+    ></SuspendAll> -->
+    <!-- <DeleteAll
+      v-model="dialogs.deleteAll"
+      :socket="socket ? socket : undefined"
+      :items="filteredData"
+    ></DeleteAll> -->
     <HeaderPicker
       v-model="state.openHeaderPicker"
       v-model:tableHeaders.sync="headers"
@@ -132,6 +164,11 @@ import {
 } from "@/store/customActiveOrders";
 
 import CommonToolbar from "@/components/CommonToolbar.vue";
+import DeleteOrder from "@/components/ActiveOrderModals/DeleteOrder.vue";
+import EditOrder from "@/components/ActiveOrderModals/EditOrder.vue";
+import SuspendOrder from "@/components/ActiveOrderModals/SuspendOrder.vue";
+import SuspendAll from "@/components/ActiveOrderModals/SuspendAll.vue";
+import DeleteAll from "@/components/ActiveOrderModals/DeleteAll.vue";
 
 import DynamicToolbarActionsHandler from "@/components/DynamicToolbarActions.vue";
 // import {
@@ -175,12 +212,14 @@ const headers: any[] = [
     title: "Instrument",
     key: "contractDisplay.instrument",
   },
-  { title: "Rate", key: "rate" },
-  { title: "Principal", key: "userCode" },
+  { title: "Price", key: "rate" },
+  { title: "Strike", key: "contractDisplay.strike" },
+  { title: "Principal", key: "principal" },
   { title: "Sub Acc", key: "subAccount" },
   { title: "Member", key: "member" },
+
   { title: "Ref", key: "userRef" },
-  { title: "Exchange Ref", key: "exchangeRef" },
+  { title: "Exchange Ref", key: "referenceCode" },
   { title: "Dealer", key: "dealer" },
   { title: "Buy/Sell", key: "buySell" },
   { title: "Order State", key: "orderState" },
@@ -246,23 +285,23 @@ const state = reactive<{
   selectedHeaders: any[];
   selectedRows: MainModel[];
   currentSubscriptions: MainModel[];
-  instrumentsToAdd: MainModel[];
 }>({
   openHeaderPicker: false,
   selectedRows: [],
   openInstruments: false,
   selectedHeaders: headers.concat([]),
   currentSubscriptions: [],
-  instrumentsToAdd: [],
 });
 
 function openEditOrder() {}
 const dialogs = reactive({
-  subAccount: false,
-  splits: false,
-  correctPrinciple: false,
-  tripartite: false,
-  assignMember: false,
+  deleteOrder: false,
+  deleteAll: false,
+  suspendAll: false,
+  resubmitSuspended: false,
+  editOrder: false,
+  editSuspended: false,
+  suspendOrder: false,
 });
 
 const actionButtons = computed<ActionButton[]>(() => [
@@ -279,7 +318,7 @@ const actionButtons = computed<ActionButton[]>(() => [
       // edit order
       // Present modal first -> modal should submit
 
-      openEditOrder();
+      dialogs.editOrder = true;
       // if (state.selectedRows.length == 1) {
       //   console.log("Suspend Order ", state.selectedRows);
       //   socket.value?.invoke(
@@ -302,10 +341,11 @@ const actionButtons = computed<ActionButton[]>(() => [
       /* Suspend Order Action */
       if (state.selectedRows.length == 1) {
         console.log("Suspend Order ", state.selectedRows);
-        socket.value?.invoke(
-          "SuspendTrade",
-          state.selectedRows[0].activeOrderSeq
-        );
+        dialogs.suspendOrder = true;
+        // socket.value?.invoke(
+        //   "SuspendTrade",
+        //   state.selectedRows[0].activeOrderSeq
+        // );
       }
     },
   },
@@ -321,11 +361,12 @@ const actionButtons = computed<ActionButton[]>(() => [
     action: () => {
       /* Delete Order Action */
       if (state.selectedRows.length == 1) {
-        console.log("Suspend Order ", state.selectedRows);
-        socket.value?.invoke(
-          "DeleteTrade",
-          state.selectedRows[0].activeOrderSeq
-        );
+        console.log("Prompt Delete Order ", state.selectedRows);
+        dialogs.deleteOrder = true;
+        // socket.value?.invoke(
+        //   "DeleteTrade",
+        //   state.selectedRows[0].activeOrderSeq
+        // );
       }
     },
   },
@@ -361,6 +402,10 @@ const actionButtons = computed<ActionButton[]>(() => [
     textField: null,
     action: () => {
       /* Delete Order Action */
+      if (filteredData.value.length > 0) {
+        console.log("Prompt Delete Order ", state.selectedRows);
+        dialogs.deleteAll = true;
+      }
     },
   },
   {
@@ -372,7 +417,11 @@ const actionButtons = computed<ActionButton[]>(() => [
     icon: "mdi-folder-cancel",
     textField: null,
     action: () => {
-      /* Delete Order Action */
+      /* Suspend all orders Action */
+      if (filteredData.value.length > 0) {
+        console.log("Prompt Suspend all ", filteredData);
+        dialogs.suspendAll = true;
+      }
     },
   },
   {
@@ -496,11 +545,13 @@ interface ItemState {
   qty: number | undefined;
 }
 let itemStates = reactive<Record<number, ItemState>>({});
+console.log("Items states ", itemStates);
 
 watch(
-  filteredData.value,
+  () => filteredData.value,
   (newItems) => {
     newItems.forEach((item) => {
+      console.log("Test watch", filteredData.value);
       if (!(item.activeOrderSeq in itemStates)) {
         itemStates[item.activeOrderSeq] = { isOpen: false, qty: undefined };
       }

@@ -1,12 +1,6 @@
 <template>
   <v-snackbar
-    :content-props="{
-      style: {
-        transform: `translateX(0)`,
-        right: 0,
-      },
-    }"
-    position="absolute"
+    location="right bottom"
     v-if="toastStore.currentToast"
     :key="toastStore.currentToast.id"
     :model-value="toastStore.currentToast.showing"
