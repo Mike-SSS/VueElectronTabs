@@ -102,8 +102,14 @@
       v-model:tableHeaders.sync="headers"
       v-model:selectedHeaders.sync="state.selectedHeaders"
     ></HeaderPicker>
-
-    <v-dialog
+    <OpenInstruments
+      v-model="state.openInstruments"
+      :headers="state.selectedHeaders"
+      :items="filteredData"
+      :subscribe-to-selected="subscribeToSelected"
+      :current-subscriptions="state.currentSubscriptions"
+    ></OpenInstruments>
+    <!-- <v-dialog
       v-model="state.openInstruments"
       scrollable
       width="auto"
@@ -172,11 +178,7 @@
             fixed-header
             item-value="contract"
             :items-per-page="-1"
-          >
-            <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
-            <!-- { item, columns, toggleGroup, isGroupOpen } -->
-            <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <template v-slot:group-header="{ item, columns, toggleGroup }">
+          ><template v-slot:group-header="{ item, columns, toggleGroup }">
               <tr :id="'group_' + item.value">
                 <td :colspan="columns.length">
                   <v-btn
@@ -200,7 +202,7 @@
           >
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
     <InsertOrder
       v-model="tradeModal.open"
       :type="tradeModal.type"
@@ -217,6 +219,7 @@
 /* Strike (smallest to biggest) */
 /* Flag (C -> P) */
 //
+import OpenInstruments from "@/components/ContractsModal/OpenInstruments.vue";
 import HeaderPicker from "@/components/HeaderPicker.vue";
 import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useLayoutStore } from "@/store/layout";
@@ -410,14 +413,19 @@ const state = reactive<{
   currentSubscriptions: [],
   instrumentsToAdd: [],
 });
-const subscribeToSelected = () => {
-  console.log("Subscribing to : ", state.instrumentsToAdd);
-  subscribe(state.instrumentsToAdd.map((e) => e.contract));
-  state.instrumentsToAdd.forEach((e) => {
-    state.currentSubscriptions.push(e);
+async function subscribeToSelected(items: MainModel[]) {
+  console.log("Subscribing to : ", items);
+  subscribe(items.map((e) => e.contract));
+  items.forEach((e) => {
+    const found = filteredData.value.findIndex(
+      (match) => e.contract == match.contract
+    );
+    if (found == -1) return;
+    console.log("Subscribe to index: ", found);
+    state.currentSubscriptions.push(filteredData.value[found]);
   });
-  state.instrumentsToAdd.splice(0);
-};
+  items.splice(0);
+}
 </script>
 <style lang="scss">
 // .v-table > .v-table__wrapper > table > thead > tr > th {

@@ -56,116 +56,18 @@
       v-model:tableHeaders.sync="headers"
       v-model:selectedHeaders.sync="state.selectedHeaders"
     ></HeaderPicker>
-
-    <v-dialog
+    <OpenInstruments
       v-model="state.openInstruments"
-      scrollable
-      width="auto"
-      key="Spreads_addInstruments"
-    >
-      <v-card height="80vh" width="80vw">
-        <v-card-title class="bg-primary"
-          ><v-row justify="space-between">
-            <v-col cols="10"
-              >Instrument List ({{
-                filteredData ? filteredData.length : -2
-              }})</v-col
-            >
-            <v-col cols="2" sm="auto"
-              ><v-btn icon size="20" color="error" flat></v-btn
-              ><v-btn
-                @click="state.openInstruments = false"
-                size="small"
-                icon
-                color="transparent"
-                flat
-              >
-                <v-icon icon="mdi-close"></v-icon> </v-btn
-            ></v-col> </v-row
-        ></v-card-title>
-        <v-card-subtitle>
-          <v-container fluid
-            ><v-row align="center">
-              <v-col cols="4"
-                ><v-text-field
-                  hide-details
-                  label="Search"
-                  append-inner-icon="mdi-magnify"
-                  variant="outlined"
-                ></v-text-field
-              ></v-col>
-              <v-spacer></v-spacer>
-              <v-col cols="auto"
-                ><v-btn
-                  @click="subscribeToSelected"
-                  :disabled="state.instrumentsToAdd.length == 0"
-                  color="primary"
-                >
-                  Add ({{ state.instrumentsToAdd.length }})</v-btn
-                ></v-col
-              >
-              <v-col cols="auto"
-                ><v-btn @click="state.openInstruments = false" color="primary">
-                  Done</v-btn
-                ></v-col
-              >
-            </v-row></v-container
-          >
-        </v-card-subtitle>
-        <v-card-text>
-          <v-data-table
-            density="compact"
-            class="tableData"
-            :items="filteredData"
-            v-model="state.instrumentsToAdd"
-            :headers="state.selectedHeaders"
-            multi-sort
-            :group-by="[{ key: 'contractDisplay.instrument' }]"
-            height="60vh"
-            show-select
-            return-object
-            fixed-header
-            item-value="contract"
-            :items-per-page="-1"
-          >
-            <!-- :group-by="[{ key: 'contractDisplay.instrument' }]" -->
-            <!-- { item, columns, toggleGroup, isGroupOpen } -->
-            <!-- "index", "item", "columns", "isExpanded", "toggleExpand", "isSelected", "toggleSelect", "toggleGroup", "isGroupOpen" -->
-            <!-- <template
-              v-slot:group-header="{
-                item,
-                columns,
-                toggleGroup,
-                isGroupOpen,
-                isSelected,
-                toggleSelect,
-              }"
-            >
-              <tr :id="'group_' + item.value">
-                <td :colspan="columns.length">
-                  <v-btn
-                    size="small"
-                    variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
-                    @click="toggleGroup(item)"
-                  ></v-btn>
-                  {{ item.value }}
-                </td>
-              </tr>
-            </template> -->
-          </v-data-table>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" block @click="state.openInstruments = false"
-            >Close Instruments</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :headers="state.selectedHeaders"
+      :items="filteredData"
+      :subscribe-to-selected="subscribeToSelected"
+      :current-subscriptions="state.currentSubscriptions"
+    ></OpenInstruments>
   </v-container>
 </template>
 
 <script lang="ts" setup>
+import OpenInstruments from "@/components/ContractsModal/OpenInstruments.vue";
 import HeaderPicker from "@/components/HeaderPicker.vue";
 import { computed, ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import InsertOrder from "@/components/OrderModals/InsertOrderSpreads.vue";
@@ -339,22 +241,25 @@ const state = reactive<{
   openInstruments: boolean;
   selectedHeaders: any[];
   currentSubscriptions: MainModel[];
-  instrumentsToAdd: MainModel[];
 }>({
   openHeaderPicker: false,
   openInstruments: false,
   selectedHeaders: headers.concat([]),
   currentSubscriptions: [],
-  instrumentsToAdd: [],
 });
-const subscribeToSelected = () => {
-  console.log("Subscribing to : ", state.instrumentsToAdd);
-  subscribe(state.instrumentsToAdd.map((e) => e.contract));
-  state.instrumentsToAdd.forEach((e) => {
-    state.currentSubscriptions.push(e);
+async function subscribeToSelected(items: MainModel[]) {
+  console.log("Subscribing to : ", items);
+  subscribe(items.map((e) => e.contract));
+  items.forEach((e) => {
+    const found = filteredData.value.findIndex(
+      (match) => e.contract == match.contract
+    );
+    if (found == -1) return;
+    console.log("Subscribe to index: ", found);
+    state.currentSubscriptions.push(filteredData.value[found]);
   });
-  state.instrumentsToAdd.splice(0);
-};
+  items.splice(0);
+}
 </script>
 <style lang="scss" scoped>
 .v-data-table {
