@@ -1,10 +1,5 @@
 <template>
-  <v-container
-    fluid
-    :style="props.style"
-    key="ActiveOrders"
-    class="bg-grey d-flex flex-column"
-  >
+  <v-container fluid :style="props.style" class="bg-grey d-flex flex-column">
     <CommonToolbar
       :socket-state="socket?.state"
       :class="props.class"
@@ -16,71 +11,6 @@
     ></CommonToolbar>
     <v-row class="fill-height">
       <v-col cols="12" class="pa-0 fill-height" ref="Reference">
-        <!-- <v-data-table
-          item-key="_groupKey"
-          :headers="getSortedHeaders"
-          :items="tableData.items"
-        >
-          <template
-            v-slot:group-header="{
-              item,
-              columns,
-              toggleGroup,
-              isGroupOpen,
-              isSelected,
-              toggleSelect,
-              depth = 0,
-            }"
-          >
-            <tr :id="'group_' + item._groupKey">
-              <td :colspan="columns.length" class="text-start">
-                <div :style="{ marginLeft: `${depth * 20}px` }">
-                  <v-btn
-                    size="small"
-                    variant="text"
-                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
-                    @click="toggleGroup(item)"
-                  ></v-btn>
-                  {{ item._groupKey }}
-                </div>
-              </td>
-            </tr>
-            <template v-for="subItem in item.items">
-              <tr
-                v-if="subItem._isGroup && isGroupOpen(item)"
-                :slot="'group-header'"
-                :key="subItem._isGroup"
-              >Main flow -->
-        <!-- <template v-slot="subSlotData">
-                  <template v-slot:group-header="groupHeaderData">
-                    <group-header
-                      v-bind="groupHeaderData"
-                      :depth="depth + 1"
-                    ></group-header>
-                  </template>
-                </template> -->
-        <!-- </tr>
-              <tr
-                
-              >else</tr>
-            </template>
-          </template> -->
-        <!-- <template
-            v-slot:item.data-table-select="{ item, toggleSelect, isSelected }"
-          >
-            <v-checkbox-btn
-              color="primary"
-              :disabled="
-                state.selectedRows.length >= 2 &&
-                !state.selectedRows.includes(item)
-              "
-              :model-value="isSelected(item)"
-              @click.stop.prevent="() => toggleSelect(item)"
-            ></v-checkbox-btn>
-          </template> 
-          <template #bottom></template
-        >
-        </v-data-table>-->
         <v-data-table
           v-model="state.selectedRows"
           density="compact"
@@ -105,6 +35,54 @@
                 {{ item.value }}
               </td>
             </tr>
+          </template>
+          <template #item.quantity="{ item }">
+            <v-menu
+              :open-delay="10"
+              :close-delay="0"
+              :open-on-hover="true"
+              :close-on-content-click="false"
+              v-model="itemStates[item.raw.activeOrderSeq].isOpen"
+              location="end"
+            >
+              <template v-slot:activator="{ props }">
+                <v-btn color="primary" variant="text" v-bind="props">
+                  {{ item.columns.quantity }}
+                </v-btn>
+              </template>
+
+              <v-card min-width="300">
+                <v-card-title> Reduce Order </v-card-title>
+                <v-card-text class="pb-1">
+                  <v-text-field
+                    hide-details="auto"
+                    type="number"
+                    label="QTY"
+                  ></v-text-field>
+                  <v-switch
+                    hide-details
+                    color="primary"
+                    label="Apply to all rows selected?"
+                  ></v-switch>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    variant="text"
+                    @click="itemStates[item.raw.activeOrderSeq].isOpen = false"
+                  >
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    color="primary"
+                    variant="text"
+                    @click="itemStates[item.raw.activeOrderSeq].isOpen = false"
+                  >
+                    Submit
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-menu>
           </template>
           <template
             v-slot:item.data-table-select="{ item, toggleSelect, isSelected }"
@@ -135,7 +113,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, Ref, reactive, onMounted, onBeforeUnmount } from "vue";
+import {
+  computed,
+  ref,
+  watch,
+  reactive,
+  onMounted,
+  onBeforeUnmount,
+} from "vue";
 import { useLayoutStore } from "@/store/layout";
 import HeaderPicker from "@/components/HeaderPicker.vue";
 import { useAppStore } from "@/store/app";
@@ -181,7 +166,7 @@ const { calculateTableHeight, Reference } = useTableHeightCalculator();
 
 const headers: any[] = [
   // { title: "Contract", key: "contract", align: "start" },
-  { title: "Enter Time", key: "enterTime", order: 1 },
+  { title: "Enter Time", key: "enterTime" },
   {
     title: "Date",
     key: "contractDisplay.contractDate",
@@ -190,6 +175,7 @@ const headers: any[] = [
     title: "Instrument",
     key: "contractDisplay.instrument",
   },
+  { title: "Rate", key: "rate" },
   { title: "Principal", key: "userCode" },
   { title: "Sub Acc", key: "subAccount" },
   { title: "Member", key: "member" },
@@ -204,7 +190,6 @@ const headers: any[] = [
     order: 2,
   },
 
-  { title: "Rate", key: "rate" },
   { title: "O/QTY", key: "originalQuantity" },
   { title: "Principle Agency", key: "principleAgency" },
 ];
@@ -344,28 +329,28 @@ const actionButtons = computed<ActionButton[]>(() => [
       }
     },
   },
-  // Assuming menu items are also part of action buttons
-  {
-    id: "4",
-    tooltip: "Reduce Order",
-    disabled: state.selectedRows.length != 1,
-    color: "transparent",
-    variant: "flat",
-    density: "compact",
-    icon: "mdi-cash",
-    textField: {
-      density: "compact",
-      variant: "solo",
-      singleLine: true,
-      label: "QTY",
-      hideDetails: "auto",
-      placeholder: "2",
-      type: "number",
-    },
-    action: () => {
-      /* Reduce Order Action */
-    },
-  },
+  // // Assuming menu items are also part of action buttons
+  // {
+  //   id: "4",
+  //   tooltip: "Reduce Order",
+  //   disabled: state.selectedRows.length != 1,
+  //   color: "transparent",
+  //   variant: "flat",
+  //   density: "compact",
+  //   icon: "mdi-cash",
+  //   textField: {
+  //     density: "compact",
+  //     variant: "solo",
+  //     singleLine: true,
+  //     label: "QTY",
+  //     hideDetails: "auto",
+  //     placeholder: "2",
+  //     type: "number",
+  //   },
+  //   action: () => {
+  //     /* Reduce Order Action */
+  //   },
+  // },
   {
     id: "5",
     tooltip: "Delete All",
@@ -506,15 +491,31 @@ const props = defineProps({
     required: true,
   },
 });
-function updateHeader(e: Event, i: any) {
-  console.log("Update header ", (e?.target as any).value, i);
-  const foundSelected = state.selectedHeaders.findIndex(
-    (item) => item.key == i.key
-  );
-  if (foundSelected != -1) {
-    state.selectedHeaders.splice(foundSelected, 1);
-  } else {
-    state.selectedHeaders.push(i);
-  }
+interface ItemState {
+  isOpen: boolean;
+  qty: number | undefined;
 }
+let itemStates = reactive<Record<number, ItemState>>({});
+
+watch(
+  filteredData.value,
+  (newItems) => {
+    newItems.forEach((item) => {
+      if (!(item.activeOrderSeq in itemStates)) {
+        itemStates[item.activeOrderSeq] = { isOpen: false, qty: undefined };
+      }
+    });
+
+    // If an item is removed, we should also remove its key from the itemStates
+    for (let id in itemStates) {
+      if (!newItems.some((item) => item.activeOrderSeq.toString() === id)) {
+        delete itemStates[id];
+      }
+    }
+  },
+  { deep: true, immediate: true }
+);
+const closeMenu = (uniqueId: number) => {
+  itemStates[uniqueId].isOpen = false;
+};
 </script>
