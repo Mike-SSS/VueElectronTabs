@@ -247,6 +247,7 @@ const headers = ref([
   { title: "Instrument", key: "contractDisplay.instrument" },
   { title: "Date", key: "contractDisplay.contractDate" },
   { title: "Strike", key: "contractDisplay.strike" },
+  { title: "Sub Acc", key: "subAccount" },
   { title: "User Ref", key: "userRef" },
   { title: "Exchange Ref", key: "exchangeRef" },
   { title: "Dealer", key: "dealer" },

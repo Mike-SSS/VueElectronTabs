@@ -111,31 +111,36 @@
         </v-data-table>
       </v-col>
     </v-row>
-    <!-- <EditOrder
+    <EditOrder
       v-model="dialogs.editOrder"
-      :socket="socket ? socket : undefined"
+      :socket="socket"
       :item="state.selectedRows[0]"
     ></EditOrder>
+    <ResubmitSuspended
+      v-model="dialogs.resubmitSuspended"
+      :socket="socket"
+      :item="state.selectedRows[0]"
+    ></ResubmitSuspended>
     <DeleteOrder
       v-model="dialogs.deleteOrder"
-      :socket="socket ? socket : undefined"
+      :socket="socket"
       :item="state.selectedRows[0]"
-    ></DeleteOrder> -->
+    ></DeleteOrder>
     <SuspendOrder
       v-model="dialogs.suspendOrder"
       :socket="socket"
       :item="state.selectedRows[0]"
     ></SuspendOrder>
-    <!-- <SuspendAll
+    <SuspendAll
       v-model="dialogs.suspendAll"
       :socket="socket ? socket : undefined"
       :items="filteredData"
-    ></SuspendAll> -->
-    <!-- <DeleteAll
+    ></SuspendAll>
+    <DeleteAll
       v-model="dialogs.deleteAll"
       :socket="socket ? socket : undefined"
       :items="filteredData"
-    ></DeleteAll> -->
+    ></DeleteAll>
     <HeaderPicker
       v-model="state.openHeaderPicker"
       v-model:tableHeaders.sync="headers"
@@ -165,6 +170,7 @@ import {
 
 import CommonToolbar from "@/components/CommonToolbar.vue";
 import DeleteOrder from "@/components/ActiveOrderModals/DeleteOrder.vue";
+import ResubmitSuspended from "@/components/ActiveOrderModals/ResubmitSuspendedOrder.vue";
 import EditOrder from "@/components/ActiveOrderModals/EditOrder.vue";
 import SuspendOrder from "@/components/ActiveOrderModals/SuspendOrder.vue";
 import SuspendAll from "@/components/ActiveOrderModals/SuspendAll.vue";
@@ -317,8 +323,9 @@ const actionButtons = computed<ActionButton[]>(() => [
     action: () => {
       // edit order
       // Present modal first -> modal should submit
-
-      dialogs.editOrder = true;
+      if (state.selectedRows.length == 1) {
+        dialogs.editOrder = true;
+      }
       // if (state.selectedRows.length == 1) {
       //   console.log("Suspend Order ", state.selectedRows);
       //   socket.value?.invoke(
@@ -435,6 +442,10 @@ const actionButtons = computed<ActionButton[]>(() => [
     textField: null,
     action: () => {
       /* Delete Order Action */
+      if (state.selectedRows.length == 1) {
+        console.log("Suspend Order ", state.selectedRows);
+        dialogs.editOrder = true;
+      }
     },
   },
   {
@@ -446,7 +457,11 @@ const actionButtons = computed<ActionButton[]>(() => [
     icon: "mdi-send-circle-outline",
     textField: null,
     action: () => {
-      /* Delete Order Action */
+      /* Re-submit suspended order action */
+      if (state.selectedRows.length == 1) {
+        console.log("Re-submit suspended Order ", state.selectedRows);
+        dialogs.resubmitSuspended = true;
+      }
     },
   },
   {

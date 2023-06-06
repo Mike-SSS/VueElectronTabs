@@ -8,6 +8,7 @@
             <v-col cols="12">
               <v-select
                 v-model="form.member"
+                :items="items"
                 density="compact"
                 variant="outlined"
                 label="Member"
@@ -39,6 +40,8 @@
 </template>
 <script setup lang="ts">
 import { Deal as MainModel } from "@/models/marketData";
+import { useAuthStore } from "@/store/authStore";
+import { computed } from "vue";
 import { PropType } from "vue";
 import { ref, watchEffect } from "vue";
 
@@ -46,9 +49,10 @@ const props = defineProps({
   modelValue: Boolean,
   item: Object as PropType<MainModel>,
 });
+const authStore = useAuthStore();
 
 const emit = defineEmits(["update:modelValue"]);
-
+const items = computed(() => authStore.getMembers);
 // reactive form data
 const form = ref({
   member: props.item?.member,

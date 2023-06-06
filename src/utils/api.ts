@@ -76,3 +76,27 @@ export async function getMarketDisplay(): Promise<MarketDisplayItemContract[]> {
     return Promise.reject(err);
   }
 }
+/**
+ * Gets all members array
+ *
+ *
+ * @function
+ * @returns {Promise<boolean>} A promise that resolves to true if authentication is successful, false otherwise.
+ */
+export async function getMembers(): Promise<any[]> {
+  try {
+    const res = await axiosInstance.get(
+      "/api/StaticData/GetAllMembers",
+      // {
+      //   params: {
+      //     publish: true,
+      //   },
+      // }
+    );
+    if (res) return Promise.resolve(res.data);
+    return [];
+  } catch (err) {
+    console.error(err);
+    return Promise.reject(err);
+  }
+}

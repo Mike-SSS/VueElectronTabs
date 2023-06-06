@@ -52,7 +52,7 @@ import { useToastStore } from "@/store/toastStore";
 const props = defineProps({
   modelValue: Boolean,
   socket: {
-    type: Object as PropType<HubConnection> | PropType<null>,
+    type: null as unknown as Object as PropType<HubConnection | null>,
     default: null,
     required: true,
   },

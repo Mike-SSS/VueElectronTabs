@@ -47,9 +47,9 @@ import {
 const props = defineProps({
   modelValue: Boolean,
   socket: {
-    type: Object as PropType<HubConnection> | PropType<null>,
-    default: null,
+    type: null as unknown as Object as PropType<HubConnection|null>,
     required: true,
+    nullable: true,
   },
   item: {
     type: Object as PropType<MainModel> | PropType<null>,

@@ -1,17 +1,17 @@
 <template>
   <v-dialog v-model="open" width="300">
     <v-card>
-      <v-card-title class="bg-primary">Correct Principle</v-card-title>
+      <v-card-title class="bg-primary">Correct Principal</v-card-title>
       <v-card-text>
         <v-container>
           <v-row>
             <v-col cols="12">
               <v-select
-                v-model="form.principle"
+                v-model="form.principal"
                 :items="principles"
                 density="compact"
                 variant="outlined"
-                label="Principle"
+                label="Principal"
               ></v-select>
               <v-text-field
                 v-model="form.ref"
@@ -32,8 +32,9 @@
   </v-dialog>
 </template>
 <script setup lang="ts">
-import { PropType, ref, watchEffect } from "vue";
+import { PropType, computed, ref, watchEffect } from "vue";
 import { Deal as MainModel } from "@/models/marketData";
+import { useAuthStore } from "@/store/authStore";
 
 const props = defineProps({
   modelValue: Boolean,
@@ -44,14 +45,34 @@ const emit = defineEmits(["update:modelValue"]);
 
 // reactive form data
 const form = ref({
-  principle: props.item?.principal,
+  principal: props.item?.principal,
   ref: props.item?.userRef,
 });
 
 // List of principles to select from
-const principles = ref(['Principle 1', 'Principle 2', 'Principle 3']);
+const principles = ref(['Principal 1', 'Principal 2', 'Principal 3']);
 
 const open = ref(props.modelValue);
+const authStore = useAuthStore();
+const hq = computed(() => authStore.getHQ);
+// const dealers = computed(() => {
+//   // if (!form.value.branch) return [];
+//   if (!hq.value) return [];
+//   if (hq.value.setup == "Dealer") {
+//     if (!hq.value.masterDealerCodes) return [];
+//     const branch = hq.value.masterDealerCodes.find((e) => e.dealers);
+//     if (!branch) return [];
+//     return branch.dealers;
+//   } else {
+//     if (!hq.value.clientCodes) return [];
+//     const branch = hq.value.clientCodes.find(
+//       (e) => form.value && form.value.branch && e.branch == form.value.branch
+//     );
+//     if (!branch) return [];
+//     const _dealers = branch.codesPerDealer.map((e) => e.dealerCode);
+//     return _dealers;
+//   }
+// });
 
 // sync open status with parent
 watchEffect(() => {
@@ -72,7 +93,7 @@ async function submitForm() {
 function cancel() {
   // reset form data
   form.value = {
-    principle: props.item?.principal,
+    principal: props.item?.principal,
     ref: props.item?.userRef,
   };
 

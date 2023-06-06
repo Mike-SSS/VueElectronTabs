@@ -1,12 +1,13 @@
 import { LoginResponse } from "@/models/auth";
 import { IUser } from "@/models/trading";
-import { getHQAccessProfile, submitLogin } from "@/utils/api";
+import { getHQAccessProfile, getMembers, submitLogin } from "@/utils/api";
 import { Base64 } from "js-base64";
 import { defineStore } from "pinia";
 
 interface State {
   login: LoginResponse | null;
   hq: IUser | null;
+  members: any[];
 }
 
 interface HQ {
@@ -14,7 +15,7 @@ interface HQ {
   userId: string;
   uniqueCode: string;
   setup: string;
-   // default for member in trading modals
+  // default for member in trading modals
   branch: string[];
   // default for dealer in trading modals
   dealer: string[];
@@ -59,12 +60,14 @@ export const useAuthStore = defineStore("auth", {
   state: (): State => ({
     login: null,
     hq: null,
+    members: [],
   }),
   // define getters, actions, and mutations
   getters: {
     isLoggedIn: (state) => state.login !== null,
     token: (state) => state.login?.token || null,
     getHQ: (state) => state.hq || null,
+    getMembers: (state) => state.members,
     decodedToken(state) {
       if (!state.login) return null;
       return decodeJwt(state.login.token);
@@ -91,6 +94,10 @@ export const useAuthStore = defineStore("auth", {
     setHQ(hq: any) {
       console.log("Set hq ", hq);
       this.hq = hq;
+    },
+    setMembers(items: any[]) {
+      console.log("Set members ", items);
+      this.members = items;
     },
     clearLoginResponse() {
       this.login = null;
@@ -120,6 +127,12 @@ export const useAuthStore = defineStore("auth", {
       this.setHQ(hq);
       return true;
     },
+    async loadMembers(): Promise<boolean> {
+      if (this.token == null) return false;
+      const members = await getMembers();
+      this.setMembers(members);
+      return true;
+    },
     async loginUser(username: string, password: string) {
       const login = await submitLogin(username, password);
       if (login) {
@@ -131,7 +144,7 @@ export const useAuthStore = defineStore("auth", {
       } else {
         this.clearLoginResponse();
         return false;
-      }      
+      }
     },
   },
 });

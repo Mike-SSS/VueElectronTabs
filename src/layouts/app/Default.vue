@@ -296,7 +296,7 @@ onMounted(async () => {
   }
   await authStore.loadHQAccess();
   // const res = await marketDisplayStore().customActions?.loadMarketDisplay();
-  
+  await authStore.loadMembers();
   console.log("Load market display :", marketDisplayStore().customActions.customActions?.loadMarketDisplay);
   const res = await marketDisplayStore().customActions.customActions?.loadMarketDisplay();
   console.log("Load market display :", marketDisplayStore().getData.value.length);

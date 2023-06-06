@@ -69,7 +69,7 @@
             </v-row>
             <v-row>
               <v-col cols="auto">
-                <v-radio-group v-model="form.capacity">
+                <v-radio-group v-model="form.capacity" hide-details inline>
                   <v-radio
                     label="Principal"
                     :value="Capacity.PrincipalCapacity"

@@ -16,7 +16,6 @@
               <v-col cols="6"
                 ><v-text-field
                   type="number"
-                  class="my-2"
                   label="QTY"
                   :rules="[
                     (msg: number) => !!msg || 'Qty Required',
@@ -26,7 +25,6 @@
                 ></v-text-field>
                 <v-text-field
                   type="number"
-                  class="my-2"
                   label="Strike"
                   v-model.number="form.price"
                   :rules="[
@@ -36,13 +34,11 @@
                 ></v-text-field
                 ><v-text-field
                   type="number"
-                  class="my-2"
                   label="Ref No"
                   v-model.number="form.ref"
                 ></v-text-field
                 ><v-text-field
                   type="number"
-                  class="my-2"
                   label="Ref No 2"
                   v-model.number="form.ref2"
                 ></v-text-field
@@ -68,11 +64,7 @@
             </v-row>
             <v-row>
               <v-col cols="12">
-                <v-radio-group
-                  hide-details
-                  direction="horizontal"
-                  v-model="form.capacity"
-                >
+                <v-radio-group hide-details inline v-model="form.capacity">
                   <v-radio label="Buy" :value="BuySell.Buy"></v-radio>
                   <v-radio label="Sell" :value="BuySell.Sell"></v-radio>
                 </v-radio-group>
@@ -124,7 +116,7 @@ interface FormModel {
 const props = defineProps({
   modelValue: Boolean,
   socket: {
-    type: Object as PropType<HubConnection> | PropType<null>,
+    type: null as unknown as Object as PropType<HubConnection | null>,
     default: null,
     required: true,
   },

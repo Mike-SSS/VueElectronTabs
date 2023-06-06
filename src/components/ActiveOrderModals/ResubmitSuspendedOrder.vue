@@ -1,22 +1,15 @@
 <template>
   <v-dialog min-width="400" max-width="500" v-model="open">
-    <v-card v-if="items">
+    <v-card v-if="item">
       <v-card-title class="bg-error">
-        Delete
-        {{ items ? `${items.length} orders` : "Empty" }}
+        Re-submit 
+        {{ item ? item.contractDisplay.contractDisplay : "Empty" }}
       </v-card-title>
       <v-card-text>
         <v-container>
           <v-row>
             <v-col cols="12">
-              You are about to delete {{ items.length }} orders? Are you sure?
-            </v-col>
-            <v-col
-              cols="4"
-              :key="i"
-              v-for="i in items.map((e) => e.contractDisplay.contractDisplay)"
-            >
-              <div class="pa-1 py-2" style="border: 1px solid red; border-radius: 1rem">{{ i }}</div>
+              You are about to resubmit this order suspended order? Are you sure?
             </v-col>
           </v-row>
         </v-container>
@@ -26,11 +19,11 @@
           >Cancel</v-btn
         >
         <v-btn
-          :disabled="props.items.length == 0"
+          :disabled="!props.item"
           color="error"
-          @click="deleteAll"
+          @click="submitTrade"
           variant="elevated"
-          >Delete All</v-btn
+          >Re-submit</v-btn
         >
       </v-card-actions>
     </v-card>
@@ -43,17 +36,27 @@ import { ref, watchEffect, watch, computed } from "vue";
 import { ActiveOrder as MainModel } from "@/models/marketData";
 import { useAuthStore } from "@/store/authStore";
 import { useToastStore } from "@/store/toastStore";
+import { Ref } from "vue";
+import {
+  Capacity,
+  MitsOrderType,
+  BuySell,
+  IInsertOrderFutures,
+} from "@/models/trading";
+import { ExtractPropTypes } from "vue";
+import { NullLiteral } from "@babel/types";
 
 const props = defineProps({
   modelValue: Boolean,
   socket: {
-    type: null as unknown as Object as PropType<HubConnection | null>,
-    default: null,
+    type: null as unknown as Object as PropType<HubConnection|null>,
     required: true,
+    nullable: true,
   },
-  items: {
-    type: Array<MainModel>,
-    required: true,
+  item: {
+    type: Object as PropType<MainModel>,
+    default: null,
+    required: false,
   },
 });
 
@@ -73,11 +76,9 @@ watchEffect(() => {
 function closeModal(): void {
   open.value = false;
 }
-function deleteAll() {
+function submitTrade() {
   try {
-    toastStore.addToast(
-      `Delete trades ${props.items.map((e) => e.activeOrderSeq)}`
-    );
+    toastStore.addToast(`Suspend trade ${props.item?.activeOrderSeq}`);
     // if (props.item)
     //   props.socket.invoke("DeleteTrade", props.item?.activeOrderSeq);
     open.value = false;
