@@ -2,14 +2,15 @@
   <v-dialog min-width="400" max-width="500" v-model="open">
     <v-card v-if="item">
       <v-card-title class="bg-error">
-        Re-submit 
+        Re-submit
         {{ item ? item.contractDisplay.contractDisplay : "Empty" }}
       </v-card-title>
       <v-card-text>
         <v-container>
           <v-row>
             <v-col cols="12">
-              You are about to resubmit this order suspended order? Are you sure?
+              You are about to resubmit this order suspended order? Are you
+              sure?
             </v-col>
           </v-row>
         </v-container>
@@ -21,7 +22,7 @@
         <v-btn
           :disabled="!props.item"
           color="error"
-          @click="submitTrade"
+          @click="confirmFunc"
           variant="elevated"
           >Re-submit</v-btn
         >
@@ -48,10 +49,9 @@ import { NullLiteral } from "@babel/types";
 
 const props = defineProps({
   modelValue: Boolean,
-  socket: {
-    type: null as unknown as Object as PropType<HubConnection|null>,
+  confirmFunc: {
+    type: Function as PropType<() => Promise<void>>,
     required: true,
-    nullable: true,
   },
   item: {
     type: Object as PropType<MainModel>,
@@ -75,15 +75,5 @@ watchEffect(() => {
 
 function closeModal(): void {
   open.value = false;
-}
-function submitTrade() {
-  try {
-    toastStore.addToast(`Suspend trade ${props.item?.activeOrderSeq}`);
-    // if (props.item)
-    //   props.socket.invoke("DeleteTrade", props.item?.activeOrderSeq);
-    open.value = false;
-  } catch (err) {
-    console.error(err);
-  }
 }
 </script>

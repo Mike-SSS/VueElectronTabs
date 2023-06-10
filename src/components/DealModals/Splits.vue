@@ -1,19 +1,29 @@
 <template>
   <v-dialog v-model="open" min-width="300" width="auto" max-width="500">
-    <v-card>
+    <v-card v-if="form">
       <v-form v-model="valid" ref="splitsForm">
         <v-card-title class="bg-primary">Splits</v-card-title>
         <v-card-text>
-          <v-container>
+          <v-container fluid>
             <v-row>
               <v-col cols="6">
                 <v-text-field
-                  v-model="form.qty"
+                  v-model.number="form.qty"
+                  class="mb-2"
                   density="compact"
+                  :rules="[
+                    // (msg: number) => !!msg || 'QTY must be larger than 0',
+                    (msg: number) => (msg &&  msg >= 0) || 'QTY must be larger than 0',
+                    // (msg: number) => (item && msg <= item?.quantity) || 'Qty must be smaller than original',
+                    (msg: number) => (item && msg + splitsSum <= item.quantity) || `Not available`,
+                  ]"
                   variant="outlined"
                   label="Qty"
                   type="number"
-                ></v-text-field>
+                  persistent-hint
+                  :hint="`Original (${item?.quantity})`"
+                >
+                </v-text-field>
                 <v-text-field
                   v-model="form.price"
                   density="compact"
@@ -22,14 +32,14 @@
                   type="number"
                 ></v-text-field>
                 <v-text-field
-                  v-model="form.refNo"
+                  v-model="form.ref"
                   density="compact"
                   variant="outlined"
                   label="Ref No"
                   type="string"
                 ></v-text-field>
                 <v-text-field
-                  v-model="form.refNo2"
+                  v-model="form.ref2"
                   density="compact"
                   variant="outlined"
                   label="Ref No 2"
@@ -38,22 +48,31 @@
               </v-col>
               <v-col cols="6">
                 <v-select
-                  v-model="form.principle"
-                  :items="principles"
+                  v-model="form.branch"
+                  :items="branches"
                   density="compact"
                   variant="outlined"
-                  label="Principle"
+                  label="Branch"
                 ></v-select>
                 <v-select
                   v-model="form.dealer"
                   :items="dealers"
+                  :disabled="form.branch == null"
                   density="compact"
                   variant="outlined"
                   label="Dealer"
                 ></v-select>
+                <v-combobox
+                  v-model="form.principal"
+                  :items="clients"
+                  :disabled="form.dealer == null"
+                  :readonly="form.dealer == null"
+                  density="compact"
+                  variant="outlined"
+                  label="Principal"
+                ></v-combobox>
+
                 <v-select
-                  v-model="form.clientSubAcc"
-                  :items="clientSubAccs"
                   density="compact"
                   variant="outlined"
                   label="Client Sub Acc"
@@ -62,25 +81,45 @@
             </v-row>
             <v-row>
               <v-col cols="12" style="border: 1px solid black">
-                <v-data-table :items-per-page="-1">
+                <v-data-table
+                  show-select
+                  density="compact"
+                  v-model="selectedSplits"
+                  return-object
+                  :height="200"
+                  :headers="headers"
+                  :items="splits"
+                  :items-per-page="-1"
+                >
                   <template #bottom></template>
+                  <!-- <template #headers></template> -->
                 </v-data-table>
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="px-5">
+          <v-btn
+            :disabled="!valid"
+            @click="handleEnter"
+            density="compact"
+            variant="tonal"
+            >Split</v-btn
+          >
+          <v-btn
+            @click="handleDelete"
+            :disabled="selectedSplits.length == 0"
+            density="compact"
+            variant="tonal"
+            >Delete</v-btn
+          >
+          <v-spacer></v-spacer>
+
           <v-btn @click="submitForm" density="compact" variant="tonal"
             >Ok</v-btn
           >
           <v-btn @click="cancel" density="compact" variant="tonal"
             >Cancel</v-btn
-          >
-          <v-btn @click="handleEnter" density="compact" variant="tonal"
-            >Enter</v-btn
-          >
-          <v-btn @click="handleDelete" density="compact" variant="tonal"
-            >Delete</v-btn
           >
         </v-card-actions>
       </v-form>
@@ -94,6 +133,7 @@ import { Deal as MainModel } from "@/models/marketData";
 import { computed } from "vue";
 import { Ref } from "vue";
 import { useAuthStore } from "@/store/authStore";
+import { useToastStore } from "@/store/toastStore";
 
 const props = defineProps({
   modelValue: Boolean,
@@ -112,6 +152,7 @@ interface FormModel {
   ref: string | null;
   ref2: string | null;
 }
+const splits: Ref<FormModel[]> = ref([]);
 const emit = defineEmits(["update:modelValue"]);
 const authStore = useAuthStore();
 // reactive form data
@@ -119,14 +160,34 @@ const form: Ref<FormModel | null> = ref(null);
 const valid = ref(false);
 const splitsForm = ref();
 
+const headers = ref([
+  {
+    title: "QTY",
+    key: "qty",
+  },
+  { title: "Price", key: "price" },
+  { title: "Ref", key: "ref" },
+  { title: "Ref2", key: "ref2" },
+  { title: "Branch", key: "branch" },
+  { title: "Dealer", key: "dealer" },
+  { title: "Principal", key: "principal" },
+]);
+const selectedSplits: Ref<FormModel[]> = ref([]);
+const splitsSum = computed(() =>
+  splits.value.map((e) => e.qty).reduce((sum, num) => sum + num, 0)
+);
+const totalSum = computed(() => {
+  return (props.item ? props.item.quantity : 0) + splitsSum.value;
+});
 const convertItemToForm = (item: MainModel): FormModel => {
   // Conversion logic goes here. Example:
+  const diff = item.quantity - splitsSum.value;
   return {
-    branch: null,
-    qty: item.quantity,
+    branch: item.member,
+    qty: diff,
     price: Number(item.dealtPrice),
-    dealer: "BDA",
-    principal: "BVGM",
+    dealer: item.dealer,
+    principal: item.principal,
     ref: null,
     ref2: null,
   };
@@ -215,7 +276,7 @@ watchEffect(() => {
 async function submitForm() {
   // submit form data to your API
   // no changes to the item prop
-
+  useToastStore().addToast("Not implemented");
   // close the dialog after submit
   open.value = false;
 }
@@ -239,9 +300,17 @@ function cancel() {
 // Add functionality for 'Enter' and 'Delete' buttons
 function handleEnter() {
   // your logic here
+  if (form.value) {
+    splits.value.push(form.value);
+  }
+  if (props.item) form.value = convertItemToForm(props.item);
 }
 
 function handleDelete() {
   // your logic here
+  splits.value = splits.value.filter(
+    (e) => selectedSplits.value.find((a) => a == e) == null
+  );
+  selectedSplits.value.splice(0);
 }
 </script>

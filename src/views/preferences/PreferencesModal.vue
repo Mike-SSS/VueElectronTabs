@@ -33,6 +33,9 @@
           </v-tab>
         </v-tabs>
         <v-btn size="small" variant="tonal" @click="open = false">Close</v-btn>
+        <v-btn size="small" variant="tonal" @click="deletePreference"
+          >Reset all</v-btn
+        >
       </v-card-title>
       <v-card-text>
         <v-window v-model="tab">
@@ -44,7 +47,11 @@
           </v-window-item>
           <v-window-item value="tab-defaults">
             <v-card>
-              <v-text-field label="Example" v-for="i in 5"></v-text-field>
+              <v-text-field
+                label="Example"
+                v-for="i in 5"
+                :key="i"
+              ></v-text-field>
             </v-card>
           </v-window-item>
           <!-- <v-window-item v-for="i in 3" :key="i" :value="'tab-' + i">
@@ -68,23 +75,28 @@ import UserProfile from "@/views/preferences/UserProfile.vue";
 import Flags from "@/views/preferences/Flags.vue";
 import { watchEffect } from "vue";
 
-const storeLayout = useAuthStore();
+const authStore = useAuthStore();
 
 const props = defineProps({
   modelValue: Boolean,
 });
 
-const emit = defineEmits(['update:modelValue']);
+async function deletePreference() {
+  await authStore.deletePreferences();
+  await authStore.loadUserPreference();
+}
+
+const emit = defineEmits(["update:modelValue"]);
 const open = ref(props.modelValue);
 
 const tab = ref(null);
 watchEffect(() => {
-  open.value = props.modelValue
-})
+  open.value = props.modelValue;
+});
 
 watchEffect(() => {
-  emit('update:modelValue', open.value)
-})
+  emit("update:modelValue", open.value);
+});
 </script>
 
 <style></style>

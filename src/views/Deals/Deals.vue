@@ -342,12 +342,12 @@ const actionButtons = computed<ActionButton[]>(() => [
   },
   {
     id: "4",
-    tooltip: "Assign to Memeber",
+    tooltip: "Assign to Member",
     disabled: state.selectedRows.length != 1,
     color: "white",
     variant: "tonal",
     density: "compact",
-    icon: "mdi-account-tag-outline",
+    icon: "mdi-account-edit",
     textField: null,
     action: () => {
       // get selected row and pass as param

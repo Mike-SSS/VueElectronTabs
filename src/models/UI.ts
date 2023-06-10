@@ -1,4 +1,5 @@
 import { Ref } from "vue";
+import { LAYOUT } from "./layout";
 
 export interface ActionButton {
   id: string;
@@ -32,4 +33,51 @@ export interface TextField {
   hideDetails: boolean | "auto" | undefined;
   placeholder: string;
   type: string;
+}
+export interface IUserFlags {
+  insertOrderOrDouble: boolean;
+  cancelAllActiveOrders: boolean;
+  suspendAllActiveOrders: boolean;
+  deleteActiveOrder: boolean;
+  suspendActiveOrder: boolean;
+  reduceActiveOrder: boolean;
+  resubmitActiveOrder: boolean;
+  editSuspendOrder: boolean;
+  insertUnmatchedDeal: boolean;
+  deleteUnmatchedDeal: boolean;
+  acceptUnmatchedDeal: boolean;
+  editUnmatchedDeal: boolean;
+  splitDeal: boolean;
+  assignDealToMember: boolean;
+  tripartiteDeal: boolean;
+  cumulateDeal: boolean;
+  correctDealPrinciple: boolean;
+  exerciseOption: boolean;
+  abandonOption: boolean;
+  subAccountChange: boolean;
+  deleteSiloCertAuctionBid: boolean;
+}
+export interface IUserDefaults {
+  price: string;
+}
+export interface IUserProfileDefaults {
+  branch: string;
+  dealer: string;
+  client: string;
+}
+export interface IUserPref {
+  flags: IUserFlags;
+  profile: IUserProfileDefaults;
+  defaults: IUserDefaults;
+}
+
+export interface UserPreferences {
+  _id?: number;
+  userId: string;
+  userPreferenceJson: string | IUserPref;
+}
+export interface UserLayout {
+  id?: number;
+  userId: string;
+  userLayoutJson: string | LAYOUT;
 }

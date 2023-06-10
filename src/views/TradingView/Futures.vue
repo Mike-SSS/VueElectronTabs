@@ -499,6 +499,7 @@ const headers: DataTableHeaderCustom[] = [
   { title: "Low", key: "lo" },
   { title: "Open", key: "openPrice" },
   { title: "Volume", key: "volume" },
+  { title: "OI", key: "openInterest" },
 ];
 const getSortedHeaders = computed(
   () =>

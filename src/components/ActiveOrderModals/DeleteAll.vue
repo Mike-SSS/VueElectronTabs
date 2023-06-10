@@ -28,7 +28,7 @@
         <v-btn
           :disabled="props.items.length == 0"
           color="error"
-          @click="deleteAll"
+          @click="confirmFunc"
           variant="elevated"
           >Delete All</v-btn
         >
@@ -46,9 +46,8 @@ import { useToastStore } from "@/store/toastStore";
 
 const props = defineProps({
   modelValue: Boolean,
-  socket: {
-    type: null as unknown as Object as PropType<HubConnection | null>,
-    default: null,
+  confirmFunc: {
+    type: Function as PropType<() => Promise<void>>,
     required: true,
   },
   items: {
@@ -73,16 +72,19 @@ watchEffect(() => {
 function closeModal(): void {
   open.value = false;
 }
-function deleteAll() {
-  try {
-    toastStore.addToast(
-      `Delete trades ${props.items.map((e) => e.activeOrderSeq)}`
-    );
-    // if (props.item)
-    //   props.socket.invoke("DeleteTrade", props.item?.activeOrderSeq);
-    open.value = false;
-  } catch (err) {
-    console.error(err);
-  }
-}
+// async function deleteAll() {
+//   try {
+//     const success = await props.confirmFunc();
+//     if (success) {
+//       open.value = false;
+//       toastStore.addToast(`Suspend trade delete);
+//     } else {
+//       throw "Socket confirmation wasnt successfull in response";
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     toastStore.addToast(`Error Suspend trade ${props.item?.activeOrderSeq}`);
+//     return Promise.reject(err);
+//   }
+// }
 </script>

@@ -21,7 +21,7 @@
         <v-btn
           :disabled="!props.item"
           color="error"
-          @click="suspendTrade"
+          @click="confirmFunc"
           variant="elevated"
           >Suspend</v-btn
         >
@@ -48,10 +48,14 @@ import { NullLiteral } from "@babel/types";
 
 const props = defineProps({
   modelValue: Boolean,
-  socket: {
-    type: null as unknown as Object as PropType<HubConnection|null>,
+  // socket: {
+  //   type: null as unknown as Object as PropType<HubConnection|null>,
+  //   required: true,
+  //   nullable: true,
+  // },
+  confirmFunc: {
+    type: Function as PropType<() => Promise<void>>,
     required: true,
-    nullable: true,
   },
   item: {
     type: Object as PropType<MainModel>,
@@ -75,15 +79,5 @@ watchEffect(() => {
 
 function closeModal(): void {
   open.value = false;
-}
-function suspendTrade() {
-  try {
-    toastStore.addToast(`Suspend trade ${props.item?.activeOrderSeq}`);
-    // if (props.item)
-    //   props.socket.invoke("DeleteTrade", props.item?.activeOrderSeq);
-    open.value = false;
-  } catch (err) {
-    console.error(err);
-  }
 }
 </script>

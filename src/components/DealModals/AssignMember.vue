@@ -41,6 +41,7 @@
 <script setup lang="ts">
 import { Deal as MainModel } from "@/models/marketData";
 import { useAuthStore } from "@/store/authStore";
+import { useToastStore } from "@/store/toastStore";
 import { computed } from "vue";
 import { PropType } from "vue";
 import { ref, watchEffect } from "vue";
@@ -73,7 +74,7 @@ watchEffect(() => {
 async function submitForm() {
   // submit form data to your API
   // no changes to the item prop
-
+  useToastStore().addToast("Not implemented");
   // close the dialog after submit
   open.value = false;
 }

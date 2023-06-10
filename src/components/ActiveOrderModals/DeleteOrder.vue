@@ -21,7 +21,7 @@
         <v-btn
           :disabled="!props.item"
           color="error"
-          @click="deleteTrade"
+          @click="confirmFunc"
           variant="elevated"
           >Delete</v-btn
         >
@@ -46,10 +46,9 @@ import {
 
 const props = defineProps({
   modelValue: Boolean,
-  socket: {
-    type: null as unknown as Object as PropType<HubConnection|null>,
+  confirmFunc: {
+    type: Function as PropType<() => Promise<void>>,
     required: true,
-    nullable: true,
   },
   item: {
     type: Object as PropType<MainModel> | PropType<null>,
@@ -72,15 +71,5 @@ watchEffect(() => {
 
 function closeModal(): void {
   open.value = false;
-}
-function deleteTrade() {
-  try {
-    toastStore.addToast(`Delete trade ${props.item?.activeOrderSeq}`);
-    // if (props.item)
-    //   props.socket.invoke("DeleteTrade", props.item?.activeOrderSeq);
-    open.value = false;
-  } catch (err) {
-    console.error(err);
-  }
 }
 </script>

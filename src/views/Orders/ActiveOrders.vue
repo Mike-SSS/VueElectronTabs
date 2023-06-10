@@ -118,27 +118,27 @@
     ></EditOrder>
     <ResubmitSuspended
       v-model="dialogs.resubmitSuspended"
-      :socket="socket"
+      :confirmFunc="resubmitsuspendTrade"
       :item="state.selectedRows[0]"
     ></ResubmitSuspended>
     <DeleteOrder
       v-model="dialogs.deleteOrder"
-      :socket="socket"
+      :confirmFunc="deleteTrade"
       :item="state.selectedRows[0]"
     ></DeleteOrder>
     <SuspendOrder
       v-model="dialogs.suspendOrder"
-      :socket="socket"
+      :confirmFunc="suspendTrades"
       :item="state.selectedRows[0]"
     ></SuspendOrder>
     <SuspendAll
       v-model="dialogs.suspendAll"
-      :socket="socket ? socket : undefined"
+      :confirmFunc="suspendAllTrades"
       :items="filteredData"
     ></SuspendAll>
     <DeleteAll
       v-model="dialogs.deleteAll"
-      :socket="socket ? socket : undefined"
+      :confirmFunc="deleteAllTrades"
       :items="filteredData"
     ></DeleteAll>
     <HeaderPicker
@@ -193,6 +193,7 @@ import { noAuthInstance } from "@/plugins/axios";
 import { useCommonComponentFunctions } from "@/utils/commonComponentFunctions";
 import CloseComponentButton from "@/components/CloseComponentButton.vue";
 import { ActionButton } from "@/models/UI";
+import { useToastStore } from "@/store/toastStore";
 // import { MarketDisplayStoreActions } from "@/store/marketDisplay";
 
 interface TableItem {
@@ -358,6 +359,23 @@ const actionButtons = computed<ActionButton[]>(() => [
   },
   {
     id: "3",
+    tooltip: "Suspend All",
+    disabled: filteredData.value.length == 0,
+    color: "white",
+    variant: "tonal",
+    density: "compact",
+    icon: "mdi-folder-cancel",
+    textField: null,
+    action: () => {
+      /* Suspend all orders Action */
+      if (filteredData.value.length > 0) {
+        console.log("Prompt Suspend all ", filteredData);
+        dialogs.suspendAll = true;
+      }
+    },
+  },
+  {
+    id: "4",
     tooltip: "Delete Order",
     disabled: state.selectedRows.length != 1,
     color: "white",
@@ -405,6 +423,7 @@ const actionButtons = computed<ActionButton[]>(() => [
     color: "white",
     variant: "tonal",
     density: "compact",
+    disabled: filteredData.value.length == 0,
     icon: "mdi-delete-sweep-outline",
     textField: null,
     action: () => {
@@ -415,22 +434,7 @@ const actionButtons = computed<ActionButton[]>(() => [
       }
     },
   },
-  {
-    id: "6",
-    tooltip: "Suspend All",
-    color: "white",
-    variant: "tonal",
-    density: "compact",
-    icon: "mdi-folder-cancel",
-    textField: null,
-    action: () => {
-      /* Suspend all orders Action */
-      if (filteredData.value.length > 0) {
-        console.log("Prompt Suspend all ", filteredData);
-        dialogs.suspendAll = true;
-      }
-    },
-  },
+
   {
     id: "7",
     tooltip: "Edit suspended order",
@@ -451,6 +455,10 @@ const actionButtons = computed<ActionButton[]>(() => [
   {
     id: "8",
     tooltip: "Re-submit suspended order",
+    disabled:
+      state.selectedRows.length == 0 ||
+      (state.selectedRows.length == 1 &&
+        state.selectedRows[0].orderState != "A"),
     color: "white",
     variant: "tonal",
     density: "compact",
@@ -482,12 +490,84 @@ const actionButtons = computed<ActionButton[]>(() => [
 
 const emits = defineEmits(["newComp", "closeComp"]);
 const { closeComponent } = useCommonComponentFunctions(emits);
+const toastStore = useToastStore();
 
 const endpoint = "/market";
 const filters: FilterCondition[] = [];
 function onRowClicked(e: any, a: any) {
   console.log("Clicked on row - a - ", a);
   console.log("Clicked on row - e - ", e);
+}
+async function resubmitsuspendTrade() {
+  try {
+    const items = state.selectedRows.map((e) => e.activeOrderSeq);
+    if (items.length <= 0) {
+      throw "No items to resubmit";
+    }
+    const res = await socket.value?.invoke("ResubmitTrade", items);
+    console.log("Resubmit response ", res);
+    toastStore.addToast(`Success: ${items}`);
+  } catch (err) {
+    toastStore.addToast(`Error: ${err}`);
+  }
+}
+async function deleteTrade() {
+  try {
+    const items = state.selectedRows.map((e) => e.activeOrderSeq);
+    if (items.length <= 0) {
+      throw "No items to delete";
+    }
+    const res = await socket.value?.invoke("DeleteTrade", items);
+    console.log("Deleted trade(s) response ", res);
+    toastStore.addToast(
+      `Delete trade(s) ${state.selectedRows.map((e) => e.activeOrderSeq)}`
+    );
+    toastStore.addToast(`Success: ${items}`);
+  } catch (err) {
+    toastStore.addToast(`Error: ${err}`);
+  }
+}
+async function deleteAllTrades() {
+  try {
+    const items = filteredData.value.map((e) => e.activeOrderSeq);
+    if (items.length <= 0) {
+      throw "No items to delete";
+    }
+
+    const res = await socket.value?.invoke("DeleteTrade", items);
+    console.log("Deleted all trades response ", res);
+    toastStore.addToast(`Success: ${items}`);
+  } catch (err) {
+    toastStore.addToast(`Error: ${err}`);
+  }
+}
+async function suspendAllTrades(): Promise<void> {
+  try {
+    const items = filteredData.value.map((e) => e.activeOrderSeq);
+    if (items.length <= 0) {
+      throw "No items to suspend";
+    }
+    const res = await socket.value?.invoke("SuspendTrade", items);
+    console.log("Suspended trades response ", res);
+    toastStore.addToast(`Success: ${items}`);
+  } catch (err) {
+    toastStore.addToast(`Error: ${err}`);
+  }
+}
+
+async function suspendTrades() {
+  try {
+    const items = state.selectedRows.map((e) => e.activeOrderSeq);
+    if (items.length <= 0) {
+      throw "No items to delete";
+    }
+
+    const res = await socket.value?.invoke("SuspendTrade", items);
+    console.log("Suspend trades response ", res);
+    toastStore.addToast(`Success: ${items}`);
+  } catch (err) {
+    toastStore.addToast(`Error: ${err}`);
+  }
 }
 
 onMounted(() => {
